@@ -1,0 +1,74 @@
+[
+  {
+    "id": "ray-tracer",
+    "title": "Ray Tracer",
+    "description": "Monte Carlo path tracer with BVH acceleration and physically-based materials. Renders in ~40ms per frame on a Ryzen 9.",
+    "tags": ["C++", "Graphics", "Systems"],
+    "link": "https://github.com/you/raytracer",
+    "thumb": "#0d1117"
+  },
+  {
+    "id": "motor-controller",
+    "title": "Motor Controller",
+    "description": "PID velocity controller for a BLDC motor on STM32F4. Sub-millisecond loop time, CAN bus telemetry.",
+    "tags": ["C++", "Embedded", "Systems"],
+    "link": "https://github.com/you/motor-ctrl",
+    "thumb": "#111a11"
+  },
+  {
+    "id": "config-parser",
+    "title": "TOML Parser",
+    "description": "Zero-dependency TOML 1.0 parser in C++17. Typed API, structured error recovery, 100% spec-compliant.",
+    "tags": ["C++", "Tools"],
+    "link": "https://github.com/you/tomlite",
+    "thumb": "#16131f"
+  },
+  {
+    "id": "portfolio-site",
+    "title": "This Site",
+    "description": "Static portfolio with tag-filtered tile grid. Served via Caddy + containerised nginx. No framework.",
+    "tags": ["Web", "JavaScript", "Tools"],
+    "link": "#",
+    "thumb": "#0d1520"
+  },
+  {
+    "id": "mesh-simplifier",
+    "title": "Mesh Simplifier",
+    "description": "QEM edge-collapse decimation with UV preservation. Reduces 1M-triangle meshes to 10k in under a second.",
+    "tags": ["C++", "Graphics", "Tools"],
+    "link": "https://github.com/you/meshsimp",
+    "thumb": "#101010"
+  },
+  {
+    "id": "log-analyzer",
+    "title": "Log Analyzer",
+    "description": "Parses structured logs from distributed services and renders flamegraphs. Handles 500MB+ files via streaming.",
+    "tags": ["Python", "Tools", "Systems"],
+    "link": "https://github.com/you/logflame",
+    "thumb": "#181208"
+  },
+  {
+    "id": "midi-sequencer",
+    "title": "MIDI Sequencer",
+    "description": "Step sequencer with pattern chaining and swing. Built on rtmidi with a Tkinter UI. Outputs to any MIDI device.",
+    "tags": ["Python", "Audio"],
+    "link": "https://github.com/you/midigrep",
+    "thumb": "#14101e"
+  },
+  {
+    "id": "terrain-gen",
+    "title": "Terrain Generator",
+    "description": "Procedural terrain via fBm noise and GPU tessellation. Exports heightmaps + mesh for game engine import.",
+    "tags": ["C++", "Graphics", "Systems"],
+    "link": "https://github.com/you/terrainforge",
+    "thumb": "#0c1410"
+  },
+  {
+    "id": "test",
+    "title": "Test",
+    "description": "A test project",  
+    "tags": ["C++"],
+    "thumb": "#40a4c1"
+  }
+
+]

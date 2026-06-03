@@ -3,7 +3,7 @@ FROM nginx:stable-alpine3.23-perl
 # Remove default nginx static assets
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy custom nginx config (optional but recommended)
+# Copy custom nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy static site content
