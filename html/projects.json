@@ -1,74 +1,157 @@
 [
   {
-    "id": "ray-tracer",
-    "title": "Ray Tracer",
-    "description": "Monte Carlo path tracer with BVH acceleration and physically-based materials. Renders in ~40ms per frame on a Ryzen 9.",
-    "tags": ["C++", "Graphics", "Systems"],
-    "link": "https://github.com/you/raytracer",
+    "id": "ball-bae",
+    "title": "Ball Aerospace / BAE SMS",
+    "description": "April 2020 - April 2026",
+    "tags": ["Career", "C++", "Python", "Rust", "Yocto", "Embedded", "CI/CD", "Linux", "Leadership"],
+    "thumb": "#0d1117",
+    "image": "img/thumb/lilhoops_thumbnail.jpg"
+  },
+  {
+    "id": "sls",
+    "title": "Stable Laser Systems",
+    "description": "November 2014 - January 2020",
+    "tags": ["Career", "C++", "Python", "Embedded", "PCB"],
     "thumb": "#0d1117"
   },
   {
-    "id": "motor-controller",
-    "title": "Motor Controller",
-    "description": "PID velocity controller for a BLDC motor on STM32F4. Sub-millisecond loop time, CAN bus telemetry.",
-    "tags": ["C++", "Embedded", "Systems"],
-    "link": "https://github.com/you/motor-ctrl",
-    "thumb": "#111a11"
+    "id": "rice",
+    "title": "Rice University",
+    "description": "August 2010 - June 2014",
+    "tags": ["Career"],
+    "thumb": "#0d1117"
+  },
+
+  {
+    "id": "rl-custom",
+    "title": "Rocket League Custom Maps",
+    "description": "Custom maps and game modes for Rocket League",
+    "tags": ["Creative", "Unreal Engine", "3D"],
+    "thumb": "#0d1117"
   },
   {
-    "id": "config-parser",
-    "title": "TOML Parser",
-    "description": "Zero-dependency TOML 1.0 parser in C++17. Typed API, structured error recovery, 100% spec-compliant.",
-    "tags": ["C++", "Tools"],
-    "link": "https://github.com/you/tomlite",
-    "thumb": "#16131f"
+    "id": "rlmm-com",
+    "title": "RocketLeagueMapmaking.com",
+    "description": "Tutorial and resource site for Rocket League custom maps",
+    "tags": ["Javascript", "CI/CD", "Educator"],
+    "thumb": "#0d1117"
   },
   {
-    "id": "portfolio-site",
-    "title": "This Site",
-    "description": "Static portfolio with tag-filtered tile grid. Served via Caddy + containerised nginx. No framework.",
-    "tags": ["Web", "JavaScript", "Tools"],
-    "link": "#",
-    "thumb": "#0d1520"
+    "id": "skillquest",
+    "title": "RLMM on Skillquest.io",
+    "description": "Video tutorial series for Rocket League custom map creation",
+    "tags": ["Creative", "Unreal Engine", "Educator"],
+    "thumb": "#0d1117"
   },
   {
-    "id": "mesh-simplifier",
-    "title": "Mesh Simplifier",
-    "description": "QEM edge-collapse decimation with UV preservation. Reduces 1M-triangle meshes to 10k in under a second.",
-    "tags": ["C++", "Graphics", "Tools"],
-    "link": "https://github.com/you/meshsimp",
-    "thumb": "#101010"
+    "id": "rlmm-discord",
+    "title": "RLMM Discord",
+    "description": "Community hub for Rocket League custom maps since 2020",
+    "tags": ["Creative", "Leadership"],
+    "thumb": "#0d1117"
   },
   {
-    "id": "log-analyzer",
-    "title": "Log Analyzer",
-    "description": "Parses structured logs from distributed services and renders flamegraphs. Handles 500MB+ files via streaming.",
-    "tags": ["Python", "Tools", "Systems"],
-    "link": "https://github.com/you/logflame",
-    "thumb": "#181208"
+    "id": "rlmm-toolkit",
+    "title": "RLMM Toolkit",
+    "description": "Qt6 plugin framework for sharing mapmaking tools",
+    "tags": ["C++", "CI/CD"],
+    "thumb": "#0d1117"
+  },
+
+  {
+    "id": "kspblender",
+    "title": "KSPBlender",
+    "description": "Blender plugin to import KSP crafts",
+    "tags": ["Creative", "Python", "3D"],
+    "thumb": "#0d1117"
   },
   {
-    "id": "midi-sequencer",
-    "title": "MIDI Sequencer",
-    "description": "Step sequencer with pattern chaining and swing. Built on rtmidi with a Tkinter UI. Outputs to any MIDI device.",
-    "tags": ["Python", "Audio"],
-    "link": "https://github.com/you/midigrep",
-    "thumb": "#14101e"
+    "id": "pyqtsa",
+    "title": "PyQtSa",
+    "description": "Flexible, data-driven GUI framework",
+    "tags": ["Python"],
+    "thumb": "#0d1117"
   },
   {
-    "id": "terrain-gen",
-    "title": "Terrain Generator",
-    "description": "Procedural terrain via fBm noise and GPU tessellation. Exports heightmaps + mesh for game engine import.",
-    "tags": ["C++", "Graphics", "Systems"],
-    "link": "https://github.com/you/terrainforge",
-    "thumb": "#0c1410"
+    "id": "hidden-layer",
+    "title": "Hidden Layer Design",
+    "description": "Grassroots tech-meets-art collective",
+    "tags": ["Creative", "PCB"],
+    "thumb": "#0d1117"
+  },
+
+  {
+    "id": "resvolution",
+    "title": "Resvolution",
+    "description": "Rice University Senior Design - Panoramic, multi-wavelength microscope attachment for smartphones",
+    "tags": ["C++", "Embedded", "3D"],
+    "thumb": "#0d1117"
   },
   {
-    "id": "test",
-    "title": "Test",
-    "description": "A test project",  
-    "tags": ["C++"],
-    "thumb": "#40a4c1"
+    "id": "spanish-writing",
+    "title": "Spanish Writings",
+    "description": "Select pieces of creative writing from Rice University",
+    "tags": ["Creative"],
+    "thumb": "#0d1117"
+  },
+  {
+    "id": "blender-rice",
+    "title": "Blender Imaginatio Infinitum",
+    "description": "Fall 2012 - Course taught at Rice University",
+    "tags": ["Creative", "3D", "Educator"],
+    "thumb": "#0d1117"
+  },
+
+  {
+    "id": "ranked-hoops",
+    "title": "Ranked Hoops",
+    "description": "Admin and Graphic Designer for the largest Rocket League Hoops community",
+    "tags": ["Creative", "Leadership"],
+    "thumb": "#0d1117"
+  },
+  {
+    "id": "rh-overlay",
+    "title": "Ranked Hoops Overlay",
+    "description": "GUI for dynamic stream overlay",
+    "tags": ["Creative"],
+    "thumb": "#0d1117"
+  },
+  {
+    "id": "playvs",
+    "title": "High School Esports Coach",
+    "description": "January 2020 - November 2025",
+    "tags": ["Career", "Leadership"],
+    "thumb": "#0d1117"
+  },
+  
+  {
+    "id": "graphic-design",
+    "title": "Graphic Design",
+    "description": "Miscellaneous graphic design projects",
+    "tags": ["Creative"],
+    "thumb": "#0d1117"
+  },
+  {
+    "id": "art",
+    "title": "Art",
+    "description": "Various digital art pieces",
+    "tags": ["Creative"],
+    "thumb": "#0d1117"
+  },
+  {
+    "id": "world-languages",
+    "title": "World Languages",
+    "description": "A lifelong passion and hobby",
+    "tags": ["Creative"],
+    "thumb": "#0d1117"
+  },
+  {
+    "id": "conlangs",
+    "title": "Conlangs",
+    "description": "Art pieces for constructed languages like Elian and Circular Gallifreyan",
+    "tags": ["Creative"],
+    "thumb": "#0d1117"
   }
+  
 
 ]

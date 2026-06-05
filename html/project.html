@@ -3,28 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spencer Arrasmith</title>
+  <title>Project</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <span class="site-name">Spencer Arrasmith</span>
-      <span class="site-tagline">Home</span>
+      <a href="index.html" class="site-name">Spencer Arrasmith</a>
+      <span class="site-tagline">systems &amp; graphics engineer</span>
     </div>
   </header>
- 
-  <main>
-    <div class="grid" id="grid"></div>
+
+  <main class="project-main" id="project-root">
+    <!-- Populated by project.js -->
   </main>
- 
-  <footer class="tag-bar" id="tagbar" role="navigation" aria-label="Filter projects by tag"></footer>
- 
-  <script src="main.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <script src="project.js"></script>
 </body>
 </html>
- 

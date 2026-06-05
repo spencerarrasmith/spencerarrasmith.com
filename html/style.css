@@ -7,10 +7,10 @@
   --bg-card-hover:#161616;
   --border:       rgba(255,255,255,0.07);
   --border-hover: rgba(255,255,255,0.18);
-  --text-primary: #e8e6e0;
+  --text-primary: #e1e8e0;
   --text-secondary:#7a7870;
   --text-dim:     #3d3d3a;
-  --accent:       #c8f560;        /* sharp chartreuse — adjust to taste */
+  --accent:       #6ad360;
   --accent-dim:   rgba(200,245,96,0.12);
   --tag-bar-h:    56px;
   --header-h:     56px;
@@ -46,8 +46,6 @@ body {
 
 .header-inner {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
   padding: 0 1.25rem;
   display: flex;
   align-items: baseline;
@@ -55,8 +53,8 @@ body {
 }
 
 .site-name {
-  font-family: var(--font-mono);
-  font-size: 13px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 20px;
   font-weight: 500;
   letter-spacing: 0.02em;
   color: var(--accent);
@@ -146,7 +144,6 @@ main {
   aspect-ratio: 16 / 9;
   overflow: hidden;
   position: relative;
-  /* Subtle noise overlay for depth on solid-color thumbs */
   background: #111;
 }
 
@@ -255,8 +252,8 @@ main {
 }
 
 .tag-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--tag-color);
+  border-color: var(--border-hover);
   color: #0a0a0a;
   font-weight: 500;
 }
@@ -288,3 +285,173 @@ main {
   .tile { animation: none; }
   .tile, .tag-btn { transition: none; }
 }
+
+/* ── Project page ────────────────────────────────────────────────────────────── */
+.project-main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.project-back {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color var(--transition);
+}
+
+.project-back:hover { color: var(--text-primary); }
+
+.project-hero {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1.75rem;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+}
+
+.project-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.project-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.project-title {
+  font-family: var(--font-body);
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.project-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.project-summary {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  font-weight: 300;
+}
+
+.project-body p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.project-link-wrap {
+  margin-top: 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 0.5px solid var(--border);
+}
+
+.project-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity var(--transition);
+}
+
+.project-link:hover { opacity: 0.7; }
+
+.project-prose { display: flex; flex-direction: column; gap: 1rem; }
+
+.project-prose h2 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-top: 0.5rem;
+}
+
+.project-prose p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.project-prose pre {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.project-prose code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.project-prose pre code {
+  color: var(--text-primary); /* code inside a block, not inline */
+}
+
+.project-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.project-prose th,
+.project-prose td {
+  text-align: left;
+  padding: 6px 12px;
+  border-bottom: 0.5px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.project-prose th {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.project-error {
+  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.project-error p {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.project-error a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Make site-name a link on the project page */
+a.site-name {
+  text-decoration: none;
+  transition: opacity var(--transition);
+}
+
+a.site-name:hover { opacity: 0.7; }

@@ -4,8 +4,8 @@
   "use strict";
 
   // ── State ──────────────────────────────────────────────────────────────────
-  let activeTag = "All";
-  let allTags   = ["All"];
+  let activeTags = new Set(); // empty = show all (same as "All")
+  let allTags    = [];
 
   // ── DOM helpers ────────────────────────────────────────────────────────────
   const grid   = document.getElementById("grid");
@@ -16,11 +16,7 @@
     projects.forEach((p, i) => {
       const tile = document.createElement("a");
       tile.className = "tile";
-      tile.href = p.link || "#";
-      if (p.link && p.link !== "#") {
-        tile.target = "_blank";
-        tile.rel = "noopener noreferrer";
-      }
+      tile.href = `project.html?id=${p.id}`;
       tile.dataset.tags = p.tags.join(",");
       tile.dataset.id   = p.id;
       tile.style.animationDelay = `${i * 40}ms`;
@@ -67,39 +63,30 @@
   }
 
   // ── Filter: fade all out → reflow layout → fade matching back in ────────────
-  //
-  // Uses transitionend rather than a fixed timeout so phase 2 starts exactly
-  // when the last tile finishes fading out, not after an approximated delay.
 
-  let filterGeneration = 0; // incremented on each call to abort stale callbacks
+  let filterGeneration = 0;
 
   function applyFilter() {
     const tiles = Array.from(grid.children);
     const gen = ++filterGeneration;
 
     const matches = (tile) => {
-      const tags = tile.dataset.tags.split(",");
-      return activeTag === "All" || tags.includes(activeTag);
+      if (activeTags.size === 0) return true;
+      return [...activeTags].every((t) => tile.dataset.tags.split(",").includes(t));
     };
 
-    // ── Phase 1: snap all tiles to invisible immediately ──────────────────────
-    // Remove any in-progress animation state, then disable the transition and
-    // set opacity/transform directly so every tile is invisible right now.
+    // Phase 1: snap all tiles invisible
     tiles.forEach((t) => {
       t.classList.remove("showing", "hiding");
-      t.style.transition = "none";
-      t.style.opacity    = "0";
-      t.style.transform  = "scale(0.96)";
+      t.style.transition    = "none";
+      t.style.opacity       = "0";
+      t.style.transform     = "scale(0.96)";
       t.style.pointerEvents = "none";
     });
 
-    // Force reflow so the browser commits the hidden state before we
-    // re-enable transitions for the fade-out.
     void grid.offsetWidth;
 
-    // ── Phase 2: reflow — update which tiles are in the grid ─────────────────
-    // All tiles are invisible, so we can safely add/remove display:none here
-    // without any visible jump.
+    // Phase 2: update layout while everything is invisible
     tiles.forEach((t) => {
       t.style.transition    = "";
       t.style.pointerEvents = "";
@@ -112,13 +99,9 @@
       }
     });
 
-    // Force reflow so the grid recalculates positions with the correct tiles
-    // in flow before we start the fade-in.
     void grid.offsetWidth;
 
-    // ── Phase 3: fade in matching tiles ──────────────────────────────────────
-    // A generation check guards against a second applyFilter call arriving
-    // while requestAnimationFrame is pending.
+    // Phase 3: fade in matching tiles
     requestAnimationFrame(() => {
       if (gen !== filterGeneration) return;
       tiles.forEach((t) => {
@@ -132,46 +115,96 @@
       setTimeout(() => {
         if (gen !== filterGeneration) return;
         tiles.forEach((t) => t.classList.remove("showing"));
-      }, 320);
+      }, 150);
     });
   }
 
-  // ── Render tag bar (active state only — no listener churn) ────────────────
+  // ── Render tag bar ─────────────────────────────────────────────────────────
   function renderTagBar() {
     tagbar.innerHTML = "";
+    const allBtn = document.createElement("button");
+    allBtn.className = "tag-btn" + (activeTags.size === 0 ? " active" : "");
+    allBtn.textContent = "All";
+    allBtn.dataset.tag = "All";
+    allBtn.setAttribute("aria-pressed", activeTags.size === 0 ? "true" : "false");
+    allBtn.style.setProperty("--tag-color", "var(--accent)");
+    tagbar.appendChild(allBtn);
+
     allTags.forEach((tag) => {
       const btn = document.createElement("button");
-      btn.className = "tag-btn" + (tag === activeTag ? " active" : "");
+      btn.className = "tag-btn" + (activeTags.has(tag) ? " active" : "");
       btn.textContent = tag;
       btn.dataset.tag = tag;
-      btn.setAttribute("aria-pressed", tag === activeTag ? "true" : "false");
+      btn.setAttribute("aria-pressed", activeTags.has(tag) ? "true" : "false");
+      btn.style.setProperty("--tag-color", tagColor(tag));
       tagbar.appendChild(btn);
     });
   }
 
-  // ── Delegated click listener on the tag bar (survives re-renders) ──────────
-  // Guard against main.js being executed more than once (e.g. double script load),
-  // which would attach a second listener and cause every click to fire twice.
-  if (!tagbar.dataset.listenerAttached) {
-    tagbar.dataset.listenerAttached = "1";
-    tagbar.addEventListener("click", (e) => {
-      const btn = e.target.closest(".tag-btn");
-      if (!btn) return;
-      setTag(btn.dataset.tag);
-    });
+  // ── Calculate tag color from text ──────────────────────────────────────────
+  function tagColor(tag) {
+    const len = tag.length;
+
+    const a = tag.slice(0,                   Math.floor(len / 3));
+    const b = tag.slice(Math.floor(len / 3), Math.floor(2 * len / 3));
+    const c = tag.slice(Math.floor(2 * len / 3));
+
+    const sum = (str) => [...str].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+
+    const r  = 0xFF - (sum(a) % 0xFF);
+    const g  = 0xFF - (sum(b) % 0xFF);
+    const b_ = 0xFF - (sum(c) % 0xFF);
+
+    const luminance = 0.299 * r + 0.587 * g + 0.114 * b_;
+    const MIN_LUMINANCE = 130;
+
+    let fr = r, fg = g, fb = b_;
+    if (luminance < MIN_LUMINANCE) {
+      const scale = MIN_LUMINANCE / (luminance || 1);
+      fr = Math.min(255, Math.round(r  * scale));
+      fg = Math.min(255, Math.round(g  * scale));
+      fb = Math.min(255, Math.round(b_ * scale));
+    }
+
+    const hex = (n) => n.toString(16).padStart(2, "0");
+    return `#${hex(fr)}${hex(fg)}${hex(fb)}`;
   }
 
-  // ── Set active tag ─────────────────────────────────────────────────────────
-  function setTag(tag) {
-    if (tag === activeTag) return;
-    activeTag = tag;
+  // ── Delegated click listener ───────────────────────────────────────────────
+  if (tagbar._filterController) tagbar._filterController.abort();
+  tagbar._filterController = new AbortController();
+  tagbar.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tag-btn");
+    if (!btn) return;
+    const tag = btn.dataset.tag;
+    if (tag === "All") {
+      resetTags();
+    } else {
+      toggleTag(tag);
+    }
+  }, { signal: tagbar._filterController.signal });
+
+  // ── Tag state mutators ─────────────────────────────────────────────────────
+  function toggleTag(tag) {
+    if (activeTags.has(tag)) {
+      activeTags.delete(tag);
+    } else {
+      activeTags.add(tag);
+    }
     applyFilter();
     renderTagBar();
   }
 
-  // ── Keyboard shortcut: Escape resets filter ────────────────────────────────
+  function resetTags() {
+    if (activeTags.size === 0) return;
+    activeTags.clear();
+    applyFilter();
+    renderTagBar();
+  }
+
+  // ── Keyboard shortcut: Escape resets filters ───────────────────────────────
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && activeTag !== "All") setTag("All");
+    if (e.key === "Escape") resetTags();
   });
 
   // ── Init ───────────────────────────────────────────────────────────────────
@@ -181,7 +214,7 @@
       return res.json();
     })
     .then((projects) => {
-      allTags = ["All", ...new Set(projects.flatMap((p) => p.tags))];
+      allTags = [...new Set(projects.flatMap((p) => p.tags))];
       buildGrid(projects);
       renderTagBar();
     })
