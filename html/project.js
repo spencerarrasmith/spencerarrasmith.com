@@ -40,9 +40,6 @@
   function renderProject(p, markdown) {
     document.title = `${p.title} — Portfolio`;
 
-    const tagline = document.querySelector(".site-tagline");
-    if (tagline) tagline.textContent = p.title;
-
     // ── Hero ─────────────────────────────────────────────────────────────────
     const hero = document.createElement("div");
     hero.className = "project-hero";
@@ -52,14 +49,14 @@
       img.alt = p.title;
       hero.appendChild(img);
     } else {
-      hero.style.background = p.thumb || "#111";
+      hero.style.background = "#111";
     }
 
     // ── Back link ─────────────────────────────────────────────────────────────
     const back = document.createElement("a");
     back.className = "project-back";
     back.href = "index.html";
-    back.textContent = "← all projects";
+    back.textContent = "← All projects";
 
     // ── Header block ──────────────────────────────────────────────────────────
     const header = document.createElement("div");

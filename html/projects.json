@@ -5,7 +5,7 @@
     "description": "April 2020 - April 2026",
     "tags": ["Career", "C++", "Python", "Rust", "Yocto", "Embedded", "CI/CD", "Linux", "Leadership"],
     "thumb": "img/thumb/bae-bs.jpg",
-    "hero": "img/project/facc.jpg"
+    "hero": "img/project/bae-sms.jpg"
   },
   {
     "id": "sls",
@@ -69,7 +69,7 @@
     "id": "rlmm-toolkit",
     "title": "RLMM Toolkit",
     "description": "Qt6 plugin framework for sharing mapmaking tools",
-    "tags": ["C++", "CI/CD"],
+    "tags": ["C++", "Python", "CI/CD"],
     "thumb": "img/thumb/rlmm-toolkit.jpg"
   },
 
@@ -103,7 +103,7 @@
     "thumb": "img/thumb/cuentos.jpg"
   },
   {
-    "id": "blender-rice",
+    "id": "blender-class",
     "title": "Blender Instructor",
     "description": "Fall 2012 - Course taught at Rice University. Spring 2021 - Course taught at Ball Aerospace",
     "tags": ["Creative", "3D", "Educator"],
@@ -121,7 +121,7 @@
     "id": "rh-overlay",
     "title": "Ranked Hoops Overlay",
     "description": "GUI for dynamic stream overlay",
-    "tags": ["Creative"],
+    "tags": ["Python", "Creative", "Graphic Design"],
     "thumb": "img/thumb/rho.jpg"
   },
   
