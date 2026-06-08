@@ -29,6 +29,13 @@
     "tags": ["Career", "Leadership"],
     "thumb": "img/thumb/pchs.jpg"
   },
+  {
+    "id": "hidden-layer",
+    "title": "Hidden Layer Design",
+    "description": "Grassroots tech-meets-art collective",
+    "tags": ["Creative", "PCB"],
+    "thumb": "img/thumb/hl.jpg"
+  },
 
   {
     "id": "rl-custom",
@@ -77,70 +84,74 @@
     "id": "pyqtsa",
     "title": "PyQtSa",
     "description": "Flexible, data-driven GUI framework",
-    "tags": ["Python"]
-  },
-  {
-    "id": "hidden-layer",
-    "title": "Hidden Layer Design",
-    "description": "Grassroots tech-meets-art collective",
-    "tags": ["Creative", "PCB"]
+    "tags": ["Python"],
+    "thumb": "img/thumb/pyqtsa.jpg"
   },
 
   {
     "id": "resvolution",
     "title": "Resvolution",
     "description": "Rice University Senior Design - Panoramic, multi-wavelength microscope attachment for smartphones",
-    "tags": ["C++", "Embedded", "3D"]
+    "tags": ["C++", "Embedded", "3D"],
+    "thumb": "img/thumb/resv.jpg"
   },
   {
     "id": "spanish-writing",
     "title": "Spanish Writings",
     "description": "Select pieces of creative writing from Rice University",
-    "tags": ["Creative"]
+    "tags": ["Creative"],
+    "thumb": "img/thumb/cuentos.jpg"
   },
   {
     "id": "blender-rice",
-    "title": "Blender Imaginatio Infinitum",
-    "description": "Fall 2012 - Course taught at Rice University",
-    "tags": ["Creative", "3D", "Educator"]
+    "title": "Blender Instructor",
+    "description": "Fall 2012 - Course taught at Rice University. Spring 2021 - Course taught at Ball Aerospace",
+    "tags": ["Creative", "3D", "Educator"],
+    "thumb": "img/thumb/bii.jpg"
   },
 
   {
     "id": "ranked-hoops",
     "title": "Ranked Hoops",
     "description": "Admin and Graphic Designer for the largest Rocket League Hoops community",
-    "tags": ["Creative", "Leadership"]
+    "tags": ["Creative", "Leadership"],
+    "thumb": "img/thumb/logo_sexy9.jpg"
   },
   {
     "id": "rh-overlay",
     "title": "Ranked Hoops Overlay",
     "description": "GUI for dynamic stream overlay",
-    "tags": ["Creative"]
+    "tags": ["Creative"],
+    "thumb": "img/thumb/rho.jpg"
   },
   
   {
     "id": "graphic-design",
     "title": "Graphic Design",
     "description": "Miscellaneous graphic design projects",
-    "tags": ["Creative"]
+    "tags": ["Creative"],
+    "thumb": "img/thumb/stj.jpg"
   },
   {
     "id": "art",
     "title": "Art",
     "description": "Various digital art pieces",
-    "tags": ["Creative"]
+    "tags": ["Creative"],
+    "thumb": "img/thumb/robotheart.jpg"
   },
   {
     "id": "world-languages",
     "title": "World Languages",
     "description": "A lifelong passion and hobby",
-    "tags": ["Creative"]
+    "tags": ["Creative"],
+    "thumb": "img/thumb/flags.jpg"
   },
   {
     "id": "conlangs",
     "title": "Conlangs",
     "description": "Art pieces for constructed languages like Elian and Circular Gallifreyan",
-    "tags": ["Creative"]
+    "tags": ["Creative"],
+    "thumb": "img/thumb/cg.jpg"
   }
   
 
