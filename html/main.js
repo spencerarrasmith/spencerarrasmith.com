@@ -23,15 +23,15 @@
 
       const thumb = document.createElement("div");
       thumb.className = "tile-thumb";
-      if (p.image) {
-        const img = document.createElement("img");
-        img.src = p.image;
-        img.alt = p.title;
-        img.loading = "lazy";
-        thumb.appendChild(img);
+      const img = document.createElement("img");
+      img.alt = p.title;
+      img.loading = "lazy";
+      if (p.thumb) {
+        img.src = p.thumb;
       } else {
-        thumb.style.background = p.thumb || "#111";
+        img.src = "img/thumb/sra.jpg"
       }
+      thumb.appendChild(img);
 
       const body = document.createElement("div");
       body.className = "tile-body";

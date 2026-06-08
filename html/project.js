@@ -46,9 +46,9 @@
     // ── Hero ─────────────────────────────────────────────────────────────────
     const hero = document.createElement("div");
     hero.className = "project-hero";
-    if (p.image) {
+    if (p.hero) {
       const img = document.createElement("img");
-      img.src = p.image;
+      img.src = p.hero;
       img.alt = p.title;
       hero.appendChild(img);
     } else {

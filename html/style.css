@@ -38,18 +38,38 @@ body {
   top: 0;
   z-index: 100;
   height: var(--header-h);
-  background: var(--bg);
+  background: rgba(10,10,10,0.8);
   border-bottom: 0.5px solid var(--border);
   display: flex;
   align-items: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .header-inner {
   width: 100%;
   padding: 0 1.25rem;
   display: flex;
-  align-items: baseline;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-logo-link {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  /* Optical gap between logo and name */
+  margin-right: 0.1rem;
+}
+
+.header-logo {
+  /* Match the cap-height of the name text beside it.
+     20px font * ~1.6 line-height cap-height ratio ≈ 32px feels balanced. */
+  height: 32px;
+  width: auto;
+  display: block;
+  /* SVG fills inherit currentColor for monochrome logos */
+  color: var(--text-primary);
 }
 
 .site-name {
@@ -57,15 +77,65 @@ body {
   font-size: 20px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--accent);
+  color: var(--text-primary);
+  white-space: nowrap;
+  text-decoration: none;
 }
 
-.site-tagline {
+/* Nav buttons */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 0.75rem;
+}
+
+.nav-btn {
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 300;
-  color: var(--text-secondary);
   letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 0.5px solid transparent;
+  transition: color var(--transition), border-color var(--transition);
+  white-space: nowrap;
+}
+
+.nav-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.nav-btn.active {
+  color: var(--accent);
+  border-color: var(--border);
+}
+
+/* Social icons — pushed to the right */
+.header-social {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  border: 0.5px solid transparent;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.social-link:hover {
+  color: var(--text-primary);
+  border-color: var(--border);
 }
 
 /* ── Main layout ─────────────────────────────────────────────────────────────── */
@@ -252,7 +322,7 @@ main {
 }
 
 .tag-btn.active {
-  background: var(--tag-color);
+  background: var(--accent);
   border-color: var(--border-hover);
   color: #0a0a0a;
   font-weight: 500;
@@ -377,7 +447,33 @@ main {
 
 .project-link:hover { opacity: 0.7; }
 
-.project-prose { display: flex; flex-direction: column; gap: 1rem; }
+.project-error {
+  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.project-error p {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.project-error a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+
+
+/* ── Markdown prose ──────────────────────────────────────────────────────────── */
+.project-prose {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
 .project-prose h2 {
   font-size: 16px;
@@ -386,9 +482,29 @@ main {
   margin-top: 0.5rem;
 }
 
+.project-prose h3 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
 .project-prose p {
   font-size: 14px;
   line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.project-prose ul,
+.project-prose ol {
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.project-prose li {
+  font-size: 14px;
+  line-height: 1.7;
   color: var(--text-secondary);
 }
 
@@ -407,7 +523,7 @@ main {
 }
 
 .project-prose pre code {
-  color: var(--text-primary); /* code inside a block, not inline */
+  color: var(--text-primary);
 }
 
 .project-prose table {
@@ -429,29 +545,39 @@ main {
   font-weight: 500;
 }
 
-.project-error {
-  padding: 2rem 0;
+.project-prose a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.project-prose a:hover {
+  opacity: 0.7;
+}
+
+.project-prose hr {
+  border: none;
+  border-top: 0.5px solid var(--border);
+}
+
+/* ── Contact page ────────────────────────────────────────────────────────────── */
+.contact-main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.project-error p {
+.contact-title {
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.contact-body {
+  font-size: 14px;
+  line-height: 1.8;
   color: var(--text-secondary);
-  font-size: 13px;
 }
-
-.project-error a {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--accent);
-  text-decoration: none;
-}
-
-/* Make site-name a link on the project page */
-a.site-name {
-  text-decoration: none;
-  transition: opacity var(--transition);
-}
-
-a.site-name:hover { opacity: 0.7; }
