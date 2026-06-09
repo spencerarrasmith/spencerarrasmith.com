@@ -11,17 +11,18 @@ const HEADER_CONFIG = {
   logo:     "img/sra_simple.svg",
   nav: [
     { id: "portfolio", label: "Portfolio", href: "index.html"   },
+    { id: "friends",   label: "Friends",   href: "friends.html" },
     { id: "contact",   label: "Contact",   href: "contact.html" },
   ],
   social: [
     {
       label: "LinkedIn",
-      href:  "https://linkedin.com/in/yourprofile",
+      href:  "https://www.linkedin.com/in/spencer-arrasmith-542113191/",
       icon:  "https://api.iconify.design/uil:linkedin-alt.svg",
     },
     {
       label: "GitHub",
-      href:  "https://github.com/yourusername",
+      href:  "https://github.com/spencerarrasmith/spencerarrasmith.com",
       icon:  "https://api.iconify.design/uil:github-alt.svg",
     },
   ],

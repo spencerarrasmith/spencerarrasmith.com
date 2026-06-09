@@ -8,8 +8,8 @@
   --border:       rgba(255,255,255,0.07);
   --border-hover: rgba(255,255,255,0.18);
   --text-primary: #e1e8e0;
-  --text-secondary:#7a7870;
-  --text-dim:     #3d3d3a;
+  --text-secondary:#bebebe;
+  --text-dim:     #585855;
   --accent:       #6ad360;
   --accent-dim:   rgba(200,245,96,0.12);
   --tag-bar-h:    56px;
@@ -475,15 +475,21 @@ main {
   gap: 1rem;
 }
 
+.project-prose h1 {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
 .project-prose h2 {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 500;
   color: var(--text-primary);
   margin-top: 0.5rem;
 }
 
 .project-prose h3 {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
 }

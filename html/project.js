@@ -56,7 +56,7 @@
     const back = document.createElement("a");
     back.className = "project-back";
     back.href = "index.html";
-    back.textContent = "← All projects";
+    back.textContent = "← All Projects";
 
     // ── Header block ──────────────────────────────────────────────────────────
     const header = document.createElement("div");
