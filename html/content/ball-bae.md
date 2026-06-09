@@ -53,7 +53,3 @@ In my final 6 months at BAE, I switched teams to focus on a satellite payload sy
 * Conducted interviews and phone screens
 * Led internal, company-wide pivot from Petalinux to Yocto
 * Rigorously documented software processes and decisionmaking
-
-:::tip Important
-Please make sure that everything in this section has been completed before venturing into the rest of the guide!
-:::

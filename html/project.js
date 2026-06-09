@@ -36,6 +36,36 @@
       console.error(err);
     });
 
+  function preProcessMarkdown(markdown) {
+    const lines = markdown.split("\n");
+    const out = [];
+    let inCallout = false;
+    let kind = "", label = "", body = [];
+
+    for (const line of lines) {
+      const open = line.match(/^:::(\w+)(.*)/);
+      if (open && !inCallout) {
+        inCallout = true;
+        kind  = open[1].toLowerCase();
+        label = open[2].trim();
+        body  = [];
+      } else if (line.trim() === ":::" && inCallout) {
+        const bodyHtml = marked.parseInline(body.join("\n"));
+        out.push(`<div class="callout callout-${kind}">`);
+        if (label) out.push(`<div class="callout-label">${label}</div>`);
+        out.push(`<div class="callout-body">${bodyHtml}</div>`);
+        out.push(`</div>`);
+        inCallout = false;
+      } else if (inCallout) {
+        body.push(line);
+      } else {
+        out.push(line);
+      }
+    }
+
+    return out.join("\n");
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
   function renderProject(p, markdown) {
     document.title = `${p.title} — Portfolio`;
@@ -82,37 +112,12 @@
     const body = document.createElement("div");
     body.className = "project-body";
 
+    
     // Markdown prose
     if (markdown) {
-      const callout = {
-        name: "callout",
-        level: "block",
-        start: (src) => src.indexOf(":::"),
-        tokenizer(src) {
-          const match = src.match(/^:::(\w+)([^\n]*)\n([\s\S]*?)(?:^:::|\n*$)/m);
-          if (!match) return;
-          return {
-            type:  "callout",
-            raw:   match[0],
-            kind:  match[1].toLowerCase(),   // warn, note, info, danger
-            label: match[2].trim(),          // "Important"
-            text:  match[3].trim(),
-          };
-        },
-        renderer({ kind, label, text }) {
-          return `
-            <div class="callout callout-${kind}">
-              ${label ? `<div class="callout-label">${label}</div>` : ""}
-              <div class="callout-body">${marked.parseInline(text)}</div>
-            </div>`;
-        },
-      };
-
-      marked.use({ extensions: [callout] });
-
-      const prose = document.createElement("div");
+            const prose = document.createElement("div");
       prose.className = "project-prose";
-      prose.innerHTML = marked.parse(markdown);
+      prose.innerHTML = marked.parse(preProcessMarkdown(markdown));
       // Markdown links open in new tab instead
       prose.querySelectorAll("a").forEach(a => {
         a.target = "_blank";
