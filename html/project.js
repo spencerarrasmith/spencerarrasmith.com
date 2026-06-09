@@ -84,9 +84,40 @@
 
     // Markdown prose
     if (markdown) {
+      const callout = {
+        name: "callout",
+        level: "block",
+        start: (src) => src.indexOf(":::"),
+        tokenizer(src) {
+          const match = src.match(/^:::(\w+)([^\n]*)\n([\s\S]*?)(?:^:::|\n*$)/m);
+          if (!match) return;
+          return {
+            type:  "callout",
+            raw:   match[0],
+            kind:  match[1].toLowerCase(),   // warn, note, info, danger
+            label: match[2].trim(),          // "Important"
+            text:  match[3].trim(),
+          };
+        },
+        renderer({ kind, label, text }) {
+          return `
+            <div class="callout callout-${kind}">
+              ${label ? `<div class="callout-label">${label}</div>` : ""}
+              <div class="callout-body">${marked.parseInline(text)}</div>
+            </div>`;
+        },
+      };
+
+      marked.use({ extensions: [callout] });
+
       const prose = document.createElement("div");
       prose.className = "project-prose";
       prose.innerHTML = marked.parse(markdown);
+      // Markdown links open in new tab instead
+      prose.querySelectorAll("a").forEach(a => {
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      });
       body.appendChild(prose);
     }
 

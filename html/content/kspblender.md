@@ -1,6 +1,6 @@
+:::warn Gathering Dust
+This project from 2015 and is in need of a complete rewrite.
+
 # .craft Importer for Blender
 
 ## Technology
-
-## Disclaimer
-Unimproved and unmaintained since 2016. It needs a complete rewrite at some point.
