@@ -2,12 +2,11 @@
 
 Across 6 years at Ball Aerospace, which was acquired by BAE Systems in 2024 and rebranded BAE Space and Missions Systems, I focused primarily on a portfolio of systems constructed with our Next Gen phased antenna arrays (pictured above). This is a modular system, allowing for rapid construction of mission-specific apertures in the K/Ku/Ka bands. As these satcom terminals are generally all-in-one solutions, the role of the system controller is to integrate, control, and monitor various pieces of hardware such as the antennas, modem(s), RF-mixing electronics, fans or other thermal management solutions, power supplies, and any program-specific hardware.
 
-While these array panels themselves carry a large amount of computing power, our software team owned the system control unit from the lowest levels of customized kernel modules, to the filesystem and our C++ microservice suite, to external-facing TCP interfaces and web GUIs. I authored a Python Tkinter-based GUI library for control and testing of these systems, and produced user manuals and other documentation for their assembly, verification, and operation.
-
-In partnership with [Stellar Blu (acquired by Gilat)](https://www.militaryaerospace.com/communications/article/55127984/bae-systems-and-stellar-blu-solutions-complete-multi-orbit-antenna-qualification-and-type-certification-for-in-flight-connectivity), our terminals have been installed on over 200 passenger aircraft as of summer 2026.
+While these array panels themselves carry a large amount of computing power, our software team owned the system control unit from the lowest levels of customized kernel modules, to the filesystem and our C++ microservice suite, to external-facing TCP interfaces and web GUIs. I authored a Python Tkinter-based GUI library for control and testing of these systems, and produced user manuals and other documentation for their assembly, verification, and operation. In partnership with [Stellar Blu (acquired by Gilat)](https://www.militaryaerospace.com/communications/article/55127984/bae-systems-and-stellar-blu-solutions-complete-multi-orbit-antenna-qualification-and-type-certification-for-in-flight-connectivity), our terminals have been installed on over 200 passenger aircraft as of summer 2026.
 
 In my final 6 months at BAE, I switched teams to focus on a satellite payload system controller, with a similarly deep ownership of the software stack down to the kernel and a microservice baseline written in Rust and using MQTT.
 
+-------
 ## Technologies
 * C/C++
 * Python
