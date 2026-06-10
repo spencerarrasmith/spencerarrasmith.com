@@ -336,13 +336,13 @@ main {
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 8px;
   }
   main { padding: 1rem 0.75rem calc(var(--tag-bar-h) + 1rem); }
   .header-inner { padding: 0 0.75rem; }
   .tag-bar { padding: 0 0.75rem; }
-  .tile-body { padding: 0.75rem; }
+  .tile-body { padding: 0.65rem; }
   .site-tagline { display: none; }
 }
 
