@@ -19,9 +19,9 @@
     "id": "rice",
     "title": "Rice University",
     "description": "August 2010 - June 2014",
-    "tags": ["Career"],
+    "tags": ["Career", "Leadership"],
     "thumb": "img/thumb/rice.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/rice-graduation.jpg"
   },
   {
     "id": "pchs",
@@ -29,15 +29,15 @@
     "description": "January 2020 - November 2025",
     "tags": ["Career", "Leadership"],
     "thumb": "img/thumb/pchs.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/pchs.jpg"
   },
   {
     "id": "hidden-layer",
     "title": "Hidden Layer Design",
     "description": "Grassroots tech-meets-art collective",
-    "tags": ["Creative", "PCB"],
+    "tags": ["C++", "Embedded", "Creative", "PCB", "3D", "Graphic Design"],
     "thumb": "img/thumb/hl.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/stacked.jpg"
   },
 
   {
