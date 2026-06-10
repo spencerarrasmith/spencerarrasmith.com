@@ -13,28 +13,31 @@
     "description": "November 2014 - January 2020",
     "tags": ["Career", "C++", "Python", "Embedded", "PCB"],
     "thumb": "img/thumb/stoble-loser.jpg",
-    "hero": "img/project/facc.jpg"
+    "hero": "img/project/sls-hero.jpg"
   },
   {
     "id": "rice",
     "title": "Rice University",
     "description": "August 2010 - June 2014",
     "tags": ["Career"],
-    "thumb": "img/thumb/rice.jpg"
+    "thumb": "img/thumb/rice.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "pchs",
     "title": "Pinnacle Charter High School Esports Coach",
     "description": "January 2020 - November 2025",
     "tags": ["Career", "Leadership"],
-    "thumb": "img/thumb/pchs.jpg"
+    "thumb": "img/thumb/pchs.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "hidden-layer",
     "title": "Hidden Layer Design",
     "description": "Grassroots tech-meets-art collective",
     "tags": ["Creative", "PCB"],
-    "thumb": "img/thumb/hl.jpg"
+    "thumb": "img/thumb/hl.jpg",
+    "hero": "img/project/wip.jpg"
   },
 
   {
@@ -42,35 +45,40 @@
     "title": "Rocket League Custom Maps",
     "description": "Custom maps and game modes for Rocket League",
     "tags": ["Creative", "Unreal Engine", "3D"],
-    "thumb": "img/thumb/rlcm.jpg"
+    "thumb": "img/thumb/rlcm.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "rlmm-com",
     "title": "RocketLeagueMapmaking.com",
     "description": "Tutorial and resource site for Rocket League custom maps",
     "tags": ["Javascript", "CI/CD", "Educator"],
-    "thumb": "img/thumb/rlmm-website.jpg"
+    "thumb": "img/thumb/rlmm-website.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "skillquest",
     "title": "RLMM on Skillquest.io",
     "description": "Video tutorial series for Rocket League custom map creation",
     "tags": ["Creative", "Unreal Engine", "Educator"],
-    "thumb": "img/thumb/skillquest.jpg"
+    "thumb": "img/thumb/skillquest.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "rlmm-discord",
     "title": "RLMM Discord",
     "description": "Community hub for Rocket League custom maps since 2020",
     "tags": ["Creative", "Leadership"],
-    "thumb": "img/thumb/rlmm-disc.jpg"
+    "thumb": "img/thumb/rlmm-disc.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "rlmm-toolkit",
     "title": "RLMM Toolkit",
     "description": "Qt6 plugin framework for sharing mapmaking tools",
     "tags": ["C++", "Python", "CI/CD"],
-    "thumb": "img/thumb/rlmm-toolkit.jpg"
+    "thumb": "img/thumb/rlmm-toolkit.jpg",
+    "hero": "img/project/wip.jpg"
   },
 
   {
@@ -78,14 +86,16 @@
     "title": "KSPBlender",
     "description": "Blender plugin to import KSP crafts",
     "tags": ["Creative", "Python", "3D"],
-    "thumb": "img/thumb/kspblender.jpg"
+    "thumb": "img/thumb/kspblender.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "pyqtsa",
     "title": "PyQtSa",
     "description": "Flexible, data-driven GUI framework",
     "tags": ["Python"],
-    "thumb": "img/thumb/pyqtsa.jpg"
+    "thumb": "img/thumb/pyqtsa.jpg",
+    "hero": "img/project/wip.jpg"
   },
 
   {
@@ -93,21 +103,24 @@
     "title": "Resvolution",
     "description": "Rice University Senior Design - Panoramic, multi-wavelength microscope attachment for smartphones",
     "tags": ["C++", "Embedded", "3D"],
-    "thumb": "img/thumb/resv.jpg"
+    "thumb": "img/thumb/resv.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "spanish-writing",
     "title": "Spanish Writings",
     "description": "Select pieces of creative writing from Rice University",
     "tags": ["Creative"],
-    "thumb": "img/thumb/cuentos.jpg"
+    "thumb": "img/thumb/cuentos.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "blender-class",
     "title": "Blender Instructor",
     "description": "Fall 2012 - Course taught at Rice University. Spring 2021 - Course taught at Ball Aerospace",
     "tags": ["Creative", "3D", "Educator"],
-    "thumb": "img/thumb/bii.jpg"
+    "thumb": "img/thumb/bii.jpg",
+    "hero": "img/project/wip.jpg"
   },
 
   {
@@ -115,14 +128,16 @@
     "title": "Ranked Hoops",
     "description": "Admin and Graphic Designer for the largest Rocket League Hoops community",
     "tags": ["Creative", "Leadership"],
-    "thumb": "img/thumb/logo_sexy9.jpg"
+    "thumb": "img/thumb/logo_sexy9.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "rh-overlay",
     "title": "Ranked Hoops Overlay",
     "description": "GUI for dynamic stream overlay",
     "tags": ["Python", "Creative", "Graphic Design"],
-    "thumb": "img/thumb/rho.jpg"
+    "thumb": "img/thumb/rho.jpg",
+    "hero": "img/project/wip.jpg"
   },
   
   {
@@ -130,28 +145,32 @@
     "title": "Graphic Design",
     "description": "Miscellaneous graphic design projects",
     "tags": ["Creative"],
-    "thumb": "img/thumb/stj.jpg"
+    "thumb": "img/thumb/stj.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "art",
     "title": "Art",
     "description": "Various digital art pieces",
     "tags": ["Creative"],
-    "thumb": "img/thumb/robotheart.jpg"
+    "thumb": "img/thumb/robotheart.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "world-languages",
     "title": "World Languages",
     "description": "A lifelong passion and hobby",
     "tags": ["Creative"],
-    "thumb": "img/thumb/flags.jpg"
+    "thumb": "img/thumb/flags.jpg",
+    "hero": "img/project/wip.jpg"
   },
   {
     "id": "conlangs",
     "title": "Conlangs",
     "description": "Art pieces for constructed languages like Elian and Circular Gallifreyan",
     "tags": ["Creative"],
-    "thumb": "img/thumb/cg.jpg"
+    "thumb": "img/thumb/cg.jpg",
+    "hero": "img/project/wip.jpg"
   }
   
 

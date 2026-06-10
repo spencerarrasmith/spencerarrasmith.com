@@ -12,6 +12,7 @@ const HEADER_CONFIG = {
   nav: [
     { id: "portfolio", label: "Portfolio", href: "index.html"   },
     { id: "friends",   label: "Friends",   href: "friends.html" },
+    { id: "resume",    label: "Resume",    href: "resume.html" },
     { id: "contact",   label: "Contact",   href: "contact.html" },
   ],
   social: [
