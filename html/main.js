@@ -207,6 +207,38 @@
     if (e.key === "Escape") resetTags();
   });
 
+  // ── Click-and-drag-scrollable tag bar ──────────────────────────────────────
+  const tagBar = document.getElementById("tagbar");
+
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  tagBar.addEventListener("mousedown", (e) => {
+    isDown = true;
+    tagBar.style.cursor = "grabbing";
+    startX = e.pageX - tagBar.offsetLeft;
+    scrollLeft = tagBar.scrollLeft;
+  });
+
+  tagBar.addEventListener("mouseleave", () => {
+    isDown = false;
+    tagBar.style.cursor = "grab";
+  });
+
+  tagBar.addEventListener("mouseup", () => {
+    isDown = false;
+    tagBar.style.cursor = "grab";
+  });
+
+  tagBar.addEventListener("mousemove", (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - tagBar.offsetLeft;
+    const walk = x - startX;
+    tagBar.scrollLeft = scrollLeft - walk;
+  });
+
   // ── Init ───────────────────────────────────────────────────────────────────
   fetch("projects.json")
     .then((res) => {

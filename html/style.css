@@ -346,6 +346,10 @@ main {
   .site-tagline { display: none; }
 }
 
+@media (max-width: 720px) {
+  .site-name { display: none; }
+}
+
 @media (max-width: 320px) {
   .grid { grid-template-columns: 1fr; }
 }
