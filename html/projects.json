@@ -32,6 +32,14 @@
     "hero": "img/project/pchs.jpg"
   },
   {
+    "id": "spencerarrasmith",
+    "title": "SpencerArrasmith.com",
+    "description": "This website",
+    "tags": ["Javascript", "CI/CD", "Graphic Design"],
+    "thumb": "img/thumb/sra.jpg",
+    "hero": "img/thumb/sra.jpg"
+  },
+  {
     "id": "hidden-layer",
     "title": "Hidden Layer Design",
     "description": "Grassroots tech-meets-art collective",
