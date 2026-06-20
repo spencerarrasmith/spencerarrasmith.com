@@ -68,7 +68,7 @@
 
   // ── Render ────────────────────────────────────────────────────────────────
   function renderProject(p, markdown) {
-    document.title = `${p.title} — Portfolio`;
+    document.title = `SRA - ${p.title}`;
 
     // ── Hero ─────────────────────────────────────────────────────────────────
     const hero = document.createElement("div");
