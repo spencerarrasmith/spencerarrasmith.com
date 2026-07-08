@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🇵🇱 Polish Practice</title>
+  <link rel="stylesheet" href="polish-practice.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <h2>🇵🇱 Polish Practice</h2>
+      <span id="score-display"></span>
+    </div>
+
+    <select id="list-select"></select>
+
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div class="card">
+      <div class="card-label">Translate to Polish:</div>
+      <div id="phrase-en"></div>
+      <div class="hint-row">
+        <button id="hint-btn" class="hint-btn">▸ hint</button>
+        <span id="hint-text" class="hint-text hidden"></span>
+      </div>
+    </div>
+
+    <input id="answer-input" type="text" placeholder="Type your Polish translation…" autocomplete="off" />
+
+    <div class="char-btns">
+      <button class="char-btn">ą</button>
+      <button class="char-btn">ć</button>
+      <button class="char-btn">ę</button>
+      <button class="char-btn">ł</button>
+      <button class="char-btn">ń</button>
+      <button class="char-btn">ó</button>
+      <button class="char-btn">ś</button>
+      <button class="char-btn">ź</button>
+      <button class="char-btn">ż</button>
+    </div>
+
+    <div id="feedback" class="feedback hidden"></div>
+
+    <button id="action-btn">Check (Enter)</button>
+  </div>
+
+  <!-- Round-over overlay -->
+  <div id="overlay" class="overlay hidden">
+    <div class="overlay-box">
+      <div id="overlay-icon" class="overlay-icon"></div>
+      <h2 id="overlay-title"></h2>
+      <p id="overlay-body"></p>
+      <button id="overlay-primary"></button>
+      <button id="overlay-secondary" class="btn-secondary hidden"></button>
+    </div>
+  </div>
+
+  <script src="phraseLists.js"></script>
+  <script src="polish-practice.js"></script>
+</body>
+</html>

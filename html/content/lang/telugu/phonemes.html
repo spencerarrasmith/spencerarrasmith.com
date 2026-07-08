@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telugu Letter Matching</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0b0c18;
+      --surface:      #111221;
+      --surface-up:   #191a2e;
+      --border:       #252648;
+      --accent:       #c9981a;
+      --accent-glow:  rgba(201, 152, 26, 0.16);
+      --accent-light: #f5c842;
+      --success:      #4ade80;
+      --success-dim:  rgba(74, 222, 128, 0.12);
+      --error:        #f87171;
+      --error-dim:    rgba(248, 113, 113, 0.12);
+      --text:         #f0ece0;
+      --text-dim:     #9090b8;
+      --text-muted:   #48487a;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Shell ────────────────────────────────── */
+    .game-wrap {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ───────────────────────────────── */
+    .g-header {
+      flex-shrink: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 24px 10px;
+    }
+
+    .g-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 9px;
+    }
+
+    .g-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .g-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .g-stat-val { font-weight: 600; color: var(--text-dim); }
+
+    .g-prog-track {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .g-prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      border-radius: 2px;
+      width: 0%;
+      transition: width .5s ease;
+    }
+
+    /* ── Controls bar ─────────────────────────── */
+    .g-controls {
+      flex-shrink: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .g-controls-sep {
+      width: 1px;
+      height: 14px;
+      background: var(--border);
+    }
+
+    /* ── Rare badge (card corner pip) ─────────── */
+    .rare-badge {
+      position: absolute;
+      top: 9px;
+      right: 11px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      background: var(--surface-up);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 5px;
+    }
+
+    /* ── Game body ────────────────────────────── */
+    .g-main {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 18px 26px 14px;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* ── Character card ───────────────────────── */
+    .card-area {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* The signature element: warm amber halo on the card */
+    .char-card {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(ellipse at 50% 40%, #1e1830 0%, #111221 68%);
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      box-shadow:
+        0 8px 32px rgba(0,0,0,.55),
+        inset 0 0 48px rgba(201, 152, 26, 0.05);
+      transition: border-color .18s, box-shadow .18s;
+    }
+
+    .char-card.correct {
+      border-color: var(--success);
+      box-shadow:
+        0 0 24px rgba(74, 222, 128, .28),
+        0 8px 32px rgba(0,0,0,.55);
+      animation: pop .28s ease;
+    }
+
+    .char-card.wrong {
+      border-color: var(--error);
+      box-shadow:
+        0 0 24px rgba(248, 113, 113, .28),
+        0 8px 32px rgba(0,0,0,.55);
+      animation: shake .32s ease;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      22%  { transform: translateX(-8px); }
+      55%  { transform: translateX(8px); }
+      80%  { transform: translateX(-4px); }
+    }
+
+    .cat-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      opacity: .8;
+    }
+
+    .cat-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .cat-toggle input[type=checkbox] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border: 1.5px solid var(--text-muted);
+      border-radius: 3px;
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: background .12s, border-color .12s;
+    }
+
+    .cat-toggle input[type=checkbox]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .cat-toggle input[type=checkbox]:checked::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 3px;
+      width: 4px;
+      height: 7px;
+      border: 1.5px solid #0b0c18;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .tel-char {
+      font-family: 'Noto Sans Telugu', serif;
+      font-size: 6.2rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      user-select: none;
+    }
+
+    .feedback {
+      height: 20px;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .01em;
+    }
+    .feedback.ok  { color: var(--success); }
+    .feedback.err { color: var(--error); }
+
+    /* ── Phoneme keyboard ─────────────────────── */
+    .kb-area {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      padding-bottom: 8px;
+      padding-right: 4px;
+
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .kb-area::-webkit-scrollbar { width: 4px; }
+    .kb-area::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .kb-group { display: flex; flex-direction: column; gap: 5px; }
+
+    .kb-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .kb-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .kb-btn {
+      padding: 6px 13px;
+      min-width: 50px;
+      background: var(--surface-up);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-dim);
+      font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background .1s, border-color .1s, color .1s, transform .08s;
+      user-select: none;
+      text-align: center;
+    }
+
+    .kb-btn:hover {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    .kb-btn:active { transform: scale(.92); }
+
+    .kb-btn.ok {
+      background: var(--success-dim);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .kb-btn.err {
+      background: var(--error-dim);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* ── Complete screen ──────────────────────── */
+    .g-complete {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .g-complete.show {
+      display: flex;
+      animation: fade-up .45s ease;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .trophy { font-size: 58px; animation: trophy-in .6s ease; }
+
+    @keyframes trophy-in {
+      from { transform: scale(.4) translateY(12px); opacity: 0; }
+      70%  { transform: scale(1.14) translateY(-4px); opacity: 1; }
+      to   { transform: scale(1); }
+    }
+
+    .c-title { font-size: 25px; font-weight: 700; color: var(--text); }
+    .c-sub   { font-size: 14px; color: var(--text-dim); max-width: 340px; }
+
+    .c-stats {
+      display: flex;
+      gap: 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 15px 28px;
+    }
+
+    .c-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .c-stat-val { font-size: 24px; font-weight: 700; color: var(--accent-light); }
+    .c-stat-lbl { font-size: 11px; color: var(--text-muted); }
+
+    .retry-btn {
+      padding: 11px 36px;
+      background: var(--accent);
+      color: #0b0c18;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter .14s, transform .1s, box-shadow .14s;
+      letter-spacing: .01em;
+    }
+
+    .retry-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(201, 152, 26, .45);
+    }
+
+    .retry-btn:active { transform: translateY(0); }
+  </style>
+</head>
+<body>
+<div class="game-wrap">
+
+  <!-- ── Progress header ── -->
+  <header class="g-header">
+    <div class="g-header-top">
+      <span class="g-title">Telugu → IPA</span>
+      <div class="g-stats">
+        <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">48</span></span>
+        <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">48</span></span>
+      </div>
+    </div>
+    <div class="g-prog-track">
+      <div class="g-prog-fill" id="prog-fill"></div>
+    </div>
+  </header>
+
+  <!-- ── Controls bar ── -->
+  <div class="g-controls">
+    <label class="cat-toggle"><input type="checkbox" id="show-cat" checked> Show category</label>
+    <div class="g-controls-sep"></div>
+    <label class="cat-toggle"><input type="checkbox" id="include-uncommon" checked> Include uncommon</label>
+  </div>
+
+  <!-- ── Game main ── -->
+  <div class="g-main" id="g-main">
+    <div class="card-area">
+      <div class="char-card" id="char-card">
+        <span class="cat-badge" id="cat-badge">Vowel</span>
+        <span class="tel-char" id="tel-char">అ</span>
+        <span class="rare-badge" id="rare-badge" style="display:none">rare</span>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="kb-area" id="kb-area"></div>
+  </div>
+
+  <!-- ── Complete screen ── -->
+  <div class="g-complete" id="g-complete">
+    <div class="trophy">🏆</div>
+    <div class="c-title">Session Complete!</div>
+    <div class="c-sub" id="c-sub">All Telugu akshara correctly matched to their IPA phonemes.</div>
+    <div class="c-stats">
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-attempts">—</span>
+        <span class="c-stat-lbl">Total Attempts</span>
+      </div>
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-accuracy">—</span>
+        <span class="c-stat-lbl">Accuracy</span>
+      </div>
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-errors">—</span>
+        <span class="c-stat-lbl">Errors</span>
+      </div>
+    </div>
+    <button class="retry-btn" id="retry-btn">Practice Again</button>
+  </div>
+
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────
+   DATA
+   48 characters: 13 vowels + 35 consonants (velars, palatals,
+   retroflexes, dentals, labials, approximants, fricatives)
+───────────────────────────────────────────────────────── */
+const CHARS = [
+  // Vowels (అచ్చులు)
+  { ch: 'అ',  ipa: 'a',    cat: 'Vowel' },
+  { ch: 'ఆ',  ipa: 'aː',   cat: 'Vowel' },
+  { ch: 'ఇ',  ipa: 'i',    cat: 'Vowel' },
+  { ch: 'ఈ',  ipa: 'iː',   cat: 'Vowel' },
+  { ch: 'ఉ',  ipa: 'u',    cat: 'Vowel' },
+  { ch: 'ఊ',  ipa: 'uː',   cat: 'Vowel' },
+  { ch: 'ఋ',  ipa: 'r̩',   cat: 'Vowel', uncommon: true },
+  { ch: 'ౠ',  ipa: 'r̩ː',  cat: 'Vowel', uncommon: true },
+  { ch: 'ఌ',  ipa: 'l̩',   cat: 'Vowel', uncommon: true },
+  { ch: 'ౡ',  ipa: 'l̩ː',  cat: 'Vowel', uncommon: true },
+  { ch: 'ఎ',  ipa: 'e',    cat: 'Vowel' },
+  { ch: 'ఏ',  ipa: 'eː',   cat: 'Vowel' },
+  { ch: 'ఐ',  ipa: 'ai',   cat: 'Vowel' },
+  { ch: 'ఒ',  ipa: 'o',    cat: 'Vowel' },
+  { ch: 'ఓ',  ipa: 'oː',   cat: 'Vowel' },
+  { ch: 'ఔ',  ipa: 'au',   cat: 'Vowel' },
+  { ch: 'అం', ipa: 'ã',   cat: 'Vowel' },
+  { ch: 'అః', ipa: 'aʰ',  cat: 'Vowel' },
+  // Velars (కంఠ్య)
+  { ch: 'క',  ipa: 'k',    cat: 'Velar' },
+  { ch: 'ఖ',  ipa: 'kʰ',   cat: 'Velar' },
+  { ch: 'గ',  ipa: 'ɡ',    cat: 'Velar' },
+  { ch: 'ఘ',  ipa: 'ɡʱ',   cat: 'Velar' },
+  { ch: 'ఙ',  ipa: 'ŋ',    cat: 'Velar',   uncommon: true },
+  // Palatals (తాలవ్య)
+  { ch: 'చ',  ipa: 'tʃ',   cat: 'Palatal' },
+  { ch: 'ఛ',  ipa: 'tʃʰ',  cat: 'Palatal' },
+  { ch: 'జ',  ipa: 'dʒ',   cat: 'Palatal' },
+  { ch: 'ఝ',  ipa: 'dʒʱ',  cat: 'Palatal' },
+  { ch: 'ఞ',  ipa: 'ɲ',    cat: 'Palatal', uncommon: true },
+  // Retroflexes (మూర్ధన్య)
+  { ch: 'ట',  ipa: 'ʈ',    cat: 'Retroflex' },
+  { ch: 'ఠ',  ipa: 'ʈʰ',   cat: 'Retroflex' },
+  { ch: 'డ',  ipa: 'ɖ',    cat: 'Retroflex' },
+  { ch: 'ఢ',  ipa: 'ɖʱ',   cat: 'Retroflex' },
+  { ch: 'ణ',  ipa: 'ɳ',    cat: 'Retroflex' },
+  { ch: 'ళ',  ipa: 'ɭ',    cat: 'Retroflex' },
+  { ch: 'ఱ',  ipa: 'ɽ',    cat: 'Retroflex' },
+  // Dentals (దంత్య)
+  { ch: 'త',  ipa: 't̪',    cat: 'Dental' },
+  { ch: 'థ',  ipa: 't̪ʰ',   cat: 'Dental' },
+  { ch: 'ద',  ipa: 'd̪',    cat: 'Dental' },
+  { ch: 'ధ',  ipa: 'd̪ʱ',   cat: 'Dental' },
+  { ch: 'న',  ipa: 'n',    cat: 'Dental' },
+  // Labials (ఓష్ఠ్య)
+  { ch: 'ప',  ipa: 'p',    cat: 'Labial' },
+  { ch: 'ఫ',  ipa: 'pʰ',   cat: 'Labial' },
+  { ch: 'బ',  ipa: 'b',    cat: 'Labial' },
+  { ch: 'భ',  ipa: 'bʱ',   cat: 'Labial' },
+  { ch: 'మ',  ipa: 'm',    cat: 'Labial' },
+  // Approximants (అంతస్థలు)
+  { ch: 'య',  ipa: 'j',    cat: 'Approx.' },
+  { ch: 'ర',  ipa: 'r',    cat: 'Approx.' },
+  { ch: 'ల',  ipa: 'l',    cat: 'Approx.' },
+  { ch: 'వ',  ipa: 'ʋ',    cat: 'Approx.' },
+  // Fricatives / Glottal (ఉష్మలు)
+  { ch: 'శ',  ipa: 'ʃ',    cat: 'Fricative' },
+  { ch: 'ష',  ipa: 'ʂ',    cat: 'Fricative' },
+  { ch: 'స',  ipa: 's',    cat: 'Fricative' },
+  { ch: 'హ',  ipa: 'ɦ',    cat: 'Fricative' },
+];
+
+// Phoneme keyboard layout — mirrors the above 8 articulatory groups
+const KB_GROUPS = [
+  { lbl: 'Vowels',     ipa: ['a','aː','i','iː','u','uː','r̩','r̩ː','l̩','l̩ː','e','eː','ai','o','oː','au','ã','aʰ'] },
+  { lbl: 'Velar',      ipa: ['k','kʰ','ɡ','ɡʱ','ŋ'] },
+  { lbl: 'Palatal',    ipa: ['tʃ','tʃʰ','dʒ','dʒʱ','ɲ'] },
+  { lbl: 'Retroflex',  ipa: ['ʈ','ʈʰ','ɖ','ɖʱ','ɳ','ɭ','ɽ'] },
+  { lbl: 'Dental',     ipa: ['t̪','t̪ʰ','d̪','d̪ʱ','n'] },
+  { lbl: 'Labial',     ipa: ['p','pʰ','b','bʱ','m'] },
+  { lbl: 'Approx.',    ipa: ['j','r','l','ʋ'] },
+  { lbl: 'Fricative',  ipa: ['ʃ','ʂ','s','ɦ'] },
+];
+
+/* ─────────────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────────────── */
+let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────── */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Find button by exact IPA string match (avoids CSS-escape issues)
+function btnForIpa(ipa) {
+  return Array.from(document.querySelectorAll('.kb-btn'))
+    .find(b => b.dataset.ipa === ipa) || null;
+}
+
+/* ─────────────────────────────────────────────────────────
+   BUILD KEYBOARD
+───────────────────────────────────────────────────────── */
+function buildKB(activeIpa) {
+  const area = document.getElementById('kb-area');
+  area.innerHTML = '';
+  KB_GROUPS.forEach(grp => {
+    const g   = document.createElement('div');
+    g.className = 'kb-group';
+
+    const lbl = document.createElement('div');
+    lbl.className   = 'kb-label';
+    lbl.textContent = grp.lbl;
+    g.appendChild(lbl);
+
+    const row = document.createElement('div');
+    row.className = 'kb-row';
+    grp.ipa.forEach(ipa => {
+      const btn = document.createElement('button');
+      btn.className       = 'kb-btn';
+      btn.textContent     = ipa;
+      btn.dataset.ipa     = ipa;
+      if (!activeIpa.has(ipa)) btn.style.display = 'none';
+      btn.addEventListener('click', () => onAnswer(ipa, btn));
+      row.appendChild(btn);
+    });
+    g.appendChild(row);
+    area.appendChild(g);
+  });
+}
+
+/* ─────────────────────────────────────────────────────────
+   RENDER CURRENT CARD
+───────────────────────────────────────────────────────── */
+function renderCard() {
+  const c = deck[0];
+  document.getElementById('tel-char').textContent  = c.ch;
+  const badge = document.getElementById('cat-badge');
+  badge.textContent  = c.cat;
+  badge.style.visibility = document.getElementById('show-cat').checked ? '' : 'hidden';
+  const rare = document.getElementById('rare-badge');
+  rare.style.display = c.uncommon ? '' : 'none';
+  const fb = document.getElementById('feedback');
+  fb.textContent = '';
+  fb.className   = 'feedback';
+  document.getElementById('char-card').className = 'char-card';
+}
+
+/* ─────────────────────────────────────────────────────────
+   PROGRESS BAR + COUNTERS
+───────────────────────────────────────────────────────── */
+function updateProg() {
+  document.getElementById('s-rem').textContent   = deck.length;
+  document.getElementById('s-done').textContent  = completed;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('prog-fill').style.width =
+    (completed / total * 100).toFixed(1) + '%';
+}
+
+/* ─────────────────────────────────────────────────────────
+   ANSWER HANDLER
+───────────────────────────────────────────────────────── */
+function onAnswer(ipa, btn) {
+  if (locked) return;
+  locked = true;
+  attempts++;
+
+  const cur = deck[0];
+  const ok  = (ipa === cur.ipa);
+
+  const card = document.getElementById('char-card');
+  const fb   = document.getElementById('feedback');
+
+  if (ok) {
+    btn.classList.add('ok');
+    card.classList.add('correct');
+    fb.textContent = '✓  Correct!';
+    fb.className   = 'feedback ok';
+
+    deck.shift();
+    completed++;
+    updateProg();
+
+    setTimeout(() => {
+      btn.classList.remove('ok');
+      if (deck.length === 0) showComplete();
+      else { renderCard(); locked = false; }
+    }, 500);
+
+  } else {
+    btn.classList.add('err');
+    card.classList.add('wrong');
+    fb.textContent = `✗  /${cur.ipa}/`;
+    fb.className   = 'feedback err';
+
+    // Highlight the correct button and scroll it into view
+    const correctBtn = btnForIpa(cur.ipa);
+    if (correctBtn) {
+      correctBtn.classList.add('ok');
+      correctBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Reinsert the card at a random position (not immediately at front)
+    const removed = deck.shift();
+    const insertAt = Math.max(1, Math.floor(Math.random() * (deck.length + 1)));
+    deck.splice(insertAt, 0, removed);
+
+    setTimeout(() => {
+      btn.classList.remove('err');
+      if (correctBtn) correctBtn.classList.remove('ok');
+      renderCard();
+      locked = false;
+    }, 850);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   COMPLETE SCREEN
+───────────────────────────────────────────────────────── */
+function showComplete() {
+  document.getElementById('g-main').style.display = 'none';
+  document.getElementById('g-complete').classList.add('show');
+
+  document.getElementById('c-sub').textContent =
+    `All ${total} Telugu akshara correctly matched to their IPA phonemes.`;
+  const errors = attempts - total;
+  const acc    = Math.round(total / attempts * 100);
+  document.getElementById('c-attempts').textContent = attempts;
+  document.getElementById('c-accuracy').textContent = acc + '%';
+  document.getElementById('c-errors').textContent   = errors;
+}
+
+/* ─────────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────────── */
+function initGame() {
+  const pool = document.getElementById('include-uncommon').checked
+    ? CHARS
+    : CHARS.filter(c => !c.uncommon);
+  deck      = shuffle(pool);
+  total     = pool.length;
+  completed = 0;
+  attempts  = 0;
+  locked    = false;
+
+  document.getElementById('g-complete').classList.remove('show');
+  document.getElementById('g-main').style.display = '';
+  document.getElementById('kb-area').scrollTop = 0;
+
+  const activeIpa = new Set(pool.map(c => c.ipa));
+  buildKB(activeIpa);
+  updateProg();
+  renderCard();
+}
+
+document.getElementById('show-cat').addEventListener('change', e => {
+  document.getElementById('cat-badge').style.visibility = e.target.checked ? '' : 'hidden';
+});
+
+document.getElementById('include-uncommon').addEventListener('change', initGame);
+
+document.getElementById('retry-btn').addEventListener('click', initGame);
+initGame();
+</script>
+</body>
+</html>

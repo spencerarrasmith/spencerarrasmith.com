@@ -115,14 +115,6 @@
     "hero": "img/project/wip.jpg"
   },
   {
-    "id": "spanish-writing",
-    "title": "Spanish Writings",
-    "description": "Select pieces of creative writing from Rice University",
-    "tags": ["Creative"],
-    "thumb": "img/thumb/cuentos.jpg",
-    "hero": "img/project/wip.jpg"
-  },
-  {
     "id": "blender-class",
     "title": "Blender Instructor",
     "description": "Fall 2012 - Course taught at Rice University. Spring 2021 - Course taught at Ball Aerospace",
