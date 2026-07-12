@@ -30,7 +30,11 @@ jobs:
           fi
     
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag spencerarrasmith.com:${{ steps.ver.outputs.version }}
+        run: |
+          docker build . \
+            --file Dockerfile \
+            --build-arg GIT_TAG=${{ github.ref_name }} \
+            --tag spencerarrasmith.com:${{ steps.ver.outputs.version }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v3

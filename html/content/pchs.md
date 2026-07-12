@@ -48,6 +48,6 @@ The League of Legends team (above) finished 3rd in the state in spring 2023.
 
 -------
 ## Responsibilities
-* Management of equipment and computer lab
 * Player and match coordination
 * Event chaperone
+* Management of equipment and computer lab

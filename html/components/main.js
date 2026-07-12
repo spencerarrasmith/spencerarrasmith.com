@@ -249,6 +249,20 @@
       allTags = [...new Set(projects.flatMap((p) => p.tags))];
       buildGrid(projects);
       renderTagBar();
+
+      // ── Version footer ─────────────────────────────────────────────────
+      fetch("version.json")
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          const el = document.getElementById("site-version");
+          if (el && data?.version) {
+            const badge = document.createElement("span");
+            badge.className = "tile-tag";
+            badge.textContent = data.version;
+            el.appendChild(badge);
+          }
+        })
+        .catch(() => {});
     })
     .catch((err) => {
       grid.innerHTML = `<p style="color:var(--text-secondary);font-size:13px;padding:1rem">${err.message}</p>`;
