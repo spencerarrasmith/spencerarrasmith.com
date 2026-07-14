@@ -45,7 +45,8 @@
     "description": "Grassroots tech-meets-art collective",
     "tags": ["C++", "Embedded", "Creative", "PCB", "3D", "Graphic Design"],
     "thumb": "img/thumb/hl.jpg",
-    "hero": "img/project/stacked.jpg"
+    "hero": "img/project/stacked.jpg",
+    "wip": true
   },
 
   {
@@ -62,7 +63,8 @@
     "description": "Tutorial and resource site for Rocket League custom maps",
     "tags": ["Javascript", "CI/CD", "Educator"],
     "thumb": "img/thumb/rlmm-website.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
   {
     "id": "skillquest",
@@ -70,7 +72,8 @@
     "description": "Video tutorial series for Rocket League custom map creation",
     "tags": ["Creative", "Unreal Engine", "Educator"],
     "thumb": "img/thumb/skillquest.jpg",
-    "hero": "img/project/m0e4title.jpg"
+    "hero": "img/project/m0e4title.jpg",
+    "wip": true
   },
   {
     "id": "rlmm-discord",
@@ -78,7 +81,8 @@
     "description": "Community hub for Rocket League custom maps since 2020",
     "tags": ["Creative", "Leadership"],
     "thumb": "img/thumb/rlmm-disc.jpg",
-    "hero": "img/project/disc.jpg"
+    "hero": "img/project/disc.jpg",
+    "wip": true
   },
   {
     "id": "rlmm-toolkit",
@@ -86,7 +90,8 @@
     "description": "Qt6 plugin framework for mapmaking tools",
     "tags": ["C++", "Python", "CI/CD"],
     "thumb": "img/thumb/rlmm-toolkit.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
 
   {
@@ -95,7 +100,8 @@
     "description": "Blender plugin to import KSP crafts",
     "tags": ["Creative", "Python", "3D"],
     "thumb": "img/thumb/kspblender.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
   {
     "id": "pyqtsa",
@@ -103,7 +109,8 @@
     "description": "Flexible, data-driven GUI framework",
     "tags": ["Python"],
     "thumb": "img/thumb/pyqtsa.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
 
   {
@@ -112,7 +119,8 @@
     "description": "Rice University Senior Design - Panoramic, multi-wavelength microscope attachment for smartphones",
     "tags": ["C++", "Embedded", "3D"],
     "thumb": "img/thumb/resv.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
   {
     "id": "blender-class",
@@ -120,7 +128,8 @@
     "description": "Fall 2012 - Course taught at Rice University. Spring 2021 - Course taught at Ball Aerospace",
     "tags": ["Creative", "3D", "Educator"],
     "thumb": "img/thumb/bii.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
 
   {
@@ -129,7 +138,8 @@
     "description": "Admin and Graphic Designer for the largest Rocket League Hoops community",
     "tags": ["Creative", "Leadership"],
     "thumb": "img/thumb/logo_sexy9.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
   {
     "id": "rh-overlay",
@@ -137,7 +147,8 @@
     "description": "GUI for dynamic stream overlay",
     "tags": ["Python", "Creative", "Graphic Design"],
     "thumb": "img/thumb/rho.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
   
   {
@@ -146,7 +157,8 @@
     "description": "Various digital art pieces",
     "tags": ["Creative", "Graphic Design", "3D"],
     "thumb": "img/thumb/robotheart.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
   {
     "id": "world-languages",
@@ -154,7 +166,8 @@
     "description": "大家好",
     "tags": ["Creative", "Javascript"],
     "thumb": "img/thumb/flags.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   },
   {
     "id": "conlangs",
@@ -162,7 +175,8 @@
     "description": "Art pieces for constructed languages like Elian and Circular Gallifreyan",
     "tags": ["Creative", "Graphic Design"],
     "thumb": "img/thumb/cg.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/wip.jpg",
+    "wip": true
   }
   
 

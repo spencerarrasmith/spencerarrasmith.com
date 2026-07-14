@@ -21,6 +21,13 @@
       tile.dataset.id   = p.id;
       tile.style.animationDelay = `${i * 40}ms`;
 
+      if (p.wip) {
+        const sash = document.createElement("div");
+        sash.className = "wip-sash";
+        sash.textContent = "WIP";
+        tile.appendChild(sash);
+      }
+
       const thumb = document.createElement("div");
       thumb.className = "tile-thumb";
       const img = document.createElement("img");

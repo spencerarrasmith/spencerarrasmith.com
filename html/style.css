@@ -283,6 +283,27 @@ main {
   background: transparent;
 }
 
+/* ── WIP sash ──────────────────────────────────────────────────────────────── */
+.tile { overflow: hidden; }   /* clips the sash band at the tile boundary */
+
+.wip-sash {
+  position: absolute;
+  top: 18px;
+  right: -22px;
+  width: 90px;
+  transform: rotate(45deg);
+  text-align: center;
+  padding: 3px 0;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* ── Tag bar ─────────────────────────────────────────────────────────────────── */
 .tag-bar {
   position: fixed;
