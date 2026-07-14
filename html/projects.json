@@ -34,7 +34,7 @@
   {
     "id": "spencerarrasmith",
     "title": "SpencerArrasmith.com",
-    "description": "This website",
+    "description": "You are here",
     "tags": ["Javascript", "CI/CD", "Graphic Design"],
     "thumb": "img/thumb/sra.jpg",
     "hero": "img/thumb/sra.jpg"
@@ -52,9 +52,9 @@
     "id": "rl-custom",
     "title": "Rocket League Custom Maps",
     "description": "Custom maps and game modes for Rocket League",
-    "tags": ["Creative", "Unreal Engine", "3D"],
+    "tags": ["Creative", "Unreal Engine", "3D", "Graphic Design"],
     "thumb": "img/thumb/rlcm.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/survivor.jpg"
   },
   {
     "id": "rlmm-com",
@@ -70,7 +70,7 @@
     "description": "Video tutorial series for Rocket League custom map creation",
     "tags": ["Creative", "Unreal Engine", "Educator"],
     "thumb": "img/thumb/skillquest.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/m0e4title.jpg"
   },
   {
     "id": "rlmm-discord",
@@ -78,12 +78,12 @@
     "description": "Community hub for Rocket League custom maps since 2020",
     "tags": ["Creative", "Leadership"],
     "thumb": "img/thumb/rlmm-disc.jpg",
-    "hero": "img/project/wip.jpg"
+    "hero": "img/project/disc.jpg"
   },
   {
     "id": "rlmm-toolkit",
     "title": "RLMM Toolkit",
-    "description": "Qt6 plugin framework for sharing mapmaking tools",
+    "description": "Qt6 plugin framework for mapmaking tools",
     "tags": ["C++", "Python", "CI/CD"],
     "thumb": "img/thumb/rlmm-toolkit.jpg",
     "hero": "img/project/wip.jpg"
@@ -141,26 +141,18 @@
   },
   
   {
-    "id": "graphic-design",
-    "title": "Graphic Design",
-    "description": "Miscellaneous graphic design projects",
-    "tags": ["Creative"],
-    "thumb": "img/thumb/stj.jpg",
-    "hero": "img/project/wip.jpg"
-  },
-  {
     "id": "art",
     "title": "Art",
     "description": "Various digital art pieces",
-    "tags": ["Creative"],
+    "tags": ["Creative", "Graphic Design", "3D"],
     "thumb": "img/thumb/robotheart.jpg",
     "hero": "img/project/wip.jpg"
   },
   {
     "id": "world-languages",
     "title": "World Languages",
-    "description": "A lifelong passion and hobby",
-    "tags": ["Creative"],
+    "description": "大家好",
+    "tags": ["Creative", "Javascript"],
     "thumb": "img/thumb/flags.jpg",
     "hero": "img/project/wip.jpg"
   },
@@ -168,7 +160,7 @@
     "id": "conlangs",
     "title": "Conlangs",
     "description": "Art pieces for constructed languages like Elian and Circular Gallifreyan",
-    "tags": ["Creative"],
+    "tags": ["Creative", "Graphic Design"],
     "thumb": "img/thumb/cg.jpg",
     "hero": "img/project/wip.jpg"
   }
