@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Telugu Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0b0c18;
+      --surface:      #111221;
+      --surface-up:   #191a2e;
+      --border:       #252648;
+      --accent:       #c9981a;
+      --accent-glow:  rgba(201, 152, 26, 0.14);
+      --accent-light: #f5c842;
+      --text:         #f0ece0;
+      --text-dim:     #9090b8;
+      --text-muted:   #48487a;
+
+      /* System bottom inset (home indicator / gesture bar). Falls back to a
+         --safe-area-inset-bottom custom property if env() is unavailable. */
+      --safe-bottom:  env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px));
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    [hidden] { display: none !important; }
+
+    a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
+
+    /* ── Home view ─────────────────────────────── */
+    #home {
+      height: 100vh;   /* fallback */
+      height: 100dvh;
+      overflow-y: auto;
+      padding: 0 24px calc(40px + var(--safe-bottom));
+    }
+
+    .home-inner { max-width: 960px; margin: 0 auto; }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 40px 0 30px;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(140deg, #c9981a 0%, #8b6512 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Sans Telugu', serif;
+      font-size: 30px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 4px 18px rgba(201, 152, 26, 0.35);
+    }
+
+    .hero-title { font-size: 26px; font-weight: 700; letter-spacing: .01em; }
+    .hero-sub   { font-size: 14px; color: var(--text-dim); margin-top: 3px; }
+
+    /* ── Sections ──────────────────────────────── */
+    .section { margin-bottom: 32px; }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 13px;
+      padding-bottom: 9px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .section-desc { font-size: 12.5px; color: var(--text-muted); }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Tile ──────────────────────────────────── */
+    .tile {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+      min-height: 138px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: inherit;
+      text-decoration: none;
+      transition: transform .14s, border-color .14s, background .14s, box-shadow .14s;
+    }
+
+    a.tile:hover, a.tile:focus-visible {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      background: var(--surface-up);
+      box-shadow: 0 8px 26px rgba(201, 152, 26, 0.16);
+    }
+
+    a.tile:active { transform: translateY(0); }
+
+    .tile-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .tile-title { font-size: 15px; font-weight: 600; }
+    .tile-desc  { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); margin-top: 3px; }
+
+    .tile.soon { opacity: .42; cursor: default; }
+
+    .tile-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: rgba(255, 255, 255, .06);
+      border-radius: 5px;
+      color: var(--text-dim);
+    }
+
+    /* ── App view ──────────────────────────────── */
+    #app {
+      height: 100vh;   /* fallback */
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      /* Iframes don't receive the device inset, so the shell reserves it
+         here and the embedded app ends above the home indicator. */
+      padding-bottom: var(--safe-bottom);
+    }
+
+    .app-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px 6px 9px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: background .12s, color .12s;
+    }
+
+    .back:hover { background: rgba(255, 255, 255, .06); color: var(--text); }
+
+    .app-title { font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; }
+
+    #app-frame {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      border: none;
+      background: var(--bg);
+    }
+
+    @media (max-width: 520px) {
+      #home { padding-left: 16px; padding-right: 16px; }
+      .hero { padding: 28px 0 22px; }
+      .hero-title { font-size: 22px; }
+      .tiles { grid-template-columns: 1fr; }
+      .tile { min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<main id="home">
+  <div class="home-inner">
+    <header class="hero">
+      <div class="logo">తె</div>
+      <div>
+        <h1 class="hero-title">Telugu Suite</h1>
+        <p class="hero-sub">Learn Telugu script and sounds, step by step.</p>
+      </div>
+    </header>
+    <div id="sections"></div>
+  </div>
+</main>
+
+<div id="app" hidden>
+  <div class="app-bar">
+    <a class="back" href="#/">← Home</a>
+    <span class="app-title" id="app-title"></span>
+  </div>
+  <iframe id="app-frame" title="Sub-app"></iframe>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────
+   CONFIG — edit this to change the home page.
+
+   Add a section : push a new { title, desc?, tiles: [...] }.
+   Add a tile    : push a new object into a section's tiles.
+
+   Tile fields
+     id     unique slug, used in the URL (#/letter-matching)
+     icon   emoji shown on the tile
+     title  tile heading
+     desc   one-line description
+     src    path to the standalone HTML file (omit if soon)
+     soon   true → greyed out, not clickable
+───────────────────────────────────────────────────────── */
+const SECTIONS = [
+  {
+    title: 'Practice',
+    desc:  'Drills that build recall',
+    tiles: [
+      { id: 'letter-matching', icon: '🎯', title: 'Letter Matching',
+        desc: 'Match each Telugu letter to its IPA phoneme.',
+        src: 'phonemes.html' },
+      { id: 'writing',         icon: '✍️', title: 'Writing Practice',
+        desc: 'Trace and write letters from memory.', soon: true },
+      { id: 'pronunciation',   icon: '🔊', title: 'Pronunciation',
+        desc: 'Listen and repeat each sound.', soon: true },
+    ],
+  },
+  {
+    title: 'Reference',
+    desc:  'Look things up',
+    tiles: [
+      { id: 'alphabet-chart',  icon: '📖', title: 'Alphabet Chart',
+        desc: 'All letters grouped by place of articulation.', soon: true },
+      { id: 'vocabulary',      icon: '📚', title: 'Vocabulary',
+        desc: 'Common words with sounds and meanings.', soon: true },
+    ],
+  },
+];
+
+/* ─────────────────────────────────────────────────────────
+   RENDER HOME
+───────────────────────────────────────────────────────── */
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function tileHTML(t) {
+  const inner = `
+    <div class="tile-icon" aria-hidden="true">${esc(t.icon)}</div>
+    <div>
+      <div class="tile-title">${esc(t.title)}</div>
+      <div class="tile-desc">${esc(t.desc)}</div>
+    </div>`;
+  return t.soon || !t.src
+    ? `<div class="tile soon" aria-disabled="true">${inner}<span class="tile-badge">Soon</span></div>`
+    : `<a class="tile" href="#/${esc(t.id)}">${inner}</a>`;
+}
+
+document.getElementById('sections').innerHTML = SECTIONS.map(s => `
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">${esc(s.title)}</h2>
+      ${s.desc ? `<span class="section-desc">${esc(s.desc)}</span>` : ''}
+    </div>
+    <div class="tiles">${s.tiles.map(tileHTML).join('')}</div>
+  </section>`).join('');
+
+/* ─────────────────────────────────────────────────────────
+   ROUTING  (#/<tile-id>  → app,  anything else → home)
+───────────────────────────────────────────────────────── */
+const home  = document.getElementById('home');
+const app   = document.getElementById('app');
+const frame = document.getElementById('app-frame');
+const ALL   = SECTIONS.flatMap(s => s.tiles);
+
+function route() {
+  const id   = location.hash.replace(/^#\/?/, '');
+  const tile = ALL.find(t => t.id === id && t.src && !t.soon);
+
+  if (tile) {
+    home.hidden = true;
+    app.hidden  = false;
+    document.getElementById('app-title').textContent = tile.title;
+    document.title = tile.title + ' · Telugu Suite';
+    if (frame.dataset.src !== tile.src) {
+      frame.src = tile.src;
+      frame.title = tile.title;
+      frame.dataset.src = tile.src;
+    }
+  } else {
+    app.hidden  = true;
+    home.hidden = false;
+    document.title = 'Telugu Suite';
+    frame.removeAttribute('src');          // leaving resets the sub-app
+    delete frame.dataset.src;
+  }
+}
+
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
