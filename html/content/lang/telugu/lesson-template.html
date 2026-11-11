@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lesson template · Telugu Suite</title>
+<link rel="stylesheet" href="shell.css">
+</head>
+<body>
+<div id="lesson"></div>
+
+<script src="telugu-data.js"></script>
+<script src="progress.js"></script>
+<script src="lesson-shell.js"></script>
+<script>
+/* ═════════════════════════════════════════════════════════
+   LESSON TEMPLATE — copy this file to start a new unit.
+
+   1. Save the copy under the unit's filename (e.g. grammar-nouns.html,
+      the same name the placeholder uses) so the home tile opens it.
+   2. Set `id` to the tile id from index.html. Using the template's own
+      id below would mark "lesson-template" as done in your progress.
+   3. Replace learn / remarks / practice with the unit's content.
+   4. In index.html, delete `soon: true` from the unit's tile.
+
+   Everything on this page is demo content, written only to show
+   each feature: it is not a real lesson.
+═════════════════════════════════════════════════════════ */
+LessonShell.mount({
+  id:      'lesson-template',
+  section: 'Template',
+  title:   'Lesson template',
+  telugu:  'తెలుగు',
+
+  learn: [
+    { h: 'What this part is for' },
+    'Learn holds the explanation. Plain strings become paragraphs, and you can mix block types freely.',
+    { list: ['Bullets for short facts', 'Tables for paradigms', 'Examples for Telugu with English'] },
+    { table: {
+        head: ['Letter', 'Sound', 'Group'],
+        rows: TeluguData.consonants.slice(0, 4).map(c => [`<span class="te">${c.ch}</span>`, '/' + c.ipa + '/', c.cat]),
+    } },
+    { examples: [
+        { te: 'క', en: 'the first consonant', ipa: 'k' },
+        { te: 'కా', en: 'the same consonant with the long vowel sign', ipa: 'kaː' },
+    ] },
+  ],
+
+  remarks: [
+    'Remarks are short asides: exceptions, things that trip learners up, how this connects to other units.',
+    { h: 'Tip' },
+    { p: 'Anything long-winded belongs in Learn; keep remarks to a sentence or two each.' },
+  ],
+
+  practice(el, ctx) {
+    // Practice is free-form: build whatever the unit needs inside `el`.
+    // This demo is a four-letter pick-the-sound drill.
+    const letters = TeluguData.consonants.slice(0, 4);
+    const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+    let deck = shuffle(letters), attempts = 0, cleared = 0;
+
+    el.innerHTML = `
+      <div class="bar"><i id="d-bar"></i></div>
+      <div class="fc" style="margin-top:14px">
+        <div class="prompt te" id="d-prompt"></div>
+        <div class="answer" id="d-fb" aria-live="polite">&nbsp;</div>
+      </div>
+      <div class="fc-actions" id="d-opts" style="flex-wrap:wrap"></div>`;
+    const $ = id => el.querySelector('#' + id);
+
+    function render() {
+      if (!deck.length) {
+        $('d-prompt').textContent = '✓';
+        $('d-fb').textContent = 'Done';
+        $('d-opts').innerHTML = '';
+        ctx.complete({ accuracy: Math.round(letters.length / attempts * 100), attempts });
+        return;
+      }
+      $('d-prompt').textContent = deck[0].ch;
+      $('d-bar').style.width = (cleared / letters.length * 100) + '%';
+      $('d-opts').innerHTML = shuffle(letters).map(l =>
+        `<button class="btn" data-ipa="${l.ipa}">/${l.ipa}/</button>`).join('');
+    }
+
+    $('d-opts').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const cur = deck[0]; attempts++;
+      if (b.dataset.ipa === cur.ipa) { deck.shift(); cleared++; $('d-fb').textContent = '✓'; }
+      else {
+        $('d-fb').textContent = '✗  /' + cur.ipa + '/';
+        ctx.miss(cur.ch, cur.ch, '/' + cur.ipa + '/', cur.cat);   // → shows up in Review
+        deck.push(deck.shift());
+      }
+      render();
+    });
+    render();
+  },
+});
+</script>
+</body>
+</html>

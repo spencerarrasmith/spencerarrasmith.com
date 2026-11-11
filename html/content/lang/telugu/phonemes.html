@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Telugu Letter Matching</title>
+  <title>Phonemes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -21,9 +21,9 @@
       --success-dim:  rgba(74, 222, 128, 0.12);
       --error:        #f87171;
       --error-dim:    rgba(248, 113, 113, 0.12);
-      --text:         #f0ece0;
-      --text-dim:     #9090b8;
-      --text-muted:   #48487a;
+      --text:         #fbf8ee;
+      --text-dim:     #d0d0e8;
+      --text-muted:   #9c9cc8;
 
       /* System bottom inset (home indicator / gesture bar). Falls back to a
          --safe-area-inset-bottom custom property if env() is unavailable. */
@@ -201,7 +201,7 @@
       color: var(--accent);
       text-transform: uppercase;
       letter-spacing: .08em;
-      opacity: .8;
+      opacity: 1;
     }
 
     .cat-toggle {
@@ -428,7 +428,7 @@
   <div class="g-controls">
     <label class="cat-toggle"><input type="checkbox" id="show-cat" checked> Show category</label>
     <div class="g-controls-sep"></div>
-    <label class="cat-toggle"><input type="checkbox" id="include-uncommon" checked> Include uncommon</label>
+    <label class="cat-toggle"><input type="checkbox" id="include-extra"> Include extra letters</label>
   </div>
 
   <!-- ── Game main ── -->
@@ -468,87 +468,23 @@
 
 </div>
 
+<script src="telugu-data.js"></script>
+<script src="progress.js"></script>
 <script>
+if (!window.TeluguData) throw new Error('telugu-data.js was not found next to this page');
+
 /* ─────────────────────────────────────────────────────────
    DATA
-   48 characters: 13 vowels + 35 consonants (velars, palatals,
-   retroflexes, dentals, labials, approximants, fricatives)
+   Letters, flags and keyboard groups all come from
+   telugu-data.js. The book's set (51 cards) is the default;
+   "Include extra letters" adds ఌ ౡ ఱ.
+     rare    → "rare" badge on the card
+     inBook  → false for the extras
 ───────────────────────────────────────────────────────── */
-const CHARS = [
-  // Vowels (అచ్చులు)
-  { ch: 'అ',  ipa: 'a',    cat: 'Vowel' },
-  { ch: 'ఆ',  ipa: 'aː',   cat: 'Vowel' },
-  { ch: 'ఇ',  ipa: 'i',    cat: 'Vowel' },
-  { ch: 'ఈ',  ipa: 'iː',   cat: 'Vowel' },
-  { ch: 'ఉ',  ipa: 'u',    cat: 'Vowel' },
-  { ch: 'ఊ',  ipa: 'uː',   cat: 'Vowel' },
-  { ch: 'ఋ',  ipa: 'r̩',   cat: 'Vowel', uncommon: true },
-  { ch: 'ౠ',  ipa: 'r̩ː',  cat: 'Vowel', uncommon: true },
-  { ch: 'ఌ',  ipa: 'l̩',   cat: 'Vowel', uncommon: true },
-  { ch: 'ౡ',  ipa: 'l̩ː',  cat: 'Vowel', uncommon: true },
-  { ch: 'ఎ',  ipa: 'e',    cat: 'Vowel' },
-  { ch: 'ఏ',  ipa: 'eː',   cat: 'Vowel' },
-  { ch: 'ఐ',  ipa: 'ai',   cat: 'Vowel' },
-  { ch: 'ఒ',  ipa: 'o',    cat: 'Vowel' },
-  { ch: 'ఓ',  ipa: 'oː',   cat: 'Vowel' },
-  { ch: 'ఔ',  ipa: 'au',   cat: 'Vowel' },
-  { ch: 'అం', ipa: 'ã',   cat: 'Vowel' },
-  { ch: 'అః', ipa: 'aʰ',  cat: 'Vowel' },
-  // Velars (కంఠ్య)
-  { ch: 'క',  ipa: 'k',    cat: 'Velar' },
-  { ch: 'ఖ',  ipa: 'kʰ',   cat: 'Velar' },
-  { ch: 'గ',  ipa: 'ɡ',    cat: 'Velar' },
-  { ch: 'ఘ',  ipa: 'ɡʱ',   cat: 'Velar' },
-  { ch: 'ఙ',  ipa: 'ŋ',    cat: 'Velar',   uncommon: true },
-  // Palatals (తాలవ్య)
-  { ch: 'చ',  ipa: 'tʃ',   cat: 'Palatal' },
-  { ch: 'ఛ',  ipa: 'tʃʰ',  cat: 'Palatal' },
-  { ch: 'జ',  ipa: 'dʒ',   cat: 'Palatal' },
-  { ch: 'ఝ',  ipa: 'dʒʱ',  cat: 'Palatal' },
-  { ch: 'ఞ',  ipa: 'ɲ',    cat: 'Palatal', uncommon: true },
-  // Retroflexes (మూర్ధన్య)
-  { ch: 'ట',  ipa: 'ʈ',    cat: 'Retroflex' },
-  { ch: 'ఠ',  ipa: 'ʈʰ',   cat: 'Retroflex' },
-  { ch: 'డ',  ipa: 'ɖ',    cat: 'Retroflex' },
-  { ch: 'ఢ',  ipa: 'ɖʱ',   cat: 'Retroflex' },
-  { ch: 'ణ',  ipa: 'ɳ',    cat: 'Retroflex' },
-  { ch: 'ళ',  ipa: 'ɭ',    cat: 'Retroflex' },
-  { ch: 'ఱ',  ipa: 'ɽ',    cat: 'Retroflex' },
-  // Dentals (దంత్య)
-  { ch: 'త',  ipa: 't̪',    cat: 'Dental' },
-  { ch: 'థ',  ipa: 't̪ʰ',   cat: 'Dental' },
-  { ch: 'ద',  ipa: 'd̪',    cat: 'Dental' },
-  { ch: 'ధ',  ipa: 'd̪ʱ',   cat: 'Dental' },
-  { ch: 'న',  ipa: 'n',    cat: 'Dental' },
-  // Labials (ఓష్ఠ్య)
-  { ch: 'ప',  ipa: 'p',    cat: 'Labial' },
-  { ch: 'ఫ',  ipa: 'pʰ',   cat: 'Labial' },
-  { ch: 'బ',  ipa: 'b',    cat: 'Labial' },
-  { ch: 'భ',  ipa: 'bʱ',   cat: 'Labial' },
-  { ch: 'మ',  ipa: 'm',    cat: 'Labial' },
-  // Approximants (అంతస్థలు)
-  { ch: 'య',  ipa: 'j',    cat: 'Approx.' },
-  { ch: 'ర',  ipa: 'r',    cat: 'Approx.' },
-  { ch: 'ల',  ipa: 'l',    cat: 'Approx.' },
-  { ch: 'వ',  ipa: 'ʋ',    cat: 'Approx.' },
-  // Fricatives / Glottal (ఉష్మలు)
-  { ch: 'శ',  ipa: 'ʃ',    cat: 'Fricative' },
-  { ch: 'ష',  ipa: 'ʂ',    cat: 'Fricative' },
-  { ch: 'స',  ipa: 's',    cat: 'Fricative' },
-  { ch: 'హ',  ipa: 'ɦ',    cat: 'Fricative' },
-];
-
-// Phoneme keyboard layout — mirrors the above 8 articulatory groups
-const KB_GROUPS = [
-  { lbl: 'Vowels',     ipa: ['a','aː','i','iː','u','uː','r̩','r̩ː','l̩','l̩ː','e','eː','ai','o','oː','au','ã','aʰ'] },
-  { lbl: 'Velar',      ipa: ['k','kʰ','ɡ','ɡʱ','ŋ'] },
-  { lbl: 'Palatal',    ipa: ['tʃ','tʃʰ','dʒ','dʒʱ','ɲ'] },
-  { lbl: 'Retroflex',  ipa: ['ʈ','ʈʰ','ɖ','ɖʱ','ɳ','ɭ','ɽ'] },
-  { lbl: 'Dental',     ipa: ['t̪','t̪ʰ','d̪','d̪ʱ','n'] },
-  { lbl: 'Labial',     ipa: ['p','pʰ','b','bʱ','m'] },
-  { lbl: 'Approx.',    ipa: ['j','r','l','ʋ'] },
-  { lbl: 'Fricative',  ipa: ['ʃ','ʂ','s','ɦ'] },
-];
+const GAME      = 'phonemes';
+const CHARS     = TeluguData.letters;
+const KB_GROUPS = TeluguData.letterGroups;
+const Progress  = window.TeluguProgress || { miss() {}, complete() {} };
 
 /* ─────────────────────────────────────────────────────────
    STATE
@@ -609,12 +545,14 @@ function buildKB(activeIpa) {
 ───────────────────────────────────────────────────────── */
 function renderCard() {
   const c = deck[0];
-  document.getElementById('tel-char').textContent  = c.ch;
+  const tel = document.getElementById('tel-char');
+  tel.textContent    = c.ch;
+  tel.style.fontSize = [...c.ch].length >= 3 ? '4.6rem' : '';   // wide conjunct (క్ష)
   const badge = document.getElementById('cat-badge');
   badge.textContent  = c.cat;
   badge.style.visibility = document.getElementById('show-cat').checked ? '' : 'hidden';
   const rare = document.getElementById('rare-badge');
-  rare.style.display = c.uncommon ? '' : 'none';
+  rare.style.display = c.rare ? '' : 'none';
   const fb = document.getElementById('feedback');
   fb.textContent = '';
   fb.className   = 'feedback';
@@ -667,6 +605,7 @@ function onAnswer(ipa, btn) {
     card.classList.add('wrong');
     fb.textContent = `✗  /${cur.ipa}/`;
     fb.className   = 'feedback err';
+    Progress.miss({ game: GAME, key: cur.ch, prompt: cur.ch, answer: `/${cur.ipa}/`, note: cur.cat });
 
     // Highlight the correct button and scroll it into view
     const correctBtn = btnForIpa(cur.ipa);
@@ -703,15 +642,14 @@ function showComplete() {
   document.getElementById('c-attempts').textContent = attempts;
   document.getElementById('c-accuracy').textContent = acc + '%';
   document.getElementById('c-errors').textContent   = errors;
+  Progress.complete(GAME, { accuracy: acc, attempts });
 }
 
 /* ─────────────────────────────────────────────────────────
    INIT
 ───────────────────────────────────────────────────────── */
 function initGame() {
-  const pool = document.getElementById('include-uncommon').checked
-    ? CHARS
-    : CHARS.filter(c => !c.uncommon);
+  const pool = TeluguData.pool(CHARS, document.getElementById('include-extra').checked);
   deck      = shuffle(pool);
   total     = pool.length;
   completed = 0;
@@ -732,7 +670,7 @@ document.getElementById('show-cat').addEventListener('change', e => {
   document.getElementById('cat-badge').style.visibility = e.target.checked ? '' : 'hidden';
 });
 
-document.getElementById('include-uncommon').addEventListener('change', initGame);
+document.getElementById('include-extra').addEventListener('change', initGame);
 
 document.getElementById('retry-btn').addEventListener('click', initGame);
 initGame();

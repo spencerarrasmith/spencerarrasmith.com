@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Review · Telugu Suite</title>
+<link rel="stylesheet" href="shell.css">
+<style>
+  .shell-body { padding-bottom: calc(24px + var(--safe-bottom)); }
+  .rv-lead  { font-size: 14.5px; line-height: 1.6; color: var(--text-dim); }
+  .rv-games { display: grid; gap: 8px; margin: 18px 0; }
+  .rv-game  { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .rv-game .name  { flex: 1; font-weight: 600; font-size: 14.5px; }
+  .rv-game .count { font-size: 13px; color: var(--text-muted); }
+  .rv-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .rv-empty { text-align: center; padding: 48px 12px; }
+  .rv-empty .big { font-size: 40px; }
+  .rv-empty h2 { font-size: 18px; margin: 10px 0 6px; }
+  .rv-meta  { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-muted); margin-bottom: 8px; }
+  .rv-warn  { font-size: 13px; color: var(--text-muted); margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="shell-head">
+    <div class="eyebrow">Practice</div>
+    <h1>Review</h1>
+    <div class="te-title" style="font-family:'Inter',system-ui,sans-serif;font-size:14px">Replay what you missed in any game</div>
+    <div style="height:16px"></div>
+  </header>
+  <main class="shell-body" id="rv-body"></main>
+</div>
+
+<script src="progress.js"></script>
+<script>
+const Progress = window.TeluguProgress;
+if (!Progress) throw new Error('progress.js was not found next to this page');
+
+const body = document.getElementById('rv-body');
+const esc  = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const LABELS = { phonemes: 'Phonemes', diacritics: 'Diacritics', conjuncts: 'Conjuncts' };
+const label  = g => LABELS[g] || g.replace(/[-_]+/g, ' ').replace(/^./, c => c.toUpperCase());
+
+let view = 'overview';          // overview | card | summary
+let session = null;             // { queue, total, cleared, again, revealed, game }
+let confirmClear = false;
+
+/* ── Overview ───────────────────────────────────────────── */
+function overview() {
+  view = 'overview';
+  const items = Progress.misses();
+  if (!items.length) {
+    body.innerHTML = `
+      <div class="rv-empty">
+        <div class="big">✓</div>
+        <h2>Nothing to review</h2>
+        <p class="rv-lead">Letters and syllables you get wrong in the games will collect here so you can replay them.</p>
+      </div>`;
+    return;
+  }
+  const byGame = {};
+  items.forEach(m => (byGame[m.game] = byGame[m.game] || []).push(m));
+  body.innerHTML = `
+    <p class="rv-lead"><b id="rv-total">${items.length}</b> ${items.length === 1 ? 'item' : 'items'} to revisit. Get an item right in two reviews in a row and it drops off the list.</p>
+    <div class="rv-games">
+      ${Object.entries(byGame).sort((a, b) => b[1].length - a[1].length || label(a[0]).localeCompare(label(b[0]))).map(([g, list]) => `
+        <div class="rv-game">
+          <span class="name">${esc(label(g))}</span>
+          <span class="count">${list.length}</span>
+          <button class="btn" data-game="${esc(g)}">Review</button>
+        </div>`).join('')}
+    </div>
+    <div class="rv-actions">
+      <button class="btn primary" id="rv-all">Review all</button>
+      <button class="btn link" id="rv-clear">${confirmClear ? 'Tap again to clear the list' : 'Clear list'}</button>
+    </div>
+    ${Progress.persistent ? '' : '<p class="rv-warn">This browser is blocking storage, so Review only remembers misses while this page stays open.</p>'}`;
+  body.querySelector('#rv-all').onclick = () => start(null);
+  body.querySelectorAll('[data-game]').forEach(b => b.onclick = () => start(b.dataset.game));
+  body.querySelector('#rv-clear').onclick = () => {
+    if (!confirmClear) { confirmClear = true; overview(); return; }
+    confirmClear = false; Progress.clearMisses(); overview();
+  };
+}
+
+/* ── Session ────────────────────────────────────────────── */
+function start(game) {
+  confirmClear = false;
+  const items = Progress.misses().filter(m => !game || m.game === game);
+  if (!items.length) return overview();
+  session = { queue: shuffle(items), total: items.length, cleared: 0, again: 0, revealed: false, game };
+  card();
+}
+
+function card() {
+  view = 'card';
+  const s = session, m = s.queue[0];
+  const done = s.total - s.queue.length;
+  const long = [...m.prompt].length >= 3;
+  body.innerHTML = `
+    <div class="rv-meta"><span>${esc(s.game ? label(s.game) : 'All games')}</span><span>${done} of ${s.total}</span></div>
+    <div class="bar"><i style="width:${done / s.total * 100}%"></i></div>
+    <div class="fc" style="margin-top:14px">
+      ${m.note ? `<div class="cat">${esc(m.note)}</div>` : ''}
+      <div class="prompt${long ? ' long' : ''}" id="rv-prompt">${esc(m.prompt)}</div>
+      <div id="rv-answer" aria-live="polite">${s.revealed ? `<div class="answer">${esc(m.answer)}</div>` : '<div class="answer-note">Say it, then check</div>'}</div>
+    </div>
+    <div class="fc-actions">
+      ${s.revealed
+        ? '<button class="btn bad" id="rv-again">Again</button><button class="btn good" id="rv-got">Got it</button>'
+        : '<button class="btn primary" id="rv-show">Show answer</button>'}
+    </div>`;
+  const $ = id => body.querySelector('#' + id);
+  if (s.revealed) { $('rv-again').onclick = () => grade(false); $('rv-got').onclick = () => grade(true); }
+  else            { $('rv-show').onclick = () => { s.revealed = true; card(); }; $('rv-show').focus(); }
+}
+
+function grade(gotIt) {
+  const s = session, m = s.queue.shift();
+  s.revealed = false;
+  const r = Progress.review(m.game, m.key, gotIt);
+  if (gotIt) { if (r.cleared) s.cleared++; }
+  else {
+    s.again++;
+    // back into the queue at a random spot (never straight back to the front)
+    s.queue.splice(Math.max(1, Math.floor(Math.random() * (s.queue.length + 1))), 0, m);
+  }
+  if (s.queue.length) card(); else summary();
+}
+
+function summary() {
+  view = 'summary';
+  const s = session, left = Progress.missCount();
+  body.innerHTML = `
+    <div class="rv-empty">
+      <div class="big">✓</div>
+      <h2>Round complete</h2>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>${s.total}</b><span>reviewed</span></div>
+      <div class="stat"><b>${s.cleared}</b><span>cleared</span></div>
+      <div class="stat"><b>${s.again}</b><span>“again” taps</span></div>
+      <div class="stat"><b>${left}</b><span>still listed</span></div>
+    </div>
+    <div class="rv-actions" style="margin-top:20px">
+      ${left ? '<button class="btn primary" id="rv-more">Review again</button>' : ''}
+      <button class="btn" id="rv-back">Back to list</button>
+    </div>`;
+  const again = body.querySelector('#rv-more');
+  if (again) again.onclick = () => start(s.game && Progress.misses().some(m => m.game === s.game) ? s.game : null);
+  body.querySelector('#rv-back').onclick = overview;
+}
+
+/* keyboard: Space = show, ← Again, → Got it */
+document.addEventListener('keydown', e => {
+  const onButton = e.target && e.target.closest && e.target.closest('button');
+  if (view !== 'card' || (onButton && e.key === ' ')) return;     // let a focused button handle its own Space
+  if (!session.revealed && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); session.revealed = true; card(); }
+  else if (session.revealed && e.key === 'ArrowLeft')  grade(false);
+  else if (session.revealed && e.key === 'ArrowRight') grade(true);
+});
+
+// another frame/tab changed the list while we are just looking at it
+Progress.onChange(() => { if (view === 'overview') overview(); });
+
+overview();
+</script>
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Diacritics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0b0c18;
+      --surface:      #111221;
+      --surface-up:   #191a2e;
+      --border:       #252648;
+      --accent:       #c9981a;
+      --accent-glow:  rgba(201, 152, 26, 0.16);
+      --accent-light: #f5c842;
+      --success:      #4ade80;
+      --success-dim:  rgba(74, 222, 128, 0.12);
+      --error:        #f87171;
+      --error-dim:    rgba(248, 113, 113, 0.12);
+      --text:         #fbf8ee;
+      --text-dim:     #d0d0e8;
+      --text-muted:   #9c9cc8;
+
+      /* System bottom inset (home indicator / gesture bar). Falls back to a
+         --safe-area-inset-bottom custom property if env() is unavailable. */
+      --safe-bottom:  env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px));
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Shell ────────────────────────────────── */
+    .game-wrap {
+      height: 100vh;   /* fallback */
+      height: 100dvh;  /* excludes mobile browser toolbars */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ───────────────────────────────── */
+    .g-header {
+      flex-shrink: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 24px 10px;
+    }
+
+    .g-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 9px;
+    }
+
+    .g-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .g-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .g-stat-val { font-weight: 600; color: var(--text-dim); }
+
+    .g-prog-track {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .g-prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      border-radius: 2px;
+      width: 0%;
+      transition: width .5s ease;
+    }
+
+    /* ── Controls bar ─────────────────────────── */
+    .g-controls {
+      flex-shrink: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .g-controls-sep {
+      width: 1px;
+      height: 14px;
+      background: var(--border);
+    }
+
+    /* ── Rare badge (card corner pip) ─────────── */
+    .rare-badge {
+      position: absolute;
+      top: 9px;
+      right: 11px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      background: var(--surface-up);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 5px;
+    }
+
+    /* ── Game body ────────────────────────────── */
+    .g-main {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 18px 26px 14px;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* ── Character card ───────────────────────── */
+    .card-area {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* The signature element: warm amber halo on the card */
+    .char-card {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(ellipse at 50% 40%, #1e1830 0%, #111221 68%);
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      box-shadow:
+        0 8px 32px rgba(0,0,0,.55),
+        inset 0 0 48px rgba(201, 152, 26, 0.05);
+      transition: border-color .18s, box-shadow .18s;
+    }
+
+    .char-card.correct {
+      border-color: var(--success);
+      box-shadow:
+        0 0 24px rgba(74, 222, 128, .28),
+        0 8px 32px rgba(0,0,0,.55);
+      animation: pop .28s ease;
+    }
+
+    .char-card.wrong {
+      border-color: var(--error);
+      box-shadow:
+        0 0 24px rgba(248, 113, 113, .28),
+        0 8px 32px rgba(0,0,0,.55);
+      animation: shake .32s ease;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      22%  { transform: translateX(-8px); }
+      55%  { transform: translateX(8px); }
+      80%  { transform: translateX(-4px); }
+    }
+
+    .cat-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      opacity: 1;
+    }
+
+    .cat-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .cat-toggle input[type=checkbox] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border: 1.5px solid var(--text-muted);
+      border-radius: 3px;
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: background .12s, border-color .12s;
+    }
+
+    .cat-toggle input[type=checkbox]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .cat-toggle input[type=checkbox]:checked::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 3px;
+      width: 4px;
+      height: 7px;
+      border: 1.5px solid #0b0c18;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .tel-char {
+      font-family: 'Noto Sans Telugu', serif;
+      font-size: 6.2rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      user-select: none;
+    }
+
+    .feedback {
+      height: 20px;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .01em;
+    }
+    .feedback.ok  { color: var(--success); }
+    .feedback.err { color: var(--error); }
+
+    /* ── Phoneme keyboard ─────────────────────── */
+    .kb-area {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+      padding-right: 4px;
+
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .kb-area::-webkit-scrollbar { width: 4px; }
+    .kb-area::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .kb-group { display: flex; flex-direction: column; gap: 5px; }
+
+    .kb-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .kb-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .kb-btn {
+      padding: 6px 13px;
+      min-width: 50px;
+      background: var(--surface-up);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-dim);
+      font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background .1s, border-color .1s, color .1s, transform .08s;
+      user-select: none;
+      text-align: center;
+    }
+
+    .kb-btn:hover {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    .kb-btn:active { transform: scale(.92); }
+
+    .kb-btn.ok {
+      background: var(--success-dim);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .kb-btn.err {
+      background: var(--error-dim);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* ── Complete screen ──────────────────────── */
+    .g-complete {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .g-complete.show {
+      display: flex;
+      animation: fade-up .45s ease;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .trophy { font-size: 58px; animation: trophy-in .6s ease; }
+
+    @keyframes trophy-in {
+      from { transform: scale(.4) translateY(12px); opacity: 0; }
+      70%  { transform: scale(1.14) translateY(-4px); opacity: 1; }
+      to   { transform: scale(1); }
+    }
+
+    .c-title { font-size: 25px; font-weight: 700; color: var(--text); }
+    .c-sub   { font-size: 14px; color: var(--text-dim); max-width: 340px; }
+
+    .c-stats {
+      display: flex;
+      gap: 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 15px 28px;
+    }
+
+    .c-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .c-stat-val { font-size: 24px; font-weight: 700; color: var(--accent-light); }
+    .c-stat-lbl { font-size: 11px; color: var(--text-muted); }
+
+    .retry-btn {
+      padding: 11px 36px;
+      background: var(--accent);
+      color: #0b0c18;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter .14s, transform .1s, box-shadow .14s;
+      letter-spacing: .01em;
+    }
+
+    .retry-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(201, 152, 26, .45);
+    }
+
+    .retry-btn:active { transform: translateY(0); }
+  
+
+    /* ══ Diacritics-specific additions ═══════════════════════ */
+
+    /* Syllable glyphs are wider than single letters */
+    .tel-char { font-size: 4.6rem; }
+
+    /* Consonant / vowel selection slots under the card */
+    .slots { display: flex; gap: 10px; }
+
+    .slot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 120px;
+      padding: 5px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      transition: border-color .12s;
+    }
+
+    .slot-val {
+      margin-left: auto;
+      min-width: 1.6em;
+      text-align: right;
+      font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text-muted);
+    }
+
+    .slot.filled { border-color: var(--accent); }
+    .slot.filled .slot-val { color: var(--accent-light); }
+    .slot.ok  { border-color: var(--success); }
+    .slot.ok  .slot-val { color: var(--success); }
+    .slot.err { border-color: var(--error); }
+    .slot.err .slot-val { color: var(--error); }
+
+    /* Two keyboards: consonants (left) and vowels (right) */
+    .kb-cols {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .kb-col { display: flex; flex-direction: column; gap: 9px; }
+
+    .kb-col-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Pending selection (before both pieces are chosen) */
+    .kb-btn.sel:not(.ok):not(.err) {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    @media (max-width: 680px) {
+      .kb-cols { grid-template-columns: 1fr; }
+      .kb-col[data-kind="v"] { order: -1; }   /* short vowel panel first */
+    }
+  </style>
+</head>
+<body>
+<div class="game-wrap">
+
+  <!-- ── Progress header ── -->
+  <header class="g-header">
+    <div class="g-header-top">
+      <span class="g-title">Diacritics → IPA</span>
+      <div class="g-stats">
+        <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
+        <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">0</span></span>
+      </div>
+    </div>
+    <div class="g-prog-track">
+      <div class="g-prog-fill" id="prog-fill"></div>
+    </div>
+  </header>
+
+  <!-- ── Controls bar ── -->
+  <div class="g-controls">
+    <label class="cat-toggle"><input type="checkbox" id="show-cat" checked> Show category</label>
+    <div class="g-controls-sep"></div>
+    <label class="cat-toggle"><input type="checkbox" id="include-extra"> Include extra letters</label>
+  </div>
+
+  <!-- ── Game main ── -->
+  <div class="g-main" id="g-main">
+    <div class="card-area">
+      <div class="char-card" id="char-card">
+        <span class="cat-badge" id="cat-badge"></span>
+        <span class="tel-char" id="tel-char"></span>
+        <span class="rare-badge" id="rare-badge" style="display:none">rare</span>
+      </div>
+      <div class="slots">
+        <div class="slot" id="slot-c">Consonant <span class="slot-val">–</span></div>
+        <div class="slot" id="slot-v">Vowel <span class="slot-val">–</span></div>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="kb-area" id="kb-area"></div>
+  </div>
+
+  <!-- ── Complete screen ── -->
+  <div class="g-complete" id="g-complete">
+    <div class="trophy">🏆</div>
+    <div class="c-title">Session Complete!</div>
+    <div class="c-sub" id="c-sub"></div>
+    <div class="c-stats">
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-attempts">—</span>
+        <span class="c-stat-lbl">Total Attempts</span>
+      </div>
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-accuracy">—</span>
+        <span class="c-stat-lbl">Accuracy</span>
+      </div>
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-errors">—</span>
+        <span class="c-stat-lbl">Errors</span>
+      </div>
+    </div>
+    <button class="retry-btn" id="retry-btn">Practice Again</button>
+  </div>
+
+</div>
+
+<script src="telugu-data.js"></script>
+<script src="progress.js"></script>
+<script>
+if (!window.TeluguData) throw new Error('telugu-data.js was not found next to this page');
+
+/* ─────────────────────────────────────────────────────────
+   DATA
+   A card is one consonant + one vowel sign. To clear it the
+   player picks BOTH the consonant phoneme and the vowel sound.
+   Letters, signs and flags come from telugu-data.js:
+     rare    → "rare" badge
+     inBook  → false for the extras (ఱ ౢ ౣ), hidden until
+               "Include extra letters" is ticked
+───────────────────────────────────────────────────────── */
+const GAME       = 'diacritics';
+const CONSONANTS = [...TeluguData.consonants, ...TeluguData.conjunctLetters];   // ends with క్ష
+const VOWELS     = TeluguData.signs;
+const Progress   = window.TeluguProgress || { miss() {}, complete() {} };
+
+const PER_VOWEL = 3;     // cards per vowel sign (each with a different consonant)
+const OK_MS     = 500;   // pause after a correct round
+const ERR_MS    = 1000;  // pause after a wrong round (two answers to read)
+
+/* ─────────────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────────────── */
+let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
+let sel = { c: null, v: null };   // pending picks: consonant, vowel
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// [[label, [items…]], …] keeping first-seen order
+function groupBy(items, key) {
+  const m = new Map();
+  items.forEach(it => {
+    if (!m.has(it[key])) m.set(it[key], []);
+    m.get(it[key]).push(it);
+  });
+  return [...m];
+}
+
+// Every vowel sign gets PER_VOWEL cards, each with a different random consonant
+function buildDeck(cons, vows) {
+  const cards = [];
+  vows.forEach(v => {
+    shuffle(cons).slice(0, PER_VOWEL).forEach(c => cards.push({
+      c, v,
+      glyph:    c.ch + v.sign,
+      cat:      c.cat,
+      rare:     c.rare || v.rare,
+    }));
+  });
+  return shuffle(cards);
+}
+// <<TEST-END>>
+
+function btnFor(kind, ipa) {
+  return Array.from(document.querySelectorAll(`.kb-btn[data-kind="${kind}"]`))
+    .find(b => b.dataset.ipa === ipa) || null;
+}
+
+/* ─────────────────────────────────────────────────────────
+   BUILD KEYBOARDS
+───────────────────────────────────────────────────────── */
+function buildPanel(title, kind, items, key) {
+  const col = document.createElement('div');
+  col.className    = 'kb-col';
+  col.dataset.kind = kind;
+
+  const h = document.createElement('div');
+  h.className   = 'kb-col-title';
+  h.textContent = title;
+  col.appendChild(h);
+
+  groupBy(items, key).forEach(([label, list]) => {
+    const g = document.createElement('div');
+    g.className = 'kb-group';
+
+    const l = document.createElement('div');
+    l.className   = 'kb-label';
+    l.textContent = label;
+
+    const row = document.createElement('div');
+    row.className = 'kb-row';
+    list.forEach(it => {
+      const btn = document.createElement('button');
+      btn.className   = 'kb-btn';
+      btn.textContent = it.ipa;
+      btn.dataset.ipa  = it.ipa;
+      btn.dataset.kind = kind;
+      btn.addEventListener('click', () => onPick(kind, it.ipa, btn));
+      row.appendChild(btn);
+    });
+
+    g.append(l, row);
+    col.appendChild(g);
+  });
+  return col;
+}
+
+function buildKB(cons, vows) {
+  const area = $('kb-area');
+  area.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'kb-cols';
+  wrap.append(
+    buildPanel('Consonant', 'c', cons, 'cat'),
+    buildPanel('Vowel',     'v', vows, 'grp'),
+  );
+  area.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────────────────
+   ROUND STATE + RENDER
+───────────────────────────────────────────────────────── */
+function updateSlots() {
+  [['c', 'slot-c'], ['v', 'slot-v']].forEach(([k, id]) => {
+    const slot = $(id);
+    const has  = sel[k] !== null;
+    slot.classList.toggle('filled', has);
+    slot.querySelector('.slot-val').textContent = has ? sel[k] : '–';
+  });
+}
+
+function clearRound() {
+  sel = { c: null, v: null };
+  document.querySelectorAll('.kb-btn').forEach(b => b.classList.remove('sel', 'ok', 'err'));
+  ['slot-c', 'slot-v'].forEach(id => $(id).classList.remove('ok', 'err'));
+  updateSlots();
+}
+
+function renderCard() {
+  const c = deck[0];
+  $('tel-char').textContent = c.glyph;
+
+  const badge = $('cat-badge');
+  badge.textContent      = c.cat;
+  badge.style.visibility = $('show-cat').checked ? '' : 'hidden';
+  $('rare-badge').style.display = c.rare ? '' : 'none';
+
+  const fb = $('feedback');
+  fb.textContent = '';
+  fb.className   = 'feedback';
+  $('char-card').className = 'char-card';
+  clearRound();
+}
+
+function updateProg() {
+  $('s-rem').textContent   = deck.length;
+  $('s-done').textContent  = completed;
+  $('s-total').textContent = total;
+  $('prog-fill').style.width = (total ? completed / total * 100 : 0).toFixed(1) + '%';
+}
+
+/* ─────────────────────────────────────────────────────────
+   ANSWER HANDLING
+   Picking one piece only marks it; the round is judged as
+   soon as BOTH a consonant and a vowel have been chosen.
+───────────────────────────────────────────────────────── */
+function onPick(kind, ipa, btn) {
+  if (locked) return;
+  sel[kind] = ipa;
+  document.querySelectorAll(`.kb-btn[data-kind="${kind}"]`)
+    .forEach(b => b.classList.toggle('sel', b === btn));
+  updateSlots();
+  if (sel.c !== null && sel.v !== null) evaluate();
+}
+
+function evaluate() {
+  locked = true;
+  attempts++;
+
+  const cur    = deck[0];
+  const answer = { c: cur.c.ipa, v: cur.v.ipa };
+  const allOk  = sel.c === answer.c && sel.v === answer.v;
+  const card   = $('char-card');
+  const fb     = $('feedback');
+  let scrollTarget = null;
+
+  ['c', 'v'].forEach(k => {
+    const good   = sel[k] === answer[k];
+    const picked = btnFor(k, sel[k]);
+    picked.classList.remove('sel');
+    picked.classList.add(good ? 'ok' : 'err');
+    $(k === 'c' ? 'slot-c' : 'slot-v').classList.add(good ? 'ok' : 'err');
+
+    if (!good) {
+      const right = btnFor(k, answer[k]);
+      if (right) {
+        right.classList.add('ok');
+        scrollTarget = scrollTarget || right;
+      }
+    }
+  });
+
+  fb.textContent = `${allOk ? '✓' : '✗'}  /${cur.c.ipa}${cur.v.sound}/`;
+  fb.className   = 'feedback ' + (allOk ? 'ok' : 'err');
+  if (!allOk) Progress.miss({ game: GAME, key: cur.glyph, prompt: cur.glyph,
+                              answer: `/${cur.c.ipa}${cur.v.sound}/`, note: cur.v.grp });
+
+  if (allOk) {
+    card.classList.add('correct');
+    deck.shift();
+    completed++;
+    updateProg();
+    setTimeout(() => {
+      if (deck.length === 0) showComplete();
+      else { renderCard(); locked = false; }
+    }, OK_MS);
+  } else {
+    card.classList.add('wrong');
+    if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Reinsert at a random position (never straight back to the front)
+    const removed  = deck.shift();
+    const insertAt = Math.max(1, Math.floor(Math.random() * (deck.length + 1)));
+    deck.splice(insertAt, 0, removed);
+
+    setTimeout(() => { renderCard(); locked = false; }, ERR_MS);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   COMPLETE SCREEN
+───────────────────────────────────────────────────────── */
+function showComplete() {
+  $('g-main').style.display = 'none';
+  $('g-complete').classList.add('show');
+
+  $('c-sub').textContent =
+    `All ${total} syllables correctly matched to their IPA sounds.`;
+  $('c-attempts').textContent = attempts;
+  $('c-accuracy').textContent = Math.round(total / attempts * 100) + '%';
+  $('c-errors').textContent   = attempts - total;
+  Progress.complete(GAME, { accuracy: Math.round(total / attempts * 100), attempts });
+}
+
+/* ─────────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────────── */
+function initGame() {
+  const all  = $('include-extra').checked;
+  const cons = TeluguData.pool(CONSONANTS, all);
+  const vows = TeluguData.pool(VOWELS, all);
+
+  deck      = buildDeck(cons, vows);
+  total     = deck.length;
+  completed = 0;
+  attempts  = 0;
+  locked    = false;
+
+  $('g-complete').classList.remove('show');
+  $('g-main').style.display = '';
+  $('kb-area').scrollTop = 0;
+
+  buildKB(cons, vows);
+  updateProg();
+  renderCard();
+}
+
+$('show-cat').addEventListener('change', e => {
+  $('cat-badge').style.visibility = e.target.checked ? '' : 'hidden';
+});
+$('include-extra').addEventListener('change', initGame);
+$('retry-btn').addEventListener('click', initGame);
+initGame();
+</script>
+</body>
+</html>

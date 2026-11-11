@@ -17,9 +17,10 @@
       --accent:       #c9981a;
       --accent-glow:  rgba(201, 152, 26, 0.14);
       --accent-light: #f5c842;
-      --text:         #f0ece0;
-      --text-dim:     #9090b8;
-      --text-muted:   #48487a;
+      --text:         #fbf8ee;
+      --text-dim:     #d0d0e8;
+      --text-muted:   #9c9cc8;
+      --success:      #4ade80;
 
       /* System bottom inset (home indicator / gesture bar). Falls back to a
          --safe-area-inset-bottom custom property if env() is unavailable. */
@@ -94,7 +95,7 @@
       letter-spacing: .12em;
     }
 
-    .section-desc { font-size: 12.5px; color: var(--text-muted); }
+    .section-count { margin-left: auto; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
 
     .tiles {
       display: grid;
@@ -135,13 +136,43 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      font-family: 'Noto Sans Telugu', 'Inter', sans-serif;
       font-size: 22px;
     }
 
     .tile-title { font-size: 15px; font-weight: 600; }
     .tile-desc  { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); margin-top: 3px; }
 
-    .tile.soon { opacity: .42; cursor: default; }
+    /* Placeholder tiles stay clickable (they open a "coming soon" page) but sit back visually. */
+    .tile.soon { background: transparent; border-style: dashed; }
+    .tile.soon .tile-icon, .tile.soon .tile-title, .tile.soon .tile-desc { opacity: .72; }
+    a.tile.soon:hover, a.tile.soon:focus-visible { box-shadow: none; }
+    a.tile.soon:hover .tile-icon, a.tile.soon:hover .tile-title, a.tile.soon:hover .tile-desc,
+    a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.tile.soon:focus-visible .tile-desc { opacity: 1; }
+
+    /* Completed ✓ (same corner as the "Soon" badge; a tile is never both) */
+    .tile-check {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0b0c18;
+      background: var(--success);
+    }
+
+    /* Review strip above the sections */
+    .featured { margin-bottom: 30px; }
+    .tile.review { flex-direction: row; align-items: center; gap: 16px; min-height: 0; padding: 14px 18px; border-color: var(--accent); background: linear-gradient(120deg, var(--surface-up), var(--surface)); }
+    .tile.review .tile-body { flex: 1; min-width: 0; }
+    .tile.review .tile-badge { position: static; flex-shrink: 0; font-size: 11.5px; padding: 3px 10px; }
+    .tile.review .tile-badge.has { background: var(--accent); color: #0b0c18; font-weight: 700; }
 
     .tile-badge {
       position: absolute;
@@ -205,8 +236,15 @@
       #home { padding-left: 16px; padding-right: 16px; }
       .hero { padding: 28px 0 22px; }
       .hero-title { font-size: 22px; }
-      .tiles { grid-template-columns: 1fr; }
-      .tile { min-height: 0; }
+      .tiles { grid-template-columns: 1fr; gap: 10px; }
+      /* compact horizontal tiles keep the 35+ item list scannable on a phone */
+      .tile { flex-direction: row; align-items: center; gap: 14px; min-height: 0; padding: 12px 14px; border-radius: 14px; }
+      .tile-icon { width: 40px; height: 40px; flex-shrink: 0; font-size: 20px; }
+      .tile-desc { margin-top: 1px; }
+      .tile-badge { top: 10px; right: 10px; }
+      .tile > div:not(.tile-icon) { padding-right: 38px; }
+      .tile.review > .tile-body { padding-right: 0; }
+      .section-head { flex-wrap: wrap; row-gap: 2px; }
     }
   </style>
 </head>
@@ -221,6 +259,7 @@
         <p class="hero-sub">Learn Telugu script and sounds, step by step.</p>
       </div>
     </header>
+    <div class="featured" id="featured"></div>
     <div id="sections"></div>
   </div>
 </main>
@@ -233,45 +272,170 @@
   <iframe id="app-frame" title="Sub-app"></iframe>
 </div>
 
+<script src="progress.js"></script>
 <script>
 /* ─────────────────────────────────────────────────────────
    CONFIG — edit this to change the home page.
 
-   Add a section : push a new { title, desc?, tiles: [...] }.
+   Add a section : push a new { title, tiles: [...] }.
    Add a tile    : push a new object into a section's tiles.
 
    Tile fields
-     id     unique slug, used in the URL (#/letter-matching)
-     icon   emoji shown on the tile
+     id     unique slug, used in the URL (#/phonemes)
+     icon   emoji (or a short Telugu string) shown on the tile
      title  tile heading
      desc   one-line description
-     src    path to the standalone HTML file (omit if soon)
-     soon   true → greyed out, not clickable
+     src    path to the standalone HTML file
+     soon   true → placeholder page: still opens, shown dashed with a
+            "Soon" badge and left out of the section's "ready" count.
+            Delete the flag when the real page replaces the placeholder.
 ───────────────────────────────────────────────────────── */
 const SECTIONS = [
   {
-    title: 'Practice',
-    desc:  'Drills that build recall',
+    title: "Alphabet",
     tiles: [
-      { id: 'letter-matching', icon: '🎯', title: 'Letter Matching',
-        desc: 'Match each Telugu letter to its IPA phoneme.',
-        src: 'phonemes.html' },
-      { id: 'writing',         icon: '✍️', title: 'Writing Practice',
-        desc: 'Trace and write letters from memory.', soon: true },
-      { id: 'pronunciation',   icon: '🔊', title: 'Pronunciation',
-        desc: 'Listen and repeat each sound.', soon: true },
+      { id: "phonemes", icon: "క", title: "Phonemes",
+        desc: "Match each Telugu letter to its IPA phoneme.",
+        src: "phonemes.html" },
+      { id: "diacritics", icon: "కా", title: "Diacritics",
+        desc: "Pick the consonant and the vowel sound of each syllable.",
+        src: "diacritics.html" },
+      { id: "conjuncts", icon: "క్ష", title: "Conjuncts",
+        desc: "Pick every consonant in a combined letter.",
+        src: "conjuncts.html" },
+      { id: "lookalikes", icon: "👀", title: "Lookalikes",
+        desc: "Tell apart letters that are easy to confuse.",
+        src: "lookalikes.html", soon: true },
+      { id: "spelling", icon: "🔍", title: "Spelling pitfalls",
+        desc: "Common mistakes when writing Telugu words.",
+        src: "spelling.html", soon: true },
+      { id: "writing", icon: "✍️", title: "Writing",
+        desc: "Trace and write letters from memory.",
+        src: "writing.html", soon: true },
+      { id: "alphabet-chart", icon: "📖", title: "Alphabet Chart",
+        desc: "Every letter grouped by how it is made.",
+        src: "alphabet-chart.html", soon: true },
     ],
   },
   {
-    title: 'Reference',
-    desc:  'Look things up',
+    title: "Grammar",
     tiles: [
-      { id: 'alphabet-chart',  icon: '📖', title: 'Alphabet Chart',
-        desc: 'All letters grouped by place of articulation.', soon: true },
-      { id: 'vocabulary',      icon: '📚', title: 'Vocabulary',
-        desc: 'Common words with sounds and meanings.', soon: true },
+      { id: "grammar-sentence", icon: "🧱", title: "Sentence skeleton",
+        desc: "The basic shape of a Telugu sentence.",
+        src: "grammar-sentence.html", soon: true },
+      { id: "grammar-nouns", icon: "🏷️", title: "Nouns: gender & number",
+        desc: "Genders, plurals and how nouns change.",
+        src: "grammar-nouns.html", soon: true },
+      { id: "grammar-cases", icon: "🔗", title: "Case endings",
+        desc: "Endings that mark the role of a noun.",
+        src: "grammar-cases.html", soon: true },
+      { id: "grammar-pronouns", icon: "🙋", title: "Pronouns",
+        desc: "I, you, he, she, it and their forms.",
+        src: "grammar-pronouns.html", soon: true },
+      { id: "grammar-adjectives", icon: "🎨", title: "Adjectives",
+        desc: "Describing words and how they attach.",
+        src: "grammar-adjectives.html", soon: true },
+      { id: "grammar-verbs", icon: "⚙️", title: "Verb basics",
+        desc: "Verb roots, endings and agreement.",
+        src: "grammar-verbs.html", soon: true },
+      { id: "grammar-tenses", icon: "⏳", title: "Tenses",
+        desc: "Overview of past, present and future.",
+        src: "grammar-tenses.html", soon: true },
+      { id: "grammar-indeclinables", icon: "🧩", title: "Indeclinables",
+        desc: "Words that never change form.",
+        src: "grammar-indeclinables.html", soon: true },
     ],
   },
+  {
+    title: "Vocabulary",
+    tiles: [
+      { id: "vocab-greetings", icon: "👋", title: "Greetings",
+        desc: "Hello, goodbye and polite openers.",
+        src: "vocab-greetings.html", soon: true },
+      { id: "vocab-numbers", icon: "౧", title: "Numbers",
+        desc: "Counting, digits and amounts.",
+        src: "vocab-numbers.html", soon: true },
+      { id: "vocab-home", icon: "🏠", title: "At home",
+        desc: "Rooms, furniture and household words.",
+        src: "vocab-home.html", soon: true },
+      { id: "vocab-shopping", icon: "🛒", title: "Shopping",
+        desc: "Markets, prices and bargaining.",
+        src: "vocab-shopping.html", soon: true },
+      { id: "vocab-craftsmen", icon: "🔨", title: "Craftsmen",
+        desc: "Trades and the people who do them.",
+        src: "vocab-craftsmen.html", soon: true },
+      { id: "vocab-food", icon: "🍛", title: "Food & drink",
+        desc: "Meals, ingredients and ordering.",
+        src: "vocab-food.html", soon: true },
+      { id: "vocab-hotel", icon: "🏨", title: "Hotel & restaurant",
+        desc: "Booking, ordering and asking for help.",
+        src: "vocab-hotel.html", soon: true },
+      { id: "vocab-post", icon: "📮", title: "Post office · phone · bank",
+        desc: "Everyday services and errands.",
+        src: "vocab-post.html", soon: true },
+      { id: "vocab-travel", icon: "🚌", title: "Travelling",
+        desc: "Transport, directions and tickets.",
+        src: "vocab-travel.html", soon: true },
+      { id: "vocab-health", icon: "🩺", title: "Health & hygiene",
+        desc: "Body, symptoms and care.",
+        src: "vocab-health.html", soon: true },
+      { id: "vocab-weather", icon: "⛅", title: "Weather",
+        desc: "Seasons, sky and temperature.",
+        src: "vocab-weather.html", soon: true },
+      { id: "vocab-time", icon: "🕒", title: "Time",
+        desc: "Hours, days and dates.",
+        src: "vocab-time.html", soon: true },
+    ],
+  },
+  {
+    title: "Advanced Grammar",
+    tiles: [
+      { id: "advanced-expressions", icon: "💬", title: "Useful expressions",
+        desc: "Ready-made phrases for daily use.",
+        src: "advanced-expressions.html", soon: true },
+      { id: "advanced-commands", icon: "📣", title: "Commands",
+        desc: "Requests, orders and polite forms.",
+        src: "advanced-commands.html", soon: true },
+      { id: "advanced-present", icon: "▶️", title: "Present tense",
+        desc: "Saying what is happening now.",
+        src: "advanced-present.html", soon: true },
+      { id: "advanced-future", icon: "⏭️", title: "Future tense",
+        desc: "Saying what will happen.",
+        src: "advanced-future.html", soon: true },
+      { id: "advanced-past", icon: "⏮️", title: "Past tense",
+        desc: "Saying what has happened.",
+        src: "advanced-past.html", soon: true },
+      { id: "advanced-questions", icon: "❓", title: "Questions",
+        desc: "Asking who, what, where and why.",
+        src: "advanced-questions.html", soon: true },
+      { id: "advanced-negatives", icon: "🚫", title: "Negatives",
+        desc: "Saying no and not.",
+        src: "advanced-negatives.html", soon: true },
+      { id: "advanced-voice", icon: "🔄", title: "Voice & causatives",
+        desc: "Passive forms and “make or let someone do”.",
+        src: "advanced-voice.html", soon: true },
+    ],
+  },
+  {
+    title: "Reference",
+    tiles: [
+      { id: "reference-idioms", icon: "📜", title: "Idioms & proverbs",
+        desc: "Sayings and what they mean.",
+        src: "reference-idioms.html", soon: true },
+      { id: "reference-dictionary", icon: "📕", title: "Dictionary",
+        desc: "Search words in English and Telugu.",
+        src: "reference-dictionary.html", soon: true },
+      { id: "reference-verbs", icon: "⚡", title: "Important verbs",
+        desc: "The verbs you will use most.",
+        src: "reference-verbs.html", soon: true },
+    ],
+  },
+];
+
+// Pinned above the sections (not part of the learning path). Same tile fields.
+const FEATURED = [
+  { id: 'review', icon: '🔁', title: 'Review',
+    desc: 'Replay the items you missed in any game.', src: 'review.html' },
 ];
 
 /* ─────────────────────────────────────────────────────────
@@ -280,26 +444,50 @@ const SECTIONS = [
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function tileHTML(t) {
-  const inner = `
+// Progress is optional: without progress.js the home page simply shows no ✓ or counts.
+const Progress = window.TeluguProgress || { doneIds: () => [], missCount: () => 0, onChange() {} };
+
+function tileHTML(t, done) {
+  const mark = t.soon ? '<span class="tile-badge">Soon</span>'
+             : done.has(t.id) ? '<span class="tile-check" title="Completed" aria-label="Completed">✓</span>' : '';
+  return `<a class="tile${t.soon ? ' soon' : ''}" href="#/${esc(t.id)}">
     <div class="tile-icon" aria-hidden="true">${esc(t.icon)}</div>
     <div>
       <div class="tile-title">${esc(t.title)}</div>
       <div class="tile-desc">${esc(t.desc)}</div>
-    </div>`;
-  return t.soon || !t.src
-    ? `<div class="tile soon" aria-disabled="true">${inner}<span class="tile-badge">Soon</span></div>`
-    : `<a class="tile" href="#/${esc(t.id)}">${inner}</a>`;
+    </div>${mark}</a>`;
 }
 
-document.getElementById('sections').innerHTML = SECTIONS.map(s => `
-  <section class="section">
-    <div class="section-head">
-      <h2 class="section-title">${esc(s.title)}</h2>
-      ${s.desc ? `<span class="section-desc">${esc(s.desc)}</span>` : ''}
+function featuredHTML(t) {
+  const n = Progress.missCount();
+  return `<a class="tile review" href="#/${esc(t.id)}">
+    <div class="tile-icon" aria-hidden="true">${esc(t.icon)}</div>
+    <div class="tile-body">
+      <div class="tile-title">${esc(t.title)}</div>
+      <div class="tile-desc">${esc(t.desc)}</div>
     </div>
-    <div class="tiles">${s.tiles.map(tileHTML).join('')}</div>
-  </section>`).join('');
+    <span class="tile-badge${n ? ' has' : ''}">${n ? n + ' to revisit' : 'All clear'}</span></a>`;
+}
+
+const readyCount = (s, done) => {
+  const ready = s.tiles.filter(t => !t.soon).length;
+  const n     = s.tiles.filter(t => done.has(t.id)).length;
+  return `${ready} of ${s.tiles.length} ready` + (n ? ` · ${n} done` : '');
+};
+
+function renderHome() {
+  const done = new Set(Progress.doneIds());
+  document.getElementById('featured').innerHTML = FEATURED.map(featuredHTML).join('');
+  document.getElementById('sections').innerHTML = SECTIONS.map(s => `
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">${esc(s.title)}</h2>
+        <span class="section-count">${readyCount(s, done)}</span>
+      </div>
+      <div class="tiles">${s.tiles.map(t => tileHTML(t, done)).join('')}</div>
+    </section>`).join('');
+}
+renderHome();
 
 /* ─────────────────────────────────────────────────────────
    ROUTING  (#/<tile-id>  → app,  anything else → home)
@@ -307,11 +495,15 @@ document.getElementById('sections').innerHTML = SECTIONS.map(s => `
 const home  = document.getElementById('home');
 const app   = document.getElementById('app');
 const frame = document.getElementById('app-frame');
-const ALL   = SECTIONS.flatMap(s => s.tiles);
+const ALL   = [...FEATURED, ...SECTIONS.flatMap(s => s.tiles)];
+
+// Catch config mistakes early (duplicate ids break routing).
+{ const seen = new Set();
+  ALL.forEach(t => { if (seen.has(t.id)) console.error('Duplicate tile id:', t.id); seen.add(t.id); }); }
 
 function route() {
   const id   = location.hash.replace(/^#\/?/, '');
-  const tile = ALL.find(t => t.id === id && t.src && !t.soon);
+  const tile = ALL.find(t => t.id === id && t.src);
 
   if (tile) {
     home.hidden = true;
@@ -326,6 +518,7 @@ function route() {
   } else {
     app.hidden  = true;
     home.hidden = false;
+    renderHome();                          // pick up ✓ and the Review count from the game just played
     document.title = 'Telugu Suite';
     frame.removeAttribute('src');          // leaving resets the sub-app
     delete frame.dataset.src;
@@ -333,6 +526,8 @@ function route() {
 }
 
 window.addEventListener('hashchange', route);
+// a game in the iframe just wrote progress (or another tab did)
+Progress.onChange(() => { if (!home.hidden) renderHome(); });
 route();
 </script>
 </body>
