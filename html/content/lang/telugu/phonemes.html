@@ -584,10 +584,15 @@ function btnForLetter(letter) {
 /* ─────────────────────────────────────────────────────────
    BUILD KEYBOARD  (layout comes from telugu-data.js)
 ───────────────────────────────────────────────────────── */
-function buildKB(activeLetters) {
+// "Show category" also drives the Telugu keyboard: ticked → grouped and
+// labelled by place of articulation, unticked → one plain block of keys.
+// (The IPA keyboard is always grouped.) Rebuilding keeps the round going.
+let activeLetters = new Set();
+function buildKB() {
   TeluguData.buildKeyboard(document.getElementById('kb-area'), {
     face:    reversed ? 'telugu' : 'ipa',
     visible: activeLetters,
+    grouped: !reversed || document.getElementById('show-cat').checked,
     onPick:  onAnswer,
   });
 }
@@ -729,7 +734,8 @@ function initGame() {
   document.getElementById('g-main').style.display = '';
   document.getElementById('kb-area').scrollTop = 0;
 
-  buildKB(new Set(pool));
+  activeLetters = new Set(pool);
+  buildKB();
   updateProg();
   renderCard();
 }
@@ -748,6 +754,7 @@ document.getElementById('rev-btn').addEventListener('click', () => setReversed(!
 
 document.getElementById('show-cat').addEventListener('change', e => {
   document.getElementById('cat-badge').style.visibility = e.target.checked ? '' : 'hidden';
+  if (reversed) buildKB();          // regroup / flatten the Telugu keyboard
 });
 
 document.getElementById('include-extra').addEventListener('change', initGame);

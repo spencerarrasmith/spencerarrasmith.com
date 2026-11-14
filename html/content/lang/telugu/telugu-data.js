@@ -242,28 +242,38 @@
          face:    'ipa' | 'telugu',     what is printed on the keys
          visible: Set | fn(letter)      letters to show (default: all);
                                         the rest are rendered hidden
+         grouped: true | false          true (default): one labelled group
+                                        per place of articulation.
+                                        false: a single unlabelled block,
+                                        like an ordinary keyboard, still
+                                        in alphabet order
          onPick:  fn(letter, button)
        })
 
      Markup:  .kb-group > .kb-label + .kb-row > button.kb-btn
-              (Telugu face adds .te). Each key carries data-ipa and
-              data-ch. Styling is left to the page.
+              (Telugu face adds .te; ungrouped has one .kb-group and
+              no .kb-label). Each key carries data-ipa and data-ch.
+              Styling is left to the page.
      Returns  the buttons, in alphabet order.                      */
   function buildKeyboard(container, opts = {}) {
-    const { face = 'ipa', visible, onPick } = opts;
+    const { face = 'ipa', visible, onPick, grouped = true } = opts;
     const doc    = container.ownerDocument;
     const isShown = visible instanceof Set ? l => visible.has(l)
                   : typeof visible === 'function' ? visible
                   : () => true;
     const buttons = [];
     container.innerHTML = '';
-    letterGroups.forEach(grp => {
+    const blocks = grouped ? letterGroups
+                           : [{ lbl: null, letters: letterGroups.flatMap(g => g.letters) }];
+    blocks.forEach(grp => {
       const g = doc.createElement('div');
       g.className = 'kb-group';
-      const lbl = doc.createElement('div');
-      lbl.className   = 'kb-label';
-      lbl.textContent = grp.lbl;
-      g.appendChild(lbl);
+      if (grp.lbl !== null) {
+        const lbl = doc.createElement('div');
+        lbl.className   = 'kb-label';
+        lbl.textContent = grp.lbl;
+        g.appendChild(lbl);
+      }
       const row = doc.createElement('div');
       row.className = 'kb-row';
       grp.letters.forEach(l => {
