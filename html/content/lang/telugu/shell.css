@@ -125,7 +125,7 @@ tr:last-child td { border-bottom: none; }
 }
 .fc .prompt { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; font-size: 4.6rem; line-height: 1.2; color: var(--text); }
 .fc .prompt.long { font-size: 3.2rem; }
-.fc .answer { font-size: 22px; font-weight: 600; color: var(--accent-light); }
+.fc .answer { font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif; font-size: 22px; font-weight: 600; color: var(--accent-light); }
 .fc .answer-note { font-size: 13px; color: var(--text-muted); }
 .fc .cat { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); }
 .fc-actions { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }

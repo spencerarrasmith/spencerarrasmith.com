@@ -39,7 +39,7 @@ if (!Progress) throw new Error('progress.js was not found next to this page');
 const body = document.getElementById('rv-body');
 const esc  = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const LABELS = { phonemes: 'Phonemes', diacritics: 'Diacritics', conjuncts: 'Conjuncts' };
+const LABELS = { phonemes: 'Phonemes', 'phonemes-reverse': 'Phonemes (IPA → Telugu)', diacritics: 'Diacritics', conjuncts: 'Conjuncts' };
 const label  = g => LABELS[g] || g.replace(/[-_]+/g, ' ').replace(/^./, c => c.toUpperCase());
 
 let view = 'overview';          // overview | card | summary

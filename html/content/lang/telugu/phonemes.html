@@ -70,6 +70,32 @@
       text-transform: uppercase;
     }
 
+    .g-title-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+    /* Direction toggle (🔀) next to the title */
+    .rev-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 26px;
+      padding: 0;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--text-dim);
+      background: var(--surface-up);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background .12s, border-color .12s, transform .08s;
+    }
+    .rev-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .rev-btn:active { transform: scale(.92); }
+    .rev-btn:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+    .rev-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-glow); }
+
     .g-stats {
       display: flex;
       gap: 20px;
@@ -101,8 +127,9 @@
       border-bottom: 1px solid var(--border);
       padding: 7px 24px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 20px;
+      gap: 6px 20px;
     }
 
     .g-controls-sep {
@@ -148,18 +175,18 @@
     }
 
     /* The signature element: warm amber halo on the card */
+    /* 16:9 tile: wider and shorter than the old 160px square.
+       Category label sits top-left, the "rare" pip top-right. */
     .char-card {
       position: relative;
-      width: 160px;
-      height: 160px;
-      background: radial-gradient(ellipse at 50% 40%, #1e1830 0%, #111221 68%);
+      width: min(256px, 100%);
+      aspect-ratio: 16 / 9;
+      background: radial-gradient(ellipse at 50% 45%, #1e1830 0%, #111221 70%);
       border: 1.5px solid var(--border);
-      border-radius: 22px;
+      border-radius: 20px;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 5px;
       box-shadow:
         0 8px 32px rgba(0,0,0,.55),
         inset 0 0 48px rgba(201, 152, 26, 0.05);
@@ -196,11 +223,15 @@
     }
 
     .cat-badge {
+      position: absolute;
+      top: 10px;
+      left: 13px;
       font-size: 10px;
       font-weight: 600;
       color: var(--accent);
       text-transform: uppercase;
       letter-spacing: .08em;
+      line-height: 1.2;
       opacity: 1;
     }
 
@@ -248,12 +279,23 @@
 
     .tel-char {
       font-family: 'Noto Sans Telugu', serif;
-      font-size: 6.2rem;
+      font-size: 5.6rem;
       font-weight: 700;
       color: var(--text);
       line-height: 1;
+      margin-top: 26px;   /* Telugu ink sits high in its line box; this centres it and clears the label */
       user-select: none;
     }
+
+    /* Reverse mode: the card shows the phoneme, written /like this/ */
+    .tel-char.ipa-face {
+      font-family: 'Noto Sans', 'Inter', system-ui, sans-serif;
+      font-weight: 500;
+      font-size: 5rem;
+      letter-spacing: .01em;
+      margin-top: 10px;
+    }
+    .ipa-face .sl { color: var(--text-muted); font-weight: 400; font-size: .7em; }
 
     .feedback {
       height: 20px;
@@ -263,6 +305,7 @@
       font-weight: 500;
       letter-spacing: .01em;
     }
+    .feedback.te { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; font-size: 16px; }
     .feedback.ok  { color: var(--success); }
     .feedback.err { color: var(--error); }
 
@@ -316,6 +359,14 @@
       transition: background .1s, border-color .1s, color .1s, transform .08s;
       user-select: none;
       text-align: center;
+    }
+
+    /* Telugu-faced keys (reverse mode) */
+    .kb-btn.te {
+      font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif;
+      font-size: 22px;
+      line-height: 1.35;
+      padding: 4px 13px;
     }
 
     .kb-btn:hover {
@@ -405,6 +456,13 @@
     }
 
     .retry-btn:active { transform: translateY(0); }
+
+    @media (max-width: 520px) {
+      .g-header   { padding-left: 16px; padding-right: 16px; }
+      .g-controls { padding-left: 16px; padding-right: 16px; gap: 6px 16px; }
+      .g-controls-sep { display: none; }
+      .g-main     { padding-left: 16px; padding-right: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -413,7 +471,11 @@
   <!-- ── Progress header ── -->
   <header class="g-header">
     <div class="g-header-top">
-      <span class="g-title">Telugu → IPA</span>
+      <div class="g-title-row">
+        <span class="g-title" id="g-title">Telugu → IPA</span>
+        <button class="rev-btn" id="rev-btn" type="button" aria-pressed="false"
+                aria-label="Reverse direction: IPA to Telugu" title="Reverse direction">🔀</button>
+      </div>
       <div class="g-stats">
         <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">48</span></span>
         <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">48</span></span>
@@ -429,6 +491,8 @@
     <label class="cat-toggle"><input type="checkbox" id="show-cat" checked> Show category</label>
     <div class="g-controls-sep"></div>
     <label class="cat-toggle"><input type="checkbox" id="include-extra"> Include extra letters</label>
+    <div class="g-controls-sep"></div>
+    <label class="cat-toggle"><input type="checkbox" id="highlight-correct" checked> Highlight correct answer</label>
   </div>
 
   <!-- ── Game main ── -->
@@ -481,15 +545,19 @@ if (!window.TeluguData) throw new Error('telugu-data.js was not found next to th
      rare    → "rare" badge on the card
      inBook  → false for the extras
 ───────────────────────────────────────────────────────── */
-const GAME      = 'phonemes';
+const GAME      = 'phonemes';            // tile id: finishing either direction ticks the tile
 const CHARS     = TeluguData.letters;
-const KB_GROUPS = TeluguData.letterGroups;
 const Progress  = window.TeluguProgress || { miss() {}, complete() {} };
 
 /* ─────────────────────────────────────────────────────────
    STATE
+   reversed = false → card shows the Telugu letter, keys show IPA
+   reversed = true  → card shows the IPA phoneme, keys show Telugu
+   The keyboard itself (layout, order, groups) is built by
+   TeluguData.buildKeyboard, so it lives with the alphabet data.
 ───────────────────────────────────────────────────────── */
 let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
+let reversed = false;
 
 /* ─────────────────────────────────────────────────────────
    HELPERS
@@ -503,40 +571,24 @@ function shuffle(arr) {
   return a;
 }
 
-// Find button by exact IPA string match (avoids CSS-escape issues)
-function btnForIpa(ipa) {
+const escHtml = s => String(s).replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Both keyboards share one key per letter; match by the letter itself
+// (data-ch is unique, data-ipa is unique too, but the glyph is the identity).
+function btnForLetter(letter) {
   return Array.from(document.querySelectorAll('.kb-btn'))
-    .find(b => b.dataset.ipa === ipa) || null;
+    .find(b => b.dataset.ch === letter.ch) || null;
 }
 
 /* ─────────────────────────────────────────────────────────
-   BUILD KEYBOARD
+   BUILD KEYBOARD  (layout comes from telugu-data.js)
 ───────────────────────────────────────────────────────── */
-function buildKB(activeIpa) {
-  const area = document.getElementById('kb-area');
-  area.innerHTML = '';
-  KB_GROUPS.forEach(grp => {
-    const g   = document.createElement('div');
-    g.className = 'kb-group';
-
-    const lbl = document.createElement('div');
-    lbl.className   = 'kb-label';
-    lbl.textContent = grp.lbl;
-    g.appendChild(lbl);
-
-    const row = document.createElement('div');
-    row.className = 'kb-row';
-    grp.ipa.forEach(ipa => {
-      const btn = document.createElement('button');
-      btn.className       = 'kb-btn';
-      btn.textContent     = ipa;
-      btn.dataset.ipa     = ipa;
-      if (!activeIpa.has(ipa)) btn.style.display = 'none';
-      btn.addEventListener('click', () => onAnswer(ipa, btn));
-      row.appendChild(btn);
-    });
-    g.appendChild(row);
-    area.appendChild(g);
+function buildKB(activeLetters) {
+  TeluguData.buildKeyboard(document.getElementById('kb-area'), {
+    face:    reversed ? 'telugu' : 'ipa',
+    visible: activeLetters,
+    onPick:  onAnswer,
   });
 }
 
@@ -546,8 +598,17 @@ function buildKB(activeIpa) {
 function renderCard() {
   const c = deck[0];
   const tel = document.getElementById('tel-char');
-  tel.textContent    = c.ch;
-  tel.style.fontSize = [...c.ch].length >= 3 ? '4.6rem' : '';   // wide conjunct (క్ష)
+  if (reversed) {
+    // the phoneme, written /like this/; longer strings (tʃʰ, dʒʱ) step down a size
+    const n = [...c.ipa].length;
+    tel.className      = 'tel-char ipa-face';
+    tel.innerHTML      = `<span class="sl">/</span>${escHtml(c.ipa)}<span class="sl">/</span>`;
+    tel.style.fontSize = n >= 4 ? '3.4rem' : n === 3 ? '4.2rem' : '';
+  } else {
+    tel.className      = 'tel-char';
+    tel.textContent    = c.ch;
+    tel.style.fontSize = [...c.ch].length >= 3 ? '4.2rem' : '';   // wide conjunct (క్ష)
+  }
   const badge = document.getElementById('cat-badge');
   badge.textContent  = c.cat;
   badge.style.visibility = document.getElementById('show-cat').checked ? '' : 'hidden';
@@ -573,13 +634,13 @@ function updateProg() {
 /* ─────────────────────────────────────────────────────────
    ANSWER HANDLER
 ───────────────────────────────────────────────────────── */
-function onAnswer(ipa, btn) {
+function onAnswer(letter, btn) {
   if (locked) return;
   locked = true;
   attempts++;
 
   const cur = deck[0];
-  const ok  = (ipa === cur.ipa);
+  const ok  = (letter === cur);
 
   const card = document.getElementById('char-card');
   const fb   = document.getElementById('feedback');
@@ -603,12 +664,19 @@ function onAnswer(ipa, btn) {
   } else {
     btn.classList.add('err');
     card.classList.add('wrong');
-    fb.textContent = `✗  /${cur.ipa}/`;
-    fb.className   = 'feedback err';
-    Progress.miss({ game: GAME, key: cur.ch, prompt: cur.ch, answer: `/${cur.ipa}/`, note: cur.cat });
+    if (reversed) {
+      fb.textContent = `✗  ${cur.ch}`;
+      fb.className   = 'feedback err te';
+      Progress.miss({ game: GAME + '-reverse', key: cur.ch, prompt: `/${cur.ipa}/`, answer: cur.ch, note: cur.cat });
+    } else {
+      fb.textContent = `✗  /${cur.ipa}/`;
+      fb.className   = 'feedback err';
+      Progress.miss({ game: GAME, key: cur.ch, prompt: cur.ch, answer: `/${cur.ipa}/`, note: cur.cat });
+    }
 
-    // Highlight the correct button and scroll it into view
-    const correctBtn = btnForIpa(cur.ipa);
+    // Highlight the correct key and scroll it into view (optional).
+    // The answer text above is shown either way.
+    const correctBtn = document.getElementById('highlight-correct').checked ? btnForLetter(cur) : null;
     if (correctBtn) {
       correctBtn.classList.add('ok');
       correctBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -635,8 +703,9 @@ function showComplete() {
   document.getElementById('g-main').style.display = 'none';
   document.getElementById('g-complete').classList.add('show');
 
-  document.getElementById('c-sub').textContent =
-    `All ${total} Telugu akshara correctly matched to their IPA phonemes.`;
+  document.getElementById('c-sub').textContent = reversed
+    ? `All ${total} IPA phonemes correctly matched to their Telugu akshara.`
+    : `All ${total} Telugu akshara correctly matched to their IPA phonemes.`;
   const errors = attempts - total;
   const acc    = Math.round(total / attempts * 100);
   document.getElementById('c-attempts').textContent = attempts;
@@ -660,11 +729,22 @@ function initGame() {
   document.getElementById('g-main').style.display = '';
   document.getElementById('kb-area').scrollTop = 0;
 
-  const activeIpa = new Set(pool.map(c => c.ipa));
-  buildKB(activeIpa);
+  buildKB(new Set(pool));
   updateProg();
   renderCard();
 }
+
+// 🔀 flips direction and starts a fresh round in the new direction
+function setReversed(rev) {
+  reversed = rev;
+  const btn = document.getElementById('rev-btn');
+  btn.setAttribute('aria-pressed', String(rev));
+  btn.setAttribute('aria-label', rev ? 'Reverse direction: Telugu to IPA' : 'Reverse direction: IPA to Telugu');
+  document.getElementById('g-title').textContent = rev ? 'IPA → Telugu' : 'Telugu → IPA';
+  initGame();
+}
+
+document.getElementById('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
 document.getElementById('show-cat').addEventListener('change', e => {
   document.getElementById('cat-badge').style.visibility = e.target.checked ? '' : 'hidden';

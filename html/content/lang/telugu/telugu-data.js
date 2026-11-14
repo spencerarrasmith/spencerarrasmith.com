@@ -16,6 +16,9 @@
              Pages show items with core:false only when their
              "Include extra letters/clusters" box is ticked.
 
+   KEYBOARD  buildKeyboard() draws the letter keyboard (IPA or Telugu
+   face) in alphabet order, so pages share one layout.
+
    Row syntax for letters:  [glyph, ipa, flags?]  flags is a
    string containing 'rare' and/or 'extra'.
 ═════════════════════════════════════════════════════════ */
@@ -219,14 +222,67 @@
   // Default practice set, or everything when the page's "include extra" box is ticked.
   const pool = (items, includeExtra) => includeExtra ? items : items.filter(i => i.core);
 
-  // Keyboard groups for the letter keyboard, in first-seen order.
+  // Keyboard groups for the letter keyboard, in alphabet order:
+  // vowels, then each place of articulation. `letters` holds the items
+  // themselves, `ipa` just their phoneme strings.
   const letterGroups = [];
   letters.forEach(l => {
     const lbl = l.cat === 'Vowel' ? 'Vowels' : l.cat;
     let g = letterGroups.find(x => x.lbl === lbl);
-    if (!g) letterGroups.push(g = { lbl, ipa: [] });
+    if (!g) letterGroups.push(g = { lbl, ipa: [], letters: [] });
     g.ipa.push(l.ipa);
+    g.letters.push(l);
   });
+
+  /* ── Letter keyboard ─────────────────────────────────────
+     One keyboard, two faces, built from letterGroups so every
+     page lays the alphabet out the same way:
+
+       buildKeyboard(container, {
+         face:    'ipa' | 'telugu',     what is printed on the keys
+         visible: Set | fn(letter)      letters to show (default: all);
+                                        the rest are rendered hidden
+         onPick:  fn(letter, button)
+       })
+
+     Markup:  .kb-group > .kb-label + .kb-row > button.kb-btn
+              (Telugu face adds .te). Each key carries data-ipa and
+              data-ch. Styling is left to the page.
+     Returns  the buttons, in alphabet order.                      */
+  function buildKeyboard(container, opts = {}) {
+    const { face = 'ipa', visible, onPick } = opts;
+    const doc    = container.ownerDocument;
+    const isShown = visible instanceof Set ? l => visible.has(l)
+                  : typeof visible === 'function' ? visible
+                  : () => true;
+    const buttons = [];
+    container.innerHTML = '';
+    letterGroups.forEach(grp => {
+      const g = doc.createElement('div');
+      g.className = 'kb-group';
+      const lbl = doc.createElement('div');
+      lbl.className   = 'kb-label';
+      lbl.textContent = grp.lbl;
+      g.appendChild(lbl);
+      const row = doc.createElement('div');
+      row.className = 'kb-row';
+      grp.letters.forEach(l => {
+        const btn = doc.createElement('button');
+        btn.type        = 'button';
+        btn.className   = 'kb-btn' + (face === 'telugu' ? ' te' : '');
+        btn.textContent = face === 'telugu' ? l.ch : l.ipa;
+        btn.dataset.ipa = l.ipa;
+        btn.dataset.ch  = l.ch;
+        if (!isShown(l)) btn.style.display = 'none';
+        btn.addEventListener('click', () => { if (onPick) onPick(l, btn); });
+        row.appendChild(btn);
+        buttons.push(btn);
+      });
+      g.appendChild(row);
+      container.appendChild(g);
+    });
+    return buttons;
+  }
 
   // Catch typos while editing the data.
   (function check() {
@@ -244,7 +300,7 @@
     VIRAMA, DENT, SYL, NAS,
     letters, vowels, consonants, conjunctLetters,
     signs, clusterSets: CLUSTER_SETS, clusters,
-    letterGroups, pool,
+    letterGroups, pool, buildKeyboard,
   });
 
   root.TeluguData = data;
