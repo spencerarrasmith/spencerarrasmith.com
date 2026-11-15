@@ -1,39 +1,12 @@
 /* ═════════════════════════════════════════════════════════
    shell.css — shared look for lesson pages and Review.
-   Same midnight + gold tokens as the game pages. Pages that
-   use it: lesson-template.html, review.html and every lesson
+   Colours, fonts and the reset come from base.css (shared
+   with game.css, the stylesheet for the practice games).
+   Pages that use it: lesson-template.html, review.html and every lesson
    built on lesson-shell.js.
 ═════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('base.css');   /* fonts, reset, colour tokens, page defaults — shared with game.css */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg:           #0b0c18;
-  --surface:      #111221;
-  --surface-up:   #191a2e;
-  --border:       #252648;
-  --accent:       #c9981a;
-  --accent-glow:  rgba(201, 152, 26, 0.16);
-  --accent-light: #f5c842;
-  --success:      #4ade80;
-  --success-dim:  rgba(74, 222, 128, 0.12);
-  --error:        #f87171;
-  --error-dim:    rgba(248, 113, 113, 0.12);
-  --text:         #fbf8ee;
-  --text-dim:     #d0d0e8;
-  --text-muted:   #9c9cc8;
-  --safe-bottom:  env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px));
-}
-
-html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overflow: hidden;
-}
-[hidden] { display: none !important; }
 .te { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; }
 
 /* ── Page frame: header · scrolling body · footer ──────── */

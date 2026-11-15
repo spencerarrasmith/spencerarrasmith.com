@@ -4,311 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Phonemes</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="game.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:           #0b0c18;
-      --surface:      #111221;
-      --surface-up:   #191a2e;
-      --border:       #252648;
-      --accent:       #c9981a;
-      --accent-glow:  rgba(201, 152, 26, 0.16);
-      --accent-light: #f5c842;
-      --success:      #4ade80;
-      --success-dim:  rgba(74, 222, 128, 0.12);
-      --error:        #f87171;
-      --error-dim:    rgba(248, 113, 113, 0.12);
-      --text:         #fbf8ee;
-      --text-dim:     #d0d0e8;
-      --text-muted:   #9c9cc8;
-
-      /* System bottom inset (home indicator / gesture bar). Falls back to a
-         --safe-area-inset-bottom custom property if env() is unavailable. */
-      --safe-bottom:  env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px));
-    }
-
-    html, body {
-      height: 100%;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow: hidden;
-    }
-
-    /* ── Shell ────────────────────────────────── */
-    .game-wrap {
-      height: 100vh;   /* fallback */
-      height: 100dvh;  /* excludes mobile browser toolbars */
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* ── Header ───────────────────────────────── */
-    .g-header {
-      flex-shrink: 0;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 11px 24px 10px;
-      position: relative;
-      z-index: 20;              /* the options menu drops over the game area */
-    }
-
-    .g-header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 9px;
-    }
-
-    .g-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-
-    .g-title-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
-
-    /* Small icon buttons: direction toggle (🔀) and options menu (⋮) */
-    .rev-btn, .menu-btn {
-      appearance: none;
-      -webkit-appearance: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 26px;
-      padding: 0;
-      font-size: 14px;
-      line-height: 1;
-      color: var(--text-dim);
-      background: var(--surface-up);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      cursor: pointer;
-      transition: background .12s, border-color .12s, transform .08s;
-    }
-    .rev-btn:hover, .menu-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
-    .rev-btn:active, .menu-btn:active { transform: scale(.92); }
-    .rev-btn:focus-visible, .menu-btn:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
-    .rev-btn[aria-pressed="true"], .menu-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-glow); }
-    .menu-btn svg { width: 16px; height: 16px; fill: currentColor; }
-
-    .g-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-
-    .g-stats {
-      display: flex;
-      gap: 20px;
-      font-size: 12.5px;
-      color: var(--text-muted);
-    }
-
-    .g-stat-val { font-weight: 600; color: var(--text-dim); }
-
-    .g-prog-track {
-      height: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .g-prog-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-light));
-      border-radius: 2px;
-      width: 0%;
-      transition: width .5s ease;
-    }
-
-    /* ── Options menu (⋮, top right) ──────────── */
-    .menu-wrap { position: relative; }
-
-    .menu {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      z-index: 30;
-      min-width: 244px;
-      padding: 6px;
-      background: var(--surface-up);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, .65);
-    }
-
-    .menu .cat-toggle {
-      gap: 11px;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 13.5px;
-      color: var(--text-dim);
-      transition: background .1s;
-    }
-    .menu .cat-toggle:hover { background: var(--accent-glow); }
-    .menu .cat-toggle:focus-within { outline: 2px solid var(--accent-light); outline-offset: -2px; }
-    .menu .cat-toggle input[type=checkbox] { width: 16px; height: 16px; }
-    .menu .cat-toggle input[type=checkbox]:checked::after { top: 1.5px; left: 4.5px; width: 4px; height: 8px; }
-    .menu .menu-txt { display: flex; flex-direction: column; gap: 2px; }
-    .menu .menu-note { font-size: 11px; color: var(--text-muted); }
-
-    /* a checkbox the app is holding in place (categories while the keyboard is shuffled) */
-    .cat-toggle.disabled { opacity: .55; cursor: default; }
-    .cat-toggle.disabled:hover { background: transparent; }
-    .cat-toggle input[type=checkbox]:disabled { cursor: default; }
-
-    /* ── Rare badge (card corner pip) ─────────── */
-    .rare-badge {
-      position: absolute;
-      top: 9px;
-      right: 11px;
-      font-size: 9px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      background: var(--surface-up);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 2px 5px;
-    }
-
-    /* ── Game body ────────────────────────────── */
-    .g-main {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      padding: 18px 26px 14px;
-      gap: 12px;
-      overflow: hidden;
-    }
-
-    /* ── Character card ───────────────────────── */
-    .card-area {
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* The signature element: warm amber halo on the card */
-    /* 16:9 tile: wider and shorter than the old 160px square.
-       Category label sits top-left, the "rare" pip top-right. */
-    .char-card {
-      position: relative;
-      width: min(256px, 100%);
-      aspect-ratio: 16 / 9;
-      background: radial-gradient(ellipse at 50% 45%, #1e1830 0%, #111221 70%);
-      border: 1.5px solid var(--border);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow:
-        0 8px 32px rgba(0,0,0,.55),
-        inset 0 0 48px rgba(201, 152, 26, 0.05);
-      transition: border-color .18s, box-shadow .18s;
-    }
-
-    .char-card.correct {
-      border-color: var(--success);
-      box-shadow:
-        0 0 24px rgba(74, 222, 128, .28),
-        0 8px 32px rgba(0,0,0,.55);
-      animation: pop .28s ease;
-    }
-
-    .char-card.wrong {
-      border-color: var(--error);
-      box-shadow:
-        0 0 24px rgba(248, 113, 113, .28),
-        0 8px 32px rgba(0,0,0,.55);
-      animation: shake .32s ease;
-    }
-
-    @keyframes pop {
-      0%   { transform: scale(1); }
-      45%  { transform: scale(1.08); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      22%  { transform: translateX(-8px); }
-      55%  { transform: translateX(8px); }
-      80%  { transform: translateX(-4px); }
-    }
-
-    .cat-badge {
-      position: absolute;
-      top: 10px;
-      left: 13px;
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      line-height: 1.2;
-      opacity: 1;
-    }
-
-    .cat-toggle {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      color: var(--text-muted);
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .cat-toggle input[type=checkbox] {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 13px;
-      height: 13px;
-      border: 1.5px solid var(--text-muted);
-      border-radius: 3px;
-      background: transparent;
-      cursor: pointer;
-      flex-shrink: 0;
-      position: relative;
-      transition: background .12s, border-color .12s;
-    }
-
-    .cat-toggle input[type=checkbox]:checked {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .cat-toggle input[type=checkbox]:checked::after {
-      content: '';
-      position: absolute;
-      top: 1px;
-      left: 3px;
-      width: 4px;
-      height: 7px;
-      border: 1.5px solid #0b0c18;
-      border-top: none;
-      border-left: none;
-      transform: rotate(45deg);
-    }
-
-    .tel-char {
-      font-family: 'Noto Sans Telugu', serif;
-      font-size: 5.6rem;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1;
-      margin-top: 26px;   /* Telugu ink sits high in its line box; this centres it and clears the label */
-      user-select: none;
-    }
+    /* ── Phonemes-specific (everything shared lives in game.css) ── */
 
     /* Reverse mode: the card shows the phoneme, written /like this/ */
     .tel-char.ipa-face {
@@ -319,173 +17,6 @@
       margin-top: 10px;
     }
     .ipa-face .sl { color: var(--text-muted); font-weight: 400; font-size: .7em; }
-
-    .feedback {
-      height: 20px;
-      display: flex;
-      align-items: center;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: .01em;
-    }
-    .feedback.te { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; font-size: 16px; }
-    .feedback.ok  { color: var(--success); }
-    .feedback.err { color: var(--error); }
-
-    /* ── Phoneme keyboard ─────────────────────── */
-    .kb-area {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-      padding-bottom: calc(16px + var(--safe-bottom));
-      padding-right: 4px;
-
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
-
-    .kb-area::-webkit-scrollbar { width: 4px; }
-    .kb-area::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 2px;
-    }
-
-    .kb-group { display: flex; flex-direction: column; gap: 5px; }
-
-    .kb-label {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .kb-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .kb-btn {
-      padding: 6px 13px;
-      min-width: 50px;
-      background: var(--surface-up);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-dim);
-      font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background .1s, border-color .1s, color .1s, transform .08s;
-      user-select: none;
-      text-align: center;
-    }
-
-    /* Telugu-faced keys (reverse mode) */
-    .kb-btn.te {
-      font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif;
-      font-size: 22px;
-      line-height: 1.35;
-      padding: 4px 13px;
-    }
-
-    .kb-btn:hover {
-      background: var(--accent-glow);
-      border-color: var(--accent);
-      color: var(--accent-light);
-    }
-
-    .kb-btn:active { transform: scale(.92); }
-
-    .kb-btn.ok {
-      background: var(--success-dim);
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .kb-btn.err {
-      background: var(--error-dim);
-      border-color: var(--error);
-      color: var(--error);
-    }
-
-    /* ── Complete screen ──────────────────────── */
-    .g-complete {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 22px;
-      padding: 24px;
-      text-align: center;
-    }
-
-    .g-complete.show {
-      display: flex;
-      animation: fade-up .45s ease;
-    }
-
-    @keyframes fade-up {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .trophy { font-size: 58px; animation: trophy-in .6s ease; }
-
-    @keyframes trophy-in {
-      from { transform: scale(.4) translateY(12px); opacity: 0; }
-      70%  { transform: scale(1.14) translateY(-4px); opacity: 1; }
-      to   { transform: scale(1); }
-    }
-
-    .c-title { font-size: 25px; font-weight: 700; color: var(--text); }
-    .c-sub   { font-size: 14px; color: var(--text-dim); max-width: 340px; }
-
-    .c-stats {
-      display: flex;
-      gap: 36px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 15px 28px;
-    }
-
-    .c-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .c-stat-val { font-size: 24px; font-weight: 700; color: var(--accent-light); }
-    .c-stat-lbl { font-size: 11px; color: var(--text-muted); }
-
-    .retry-btn {
-      padding: 11px 36px;
-      background: var(--accent);
-      color: #0b0c18;
-      border: none;
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 14.5px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: filter .14s, transform .1s, box-shadow .14s;
-      letter-spacing: .01em;
-    }
-
-    .retry-btn:hover {
-      filter: brightness(1.1);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(201, 152, 26, .45);
-    }
-
-    .retry-btn:active { transform: translateY(0); }
-
-    @media (max-width: 520px) {
-      .g-header   { padding-left: 16px; padding-right: 16px; }
-      .g-main     { padding-left: 16px; padding-right: 16px; }
-      .g-right    { gap: 10px; }
-      .g-stats    { gap: 12px; }
-    }
   </style>
 </head>
 <body>
@@ -510,10 +41,10 @@
             <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="2.8" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="8" cy="13.2" r="1.6"/></svg>
           </button>
           <div class="menu" id="opts-menu" role="group" aria-label="Options" hidden>
-            <label class="cat-toggle"><input type="checkbox" id="show-cat" checked> <span class="menu-txt"><span>Show categories</span><span class="menu-note" id="cat-note" hidden>Off while keyboard is shuffled</span></span></label>
-            <label class="cat-toggle"><input type="checkbox" id="shuffle-kb"> <span>Shuffle keyboard</span></label>
-            <label class="cat-toggle"><input type="checkbox" id="include-extra"> <span>Include extra letters</span></label>
-            <label class="cat-toggle"><input type="checkbox" id="highlight-correct" checked> <span>Highlight correct answer</span></label>
+            <label class="menu-opt"><input type="checkbox" id="show-cat" checked> <span class="menu-txt"><span>Show categories</span><span class="menu-note" id="cat-note" hidden>Off while keyboard is shuffled</span></span></label>
+            <label class="menu-opt"><input type="checkbox" id="shuffle-kb"> <span>Shuffle keyboard</span></label>
+            <label class="menu-opt"><input type="checkbox" id="include-extra"> <span>Include extra letters</span></label>
+            <label class="menu-opt"><input type="checkbox" id="highlight-correct" checked> <span>Highlight correct answer</span></label>
           </div>
         </div>
       </div>
@@ -562,6 +93,7 @@
 
 <script src="telugu-data.js"></script>
 <script src="progress.js"></script>
+<script src="game-menu.js"></script>
 <script>
 if (!window.TeluguData) throw new Error('telugu-data.js was not found next to this page');
 
@@ -624,7 +156,7 @@ function buildKB() {
   TeluguData.buildKeyboard(document.getElementById('kb-area'), {
     face:    reversed ? 'telugu' : 'ipa',
     visible: activeLetters,
-    grouped: document.getElementById('show-cat').checked,
+    grouped: GameMenu.grouped(),
     order:   kbOrder,
     onPick:  onAnswer,
   });
@@ -768,7 +300,7 @@ function initGame() {
   document.getElementById('kb-area').scrollTop = 0;
 
   activeLetters = new Set(pool);
-  kbOrder = document.getElementById('shuffle-kb').checked ? shuffle(CHARS) : null;   // fresh order each round
+  kbOrder = GameMenu.shuffled() ? shuffle(CHARS) : null;   // fresh order each round
   buildKB();
   updateProg();
   renderCard();
@@ -786,50 +318,16 @@ function setReversed(rev) {
 
 document.getElementById('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
-/* ── Options menu ─────────────────────────────────────── */
-const menuWrap = document.getElementById('menu-wrap');
-const menuBtn  = document.getElementById('menu-btn');
-const menu     = document.getElementById('opts-menu');
-
-function setMenu(open) {
-  menu.hidden = !open;
-  menuBtn.setAttribute('aria-expanded', String(open));
-}
-menuBtn.addEventListener('click', () => setMenu(menu.hidden));
-// Stays open while ticking boxes; closes on a tap anywhere else, or Escape.
-document.addEventListener('pointerdown', e => { if (!menu.hidden && !menuWrap.contains(e.target)) setMenu(false); });
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); }
-});
-
-/* ── Options ──────────────────────────────────────────── */
-// Shuffling forces categories off (a shuffled keyboard has no groups) and
-// holds the box there. Un-shuffling frees it again but leaves it unticked.
-function syncCategoryControl() {
-  const cat      = document.getElementById('show-cat');
-  const shuffled = document.getElementById('shuffle-kb').checked;
-  if (shuffled) cat.checked = false;
-  cat.disabled = shuffled;
-  cat.closest('.cat-toggle').classList.toggle('disabled', shuffled);
-  document.getElementById('cat-note').hidden = !shuffled;
-  document.getElementById('cat-badge').style.visibility = cat.checked ? '' : 'hidden';
-}
-
-document.getElementById('show-cat').addEventListener('change', () => {
-  syncCategoryControl();            // card label follows the box
-  buildKB();                        // regroup / flatten both keyboards
-});
-
-document.getElementById('shuffle-kb').addEventListener('change', e => {
-  syncCategoryControl();
-  kbOrder = e.target.checked ? shuffle(CHARS) : null;
-  buildKB();
+/* ── Options menu (⋮) ─────────────────────────────────── */
+// Open/close, "Show categories" and "Shuffle keyboard" are shared: game-menu.js.
+GameMenu.init({
+  rebuild: buildKB,
+  reorder: on => { kbOrder = on ? shuffle(CHARS) : null; },
 });
 
 document.getElementById('include-extra').addEventListener('change', initGame);
 
 document.getElementById('retry-btn').addEventListener('click', initGame);
-syncCategoryControl();              // browsers can restore ticked boxes on reload
 initGame();
 </script>
 </body>

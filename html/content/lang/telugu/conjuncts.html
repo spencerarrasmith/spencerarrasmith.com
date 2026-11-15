@@ -4,455 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Conjuncts</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="game.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:           #0b0c18;
-      --surface:      #111221;
-      --surface-up:   #191a2e;
-      --border:       #252648;
-      --accent:       #c9981a;
-      --accent-glow:  rgba(201, 152, 26, 0.16);
-      --accent-light: #f5c842;
-      --success:      #4ade80;
-      --success-dim:  rgba(74, 222, 128, 0.12);
-      --error:        #f87171;
-      --error-dim:    rgba(248, 113, 113, 0.12);
-      --text:         #fbf8ee;
-      --text-dim:     #d0d0e8;
-      --text-muted:   #9c9cc8;
-
-      /* System bottom inset (home indicator / gesture bar). Falls back to a
-         --safe-area-inset-bottom custom property if env() is unavailable. */
-      --safe-bottom:  env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px));
-    }
-
-    html, body {
-      height: 100%;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow: hidden;
-    }
-
-    /* ── Shell ────────────────────────────────── */
-    .game-wrap {
-      height: 100vh;   /* fallback */
-      height: 100dvh;  /* excludes mobile browser toolbars */
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* ── Header ───────────────────────────────── */
-    .g-header {
-      flex-shrink: 0;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 11px 24px 10px;
-    }
-
-    .g-header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 9px;
-    }
-
-    .g-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-
-    .g-stats {
-      display: flex;
-      gap: 20px;
-      font-size: 12.5px;
-      color: var(--text-muted);
-    }
-
-    .g-stat-val { font-weight: 600; color: var(--text-dim); }
-
-    .g-prog-track {
-      height: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .g-prog-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-light));
-      border-radius: 2px;
-      width: 0%;
-      transition: width .5s ease;
-    }
-
-    /* ── Controls bar ─────────────────────────── */
-    .g-controls {
-      flex-shrink: 0;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 7px 24px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .g-controls-sep {
-      width: 1px;
-      height: 14px;
-      background: var(--border);
-    }
-
-    /* ── Rare badge (card corner pip) ─────────── */
-    .rare-badge {
-      position: absolute;
-      top: 9px;
-      right: 11px;
-      font-size: 9px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      background: var(--surface-up);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 2px 5px;
-    }
-
-    /* ── Game body ────────────────────────────── */
-    .g-main {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      padding: 18px 26px 14px;
-      gap: 12px;
-      overflow: hidden;
-    }
-
-    /* ── Character card ───────────────────────── */
-    .card-area {
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* The signature element: warm amber halo on the card */
-    .char-card {
-      position: relative;
-      width: 160px;
-      height: 160px;
-      background: radial-gradient(ellipse at 50% 40%, #1e1830 0%, #111221 68%);
-      border: 1.5px solid var(--border);
-      border-radius: 22px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      box-shadow:
-        0 8px 32px rgba(0,0,0,.55),
-        inset 0 0 48px rgba(201, 152, 26, 0.05);
-      transition: border-color .18s, box-shadow .18s;
-    }
-
-    .char-card.correct {
-      border-color: var(--success);
-      box-shadow:
-        0 0 24px rgba(74, 222, 128, .28),
-        0 8px 32px rgba(0,0,0,.55);
-      animation: pop .28s ease;
-    }
-
-    .char-card.wrong {
-      border-color: var(--error);
-      box-shadow:
-        0 0 24px rgba(248, 113, 113, .28),
-        0 8px 32px rgba(0,0,0,.55);
-      animation: shake .32s ease;
-    }
-
-    @keyframes pop {
-      0%   { transform: scale(1); }
-      45%  { transform: scale(1.08); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      22%  { transform: translateX(-8px); }
-      55%  { transform: translateX(8px); }
-      80%  { transform: translateX(-4px); }
-    }
-
-    .cat-badge {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      opacity: 1;
-    }
-
-    .cat-toggle {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      color: var(--text-muted);
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .cat-toggle input[type=checkbox] {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 13px;
-      height: 13px;
-      border: 1.5px solid var(--text-muted);
-      border-radius: 3px;
-      background: transparent;
-      cursor: pointer;
-      flex-shrink: 0;
-      position: relative;
-      transition: background .12s, border-color .12s;
-    }
-
-    .cat-toggle input[type=checkbox]:checked {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .cat-toggle input[type=checkbox]:checked::after {
-      content: '';
-      position: absolute;
-      top: 1px;
-      left: 3px;
-      width: 4px;
-      height: 7px;
-      border: 1.5px solid #0b0c18;
-      border-top: none;
-      border-left: none;
-      transform: rotate(45deg);
-    }
-
-    .tel-char {
-      font-family: 'Noto Sans Telugu', serif;
-      font-size: 6.2rem;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1;
-      user-select: none;
-    }
-
-    .feedback {
-      height: 20px;
-      display: flex;
-      align-items: center;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: .01em;
-    }
-    .feedback.ok  { color: var(--success); }
-    .feedback.err { color: var(--error); }
-
-    /* ── Phoneme keyboard ─────────────────────── */
-    .kb-area {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-      padding-bottom: calc(16px + var(--safe-bottom));
-      padding-right: 4px;
-
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
-
-    .kb-area::-webkit-scrollbar { width: 4px; }
-    .kb-area::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 2px;
-    }
-
-    .kb-group { display: flex; flex-direction: column; gap: 5px; }
-
-    .kb-label {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .kb-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .kb-btn {
-      padding: 6px 13px;
-      min-width: 50px;
-      background: var(--surface-up);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-dim);
-      font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background .1s, border-color .1s, color .1s, transform .08s;
-      user-select: none;
-      text-align: center;
-    }
-
-    .kb-btn:hover {
-      background: var(--accent-glow);
-      border-color: var(--accent);
-      color: var(--accent-light);
-    }
-
-    .kb-btn:active { transform: scale(.92); }
-
-    .kb-btn.ok {
-      background: var(--success-dim);
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .kb-btn.err {
-      background: var(--error-dim);
-      border-color: var(--error);
-      color: var(--error);
-    }
-
-    /* ── Complete screen ──────────────────────── */
-    .g-complete {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 22px;
-      padding: 24px;
-      text-align: center;
-    }
-
-    .g-complete.show {
-      display: flex;
-      animation: fade-up .45s ease;
-    }
-
-    @keyframes fade-up {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .trophy { font-size: 58px; animation: trophy-in .6s ease; }
-
-    @keyframes trophy-in {
-      from { transform: scale(.4) translateY(12px); opacity: 0; }
-      70%  { transform: scale(1.14) translateY(-4px); opacity: 1; }
-      to   { transform: scale(1); }
-    }
-
-    .c-title { font-size: 25px; font-weight: 700; color: var(--text); }
-    .c-sub   { font-size: 14px; color: var(--text-dim); max-width: 340px; }
-
-    .c-stats {
-      display: flex;
-      gap: 36px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 15px 28px;
-    }
-
-    .c-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .c-stat-val { font-size: 24px; font-weight: 700; color: var(--accent-light); }
-    .c-stat-lbl { font-size: 11px; color: var(--text-muted); }
-
-    .retry-btn {
-      padding: 11px 36px;
-      background: var(--accent);
-      color: #0b0c18;
-      border: none;
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 14.5px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: filter .14s, transform .1s, box-shadow .14s;
-      letter-spacing: .01em;
-    }
-
-    .retry-btn:hover {
-      filter: brightness(1.1);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(201, 152, 26, .45);
-    }
-
-    .retry-btn:active { transform: translateY(0); }
-  
-
-    /* ══ Conjunct-specific additions ═════════════════════════ */
+    /* ── Conjunct-specific (everything shared lives in game.css) ── */
 
     /* Conjunct glyphs stack vertically and run wide */
-    .tel-char { font-size: 4.4rem; }
-
-    /* One slot per consonant in the cluster (2 or 3) */
-    .slots { display: flex; gap: 10px; }
-
-    .slot {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 92px;
-      padding: 5px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      cursor: pointer;
-      transition: border-color .12s;
-    }
-
-    .slot-val {
-      margin-left: auto;
-      min-width: 1.6em;
-      text-align: right;
-      font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
-      font-size: 15px;
-      font-weight: 500;
-      text-transform: none;
-      letter-spacing: 0;
-      color: var(--text-muted);
-    }
-
-    .slot.filled { border-color: var(--accent); }
-    .slot.filled .slot-val { color: var(--accent-light); }
-    .slot.filled:hover { border-color: var(--accent-light); }   /* tap to clear */
-    .slot.ok  { border-color: var(--success); }
-    .slot.ok  .slot-val { color: var(--success); }
-    .slot.err { border-color: var(--error); }
-    .slot.err .slot-val { color: var(--error); }
+    .tel-char { font-size: 4.4rem; margin-top: 4px; }    /* these glyphs sit low in the line box; centres them like the other games */
 
     /* Instruction line shown until the round is answered */
     .feedback.hint {
@@ -469,22 +26,28 @@
   <header class="g-header">
     <div class="g-header-top">
       <span class="g-title">Conjuncts → IPA</span>
-      <div class="g-stats">
-        <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
-        <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">0</span></span>
+      <div class="g-right">
+        <div class="g-stats">
+          <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
+          <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">0</span></span>
+        </div>
+        <div class="menu-wrap" id="menu-wrap">
+          <button class="menu-btn" id="menu-btn" type="button" aria-haspopup="true" aria-expanded="false"
+                  aria-controls="opts-menu" aria-label="Options" title="Options">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="2.8" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="8" cy="13.2" r="1.6"/></svg>
+          </button>
+          <div class="menu" id="opts-menu" role="group" aria-label="Options" hidden>
+            <label class="menu-opt"><input type="checkbox" id="show-cat" checked> <span class="menu-txt"><span>Show categories</span><span class="menu-note" id="cat-note" hidden>Off while keyboard is shuffled</span></span></label>
+            <label class="menu-opt"><input type="checkbox" id="shuffle-kb"> <span>Shuffle keyboard</span></label>
+            <label class="menu-opt"><input type="checkbox" id="include-uncommon"> <span>Include uncommon clusters</span></label>
+          </div>
+        </div>
       </div>
     </div>
     <div class="g-prog-track">
       <div class="g-prog-fill" id="prog-fill"></div>
     </div>
   </header>
-
-  <!-- ── Controls bar ── -->
-  <div class="g-controls">
-    <label class="cat-toggle"><input type="checkbox" id="show-cat" checked> Show category</label>
-    <div class="g-controls-sep"></div>
-    <label class="cat-toggle"><input type="checkbox" id="include-uncommon"> Include uncommon clusters</label>
-  </div>
 
   <!-- ── Game main ── -->
   <div class="g-main" id="g-main">
@@ -526,6 +89,7 @@
 
 <script src="telugu-data.js"></script>
 <script src="progress.js"></script>
+<script src="game-menu.js"></script>
 <script>
 if (!window.TeluguData) throw new Error('telugu-data.js was not found next to this page');
 
@@ -558,6 +122,8 @@ const HINT         = 'Pick each consonant in order · the vowel is always the sh
 let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
 let sel = [];        // picked ipa per slot (null = empty)
 let slotEls = [];
+let keys    = [];    // the consonants on the keyboard, in alphabet order
+let kbOrder = null;  // null, or a shuffled copy of keys (fixed for the round)
 
 /* ─────────────────────────────────────────────────────────
    HELPERS
@@ -592,16 +158,20 @@ function btnFor(ipa) {
 /* ─────────────────────────────────────────────────────────
    BUILD KEYBOARD  (consonants only)
 ───────────────────────────────────────────────────────── */
-function buildKB(cons) {
+// Follows the options menu:
+//   Show categories ticked   → grouped and labelled by place of articulation
+//   Show categories unticked → one plain block of keys, alphabet order
+//   Shuffle keyboard ticked  → that block in a random order (kbOrder), which
+//                              stays fixed for the round so keys can be found
+// Rebuilding (e.g. when an option changes) never restarts the round.
+function buildKB() {
+  const grouped = GameMenu.grouped();
+  const list0   = grouped ? keys : (kbOrder || keys);
   const area = $('kb-area');
   area.innerHTML = '';
-  groupBy(cons, 'cat').forEach(([label, list]) => {
+  (grouped ? groupBy(list0, 'cat') : [[null, list0]]).forEach(([label, list]) => {
     const g = document.createElement('div');
     g.className = 'kb-group';
-
-    const l = document.createElement('div');
-    l.className   = 'kb-label';
-    l.textContent = label;
 
     const row = document.createElement('div');
     row.className = 'kb-row';
@@ -614,7 +184,13 @@ function buildKB(cons) {
       row.appendChild(btn);
     });
 
-    g.append(l, row);
+    if (label !== null) {
+      const l = document.createElement('div');
+      l.className   = 'kb-label';
+      l.textContent = label;
+      g.appendChild(l);
+    }
+    g.appendChild(row);
     area.appendChild(g);
   });
 }
@@ -778,13 +354,17 @@ function initGame() {
   $('g-main').style.display = '';
   $('kb-area').scrollTop = 0;
 
-  buildKB(cons);
+  keys    = cons;
+  kbOrder = GameMenu.shuffled() ? shuffle(keys) : null;   // fresh order each round
+  buildKB();
   updateProg();
   renderCard();
 }
 
-$('show-cat').addEventListener('change', e => {
-  $('cat-badge').style.visibility = e.target.checked ? '' : 'hidden';
+// ⋮ menu: open/close, "Show categories" and "Shuffle keyboard" live in game-menu.js
+GameMenu.init({
+  rebuild: buildKB,
+  reorder: on => { kbOrder = on ? shuffle(keys) : null; },
 });
 $('include-uncommon').addEventListener('change', initGame);
 $('retry-btn').addEventListener('click', initGame);

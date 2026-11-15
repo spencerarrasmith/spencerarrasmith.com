@@ -1,0 +1,494 @@
+/* ═════════════════════════════════════════════════════════
+   game.css — shared look for every practice game
+   (phonemes.html, diacritics.html, conjuncts.html, …).
+
+   Link it from a game page with one line:
+       <link rel="stylesheet" href="game.css">
+   It pulls in base.css (fonts, colours, reset) itself.
+
+   Holds only what games have in common. Anything that belongs
+   to one game — its tile size, its extra keyboards — stays in
+   a small <style> block in that page.
+
+   Contents
+     1. Frame + header          5. Keyboard
+     2. Icon buttons + ⋮ menu   6. Selection slots
+     3. Card (tile)             7. Complete screen
+     4. Feedback line           8. Phone layout
+═════════════════════════════════════════════════════════ */
+@import url('base.css');
+
+/* ── 1. Frame + header ─────────────────────────────────── */
+.game-wrap {
+  height: 100vh;   /* fallback */
+  height: 100dvh;  /* excludes mobile browser toolbars */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.g-header {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 11px 24px 10px;
+  position: relative;
+  z-index: 20;              /* the options menu drops over the game area */
+}
+
+.g-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.g-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.g-title-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+/* stats + ⋮ menu, pinned top right */
+.g-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+
+.g-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.g-stat-val { font-weight: 600; color: var(--text-dim); }
+
+.g-prog-track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.g-prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  border-radius: 2px;
+  width: 0%;
+  transition: width .5s ease;
+}
+
+.g-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 26px 14px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* ── 2. Icon buttons + options menu (⋮) ────────────────── */
+/* Small header buttons: direction toggle (🔀) and options menu (⋮) */
+.rev-btn, .menu-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 26px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-dim);
+  background: var(--surface-up);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, transform .08s;
+}
+.rev-btn:hover, .menu-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
+.rev-btn:active, .menu-btn:active { transform: scale(.92); }
+.rev-btn:focus-visible, .menu-btn:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+.rev-btn[aria-pressed="true"], .menu-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-glow); }
+.menu-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+/* The popover. Markup is in each page; behaviour is game-menu.js. */
+.menu-wrap { position: relative; }
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 244px;
+  padding: 6px;
+  background: var(--surface-up);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .65);
+}
+
+/* One option: a whole-row label around a checkbox */
+.menu-opt {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+  transition: background .1s;
+}
+.menu-opt:hover { background: var(--accent-glow); }
+.menu-opt:focus-within { outline: 2px solid var(--accent-light); outline-offset: -2px; }
+
+.menu-opt input[type=checkbox] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition: background .12s, border-color .12s;
+}
+.menu-opt input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
+.menu-opt input[type=checkbox]:checked::after {
+  content: '';
+  position: absolute;
+  top: 1.5px;
+  left: 4.5px;
+  width: 4px;
+  height: 8px;
+  border: 1.5px solid #0b0c18;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.menu-txt  { display: flex; flex-direction: column; gap: 2px; }
+.menu-note { font-size: 11px; color: var(--text-muted); }
+
+/* an option the app is holding in place (categories while the keyboard is shuffled) */
+.menu-opt.disabled { opacity: .55; cursor: default; }
+.menu-opt.disabled:hover { background: transparent; }
+.menu-opt input[type=checkbox]:disabled { cursor: default; }
+
+/* ── 3. Card (tile) ────────────────────────────────────── */
+.card-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The signature element: warm amber halo. A 16:9 tile, wider than tall.
+   Category label sits top-left, the "rare" pip top-right. */
+.char-card {
+  position: relative;
+  width: min(256px, 100%);
+  aspect-ratio: 16 / 9;
+  background: radial-gradient(ellipse at 50% 45%, #1e1830 0%, #111221 70%);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,.55),
+    inset 0 0 48px rgba(201, 152, 26, 0.05);
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.char-card.correct {
+  border-color: var(--success);
+  box-shadow:
+    0 0 24px rgba(74, 222, 128, .28),
+    0 8px 32px rgba(0,0,0,.55);
+  animation: pop .28s ease;
+}
+
+.char-card.wrong {
+  border-color: var(--error);
+  box-shadow:
+    0 0 24px rgba(248, 113, 113, .28),
+    0 8px 32px rgba(0,0,0,.55);
+  animation: shake .32s ease;
+}
+
+@keyframes pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  22%  { transform: translateX(-8px); }
+  55%  { transform: translateX(8px); }
+  80%  { transform: translateX(-4px); }
+}
+
+/* Category label, pinned to the card's top-left corner */
+.cat-badge {
+  position: absolute;
+  top: 10px;
+  left: 13px;
+  line-height: 1.2;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+/* "rare" pip, top-right corner */
+.rare-badge {
+  position: absolute;
+  top: 9px;
+  right: 11px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  background: var(--surface-up);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 5px;
+}
+
+.tel-char {
+  font-family: 'Noto Sans Telugu', serif;
+  font-size: 5.6rem;           /* a game sets its own: syllables and clusters run wider */
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-top: 26px;            /* Telugu ink sits high in its line box; this centres it and clears the label */
+  user-select: none;
+}
+
+/* ── 4. Feedback line (under the card) ─────────────────── */
+.feedback {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .01em;
+}
+.feedback.te  { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; font-size: 16px; }
+.feedback.ok  { color: var(--success); }
+.feedback.err { color: var(--error); }
+
+/* ── 5. Keyboard ───────────────────────────────────────── */
+.kb-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  padding-right: 4px;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.kb-area::-webkit-scrollbar { width: 4px; }
+.kb-area::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.kb-group { display: flex; flex-direction: column; gap: 5px; }
+
+.kb-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.kb-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.kb-btn {
+  padding: 6px 13px;
+  min-width: 50px;
+  background: var(--surface-up);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background .1s, border-color .1s, color .1s, transform .08s;
+  user-select: none;
+  text-align: center;
+}
+
+/* Telugu-faced keys */
+.kb-btn.te {
+  font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif;
+  font-size: 22px;
+  line-height: 1.35;
+  padding: 4px 13px;
+}
+
+.kb-btn:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
+
+.kb-btn:active { transform: scale(.92); }
+
+.kb-btn.ok {
+  background: var(--success-dim);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.kb-btn.err {
+  background: var(--error-dim);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* ── 6. Selection slots (games where several picks make one answer) ── */
+.slots { display: flex; gap: 10px; }
+
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 92px;
+  padding: 5px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  transition: border-color .12s;
+}
+
+/* a slot that is a <button> can be tapped to clear it */
+button.slot { cursor: pointer; }
+button.slot.filled:hover { border-color: var(--accent-light); }
+
+.slot-val {
+  margin-left: auto;
+  min-width: 1.6em;
+  text-align: right;
+  font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.slot.filled { border-color: var(--accent); }
+.slot.filled .slot-val { color: var(--accent-light); }
+.slot.ok  { border-color: var(--success); }
+.slot.ok  .slot-val { color: var(--success); }
+.slot.err { border-color: var(--error); }
+.slot.err .slot-val { color: var(--error); }
+
+/* ── 7. Complete screen ────────────────────────────────── */
+.g-complete {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 24px;
+  text-align: center;
+}
+
+.g-complete.show {
+  display: flex;
+  animation: fade-up .45s ease;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.trophy { font-size: 58px; animation: trophy-in .6s ease; }
+
+@keyframes trophy-in {
+  from { transform: scale(.4) translateY(12px); opacity: 0; }
+  70%  { transform: scale(1.14) translateY(-4px); opacity: 1; }
+  to   { transform: scale(1); }
+}
+
+.c-title { font-size: 25px; font-weight: 700; color: var(--text); }
+.c-sub   { font-size: 14px; color: var(--text-dim); max-width: 340px; }
+
+.c-stats {
+  display: flex;
+  gap: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 15px 28px;
+}
+
+.c-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.c-stat-val { font-size: 24px; font-weight: 700; color: var(--accent-light); }
+.c-stat-lbl { font-size: 11px; color: var(--text-muted); }
+
+.retry-btn {
+  padding: 11px 36px;
+  background: var(--accent);
+  color: #0b0c18;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .14s, transform .1s, box-shadow .14s;
+  letter-spacing: .01em;
+}
+
+.retry-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(201, 152, 26, .45);
+}
+
+.retry-btn:active { transform: translateY(0); }
+
+/* ── 8. Phone layout ───────────────────────────────────── */
+@media (max-width: 520px) {
+  .g-header   { padding-left: 16px; padding-right: 16px; }
+  .g-main     { padding-left: 16px; padding-right: 16px; }
+  .g-right    { gap: 10px; }
+  .g-stats    { gap: 12px; }
+}
