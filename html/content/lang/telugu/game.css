@@ -40,6 +40,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;                  /* a long title wraps rather than touching the stats */
   margin-bottom: 9px;
 }
 
@@ -280,6 +281,16 @@
   user-select: none;
 }
 
+/* Reverse mode: the tile shows a sound, written /like this/ */
+.tel-char.ipa-face {
+  font-family: 'Noto Sans', 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 5rem;
+  letter-spacing: .01em;
+  margin-top: 10px;
+}
+.ipa-face .sl { color: var(--text-muted); font-weight: 400; font-size: .7em; }
+
 /* ── 4. Feedback line (under the card) ─────────────────── */
 .feedback {
   height: 20px;
@@ -410,6 +421,8 @@ button.slot.filled:hover { border-color: var(--accent-light); }
   color: var(--text-muted);
 }
 
+.slot-val.te { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; }
+
 .slot.filled { border-color: var(--accent); }
 .slot.filled .slot-val { color: var(--accent-light); }
 .slot.ok  { border-color: var(--success); }
@@ -491,4 +504,9 @@ button.slot.filled:hover { border-color: var(--accent-light); }
   .g-main     { padding-left: 16px; padding-right: 16px; }
   .g-right    { gap: 10px; }
   .g-stats    { gap: 12px; }
+}
+
+/* Small phones: stack the two counters so a long title + the 🔀 button still fit */
+@media (max-width: 380px) {
+  .g-stats { flex-direction: column; gap: 1px; align-items: flex-end; font-size: 11.5px; line-height: 1.25; }
 }

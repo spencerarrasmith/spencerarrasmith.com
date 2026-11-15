@@ -22,7 +22,7 @@
       align-items: start;
     }
 
-    .kb-col { display: flex; flex-direction: column; gap: 9px; }
+    .kb-col, .kb-col-keys { display: flex; flex-direction: column; gap: 9px; }
 
     .kb-col-title {
       font-size: 11px;
@@ -32,6 +32,13 @@
       letter-spacing: .12em;
       padding-bottom: 6px;
       border-bottom: 1px solid var(--border);
+    }
+
+    /* Reversed: vowel signs are small marks, so their keys run a little larger */
+    .kb-btn.sign {
+      font-size: 26px;
+      line-height: 1.2;
+      padding: 3px 13px;
     }
 
     /* Pending selection (before both pieces are chosen) */
@@ -53,7 +60,11 @@
   <!-- ── Progress header ── -->
   <header class="g-header">
     <div class="g-header-top">
-      <span class="g-title">Diacritics → IPA</span>
+      <div class="g-title-row">
+        <span class="g-title" id="g-title">Diacritics → IPA</span>
+        <button class="rev-btn" id="rev-btn" type="button" aria-pressed="false"
+                aria-label="Reverse direction: IPA to Diacritics" title="Reverse direction">🔀</button>
+      </div>
       <div class="g-right">
         <div class="g-stats">
           <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
@@ -146,7 +157,9 @@ const ERR_MS    = 1000;  // pause after a wrong round (two answers to read)
    STATE
 ───────────────────────────────────────────────────────── */
 let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
-let sel = { c: null, v: null };   // pending picks: consonant, vowel
+let reversed = false;             // false: card shows the syllable, keys show IPA
+                                  // true:  card shows the sound, keys show Telugu
+let sel = { c: null, v: null };   // pending picks (the key's IPA, whichever face it wears)
 let keys    = { c: [], v: [] };   // what is on the two keyboards, in alphabet order
 let kbOrder = null;               // null, or { c, v }: shuffled copies (fixed for the round)
 
@@ -189,6 +202,20 @@ function buildDeck(cons, vows) {
 }
 // <<TEST-END>>
 
+// A vowel sign can't stand alone, so each key shows it on క, the way
+// textbooks do (కా కి కీ …). The "no sign" key is plain క: the consonant's
+// own short a. (An isolated mark would get a dotted circle, which each
+// browser draws differently.)
+const SIGN_BASE = '\u0C15';
+const signLabel = v => SIGN_BASE + v.sign;
+
+// What a pending pick looks like in its slot, in the current direction
+function pickLabel(kind, ipa) {
+  if (!reversed) return ipa;
+  return kind === 'c' ? CONSONANTS.find(c => c.ipa === ipa).ch
+                      : signLabel(VOWELS.find(v => v.ipa === ipa));
+}
+
 function btnFor(kind, ipa) {
   return Array.from(document.querySelectorAll(`.kb-btn[data-kind="${kind}"]`))
     .find(b => b.dataset.ipa === ipa) || null;
@@ -207,6 +234,23 @@ function buildPanel(title, kind, items, key, grouped) {
   h.textContent = title;
   col.appendChild(h);
 
+  // Reversed consonants: the Telugu letter keyboard shared with Phonemes
+  // (telugu-data.js), restricted to the consonants on this page.
+  if (reversed && kind === 'c') {
+    const body = document.createElement('div');
+    body.className = 'kb-col-keys';
+    TeluguData.buildKeyboard(body, {
+      face:       'telugu',
+      visible:    new Set(items),
+      skipHidden: true,
+      grouped,
+      order:      items,                    // only used when ungrouped
+      onPick:     (l, btn) => onPick('c', l.ipa, btn),
+    }).forEach(b => { b.dataset.kind = 'c'; });
+    col.appendChild(body);
+    return col;
+  }
+
   // Grouped: one labelled block per category. Ungrouped: a single plain block.
   (grouped ? groupBy(items, key) : [[null, items]]).forEach(([label, list]) => {
     const g = document.createElement('div');
@@ -216,8 +260,9 @@ function buildPanel(title, kind, items, key, grouped) {
     row.className = 'kb-row';
     list.forEach(it => {
       const btn = document.createElement('button');
-      btn.className   = 'kb-btn';
-      btn.textContent = it.ipa;
+      btn.className   = 'kb-btn' + (reversed ? ' te sign' : '');
+      btn.textContent = reversed ? signLabel(it) : it.ipa;
+      if (reversed && it.sign === '') btn.setAttribute('aria-label', 'no sign: the consonant on its own');
       btn.dataset.ipa  = it.ipa;
       btn.dataset.kind = kind;
       btn.addEventListener('click', () => onPick(kind, it.ipa, btn));
@@ -251,7 +296,7 @@ function buildKB() {
   wrap.className = 'kb-cols';
   wrap.append(
     buildPanel('Consonant', 'c', src.c, 'cat', grouped),
-    buildPanel('Vowel',     'v', src.v, 'grp', grouped),
+    buildPanel(reversed ? 'Vowel sign (on క)' : 'Vowel', 'v', src.v, 'grp', grouped),
   );
   area.appendChild(wrap);
 
@@ -261,6 +306,10 @@ function buildKB() {
     if (b) b.classList.add('sel');
   });
 }
+
+const escHtml = s => String(s).replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const IPA_SIZE = ['', '5rem', '5rem', '4.2rem', '3.6rem', '3.1rem', '2.7rem'];   // by length of the sound; the last applies to anything longer
 
 const newOrder = () => ({ c: shuffle(keys.c), v: shuffle(keys.v) });
 
@@ -272,7 +321,9 @@ function updateSlots() {
     const slot = $(id);
     const has  = sel[k] !== null;
     slot.classList.toggle('filled', has);
-    slot.querySelector('.slot-val').textContent = has ? sel[k] : '–';
+    const val = slot.querySelector('.slot-val');
+    val.textContent = has ? pickLabel(k, sel[k]) : '–';
+    val.classList.toggle('te', reversed && has);
   });
 }
 
@@ -285,7 +336,18 @@ function clearRound() {
 
 function renderCard() {
   const c = deck[0];
-  $('tel-char').textContent = c.glyph;
+  const tel = $('tel-char');
+  if (reversed) {
+    // the sound, written /like this/; longer strings (kʰaː, tʃʰai) step down a size
+    const sound = c.c.ipa + c.v.sound, n = [...sound].length;
+    tel.className      = 'tel-char ipa-face';
+    tel.innerHTML      = `<span class="sl">/</span>${escHtml(sound)}<span class="sl">/</span>`;
+    tel.style.fontSize = IPA_SIZE[Math.min(n, IPA_SIZE.length - 1)];
+  } else {
+    tel.className      = 'tel-char';
+    tel.textContent    = c.glyph;
+    tel.style.fontSize = '';
+  }
 
   const badge = $('cat-badge');
   badge.textContent      = c.cat;
@@ -347,10 +409,12 @@ function evaluate() {
     }
   });
 
-  fb.textContent = `${allOk ? '✓' : '✗'}  /${cur.c.ipa}${cur.v.sound}/`;
-  fb.className   = 'feedback ' + (allOk ? 'ok' : 'err');
-  if (!allOk) Progress.miss({ game: GAME, key: cur.glyph, prompt: cur.glyph,
-                              answer: `/${cur.c.ipa}${cur.v.sound}/`, note: cur.v.grp });
+  const sound = `/${cur.c.ipa}${cur.v.sound}/`;
+  fb.textContent = `${allOk ? '✓' : '✗'}  ${reversed ? cur.glyph : sound}`;
+  fb.className   = 'feedback ' + (allOk ? 'ok' : 'err') + (reversed ? ' te' : '');
+  if (!allOk) Progress.miss(reversed
+    ? { game: GAME + '-reverse', key: cur.glyph, prompt: sound, answer: cur.glyph, note: cur.v.grp }
+    : { game: GAME,              key: cur.glyph, prompt: cur.glyph, answer: sound, note: cur.v.grp });
 
   if (allOk) {
     card.classList.add('correct');
@@ -381,8 +445,9 @@ function showComplete() {
   $('g-main').style.display = 'none';
   $('g-complete').classList.add('show');
 
-  $('c-sub').textContent =
-    `All ${total} syllables correctly matched to their IPA sounds.`;
+  $('c-sub').textContent = reversed
+    ? `All ${total} sounds correctly written as Telugu syllables.`
+    : `All ${total} syllables correctly matched to their IPA sounds.`;
   $('c-attempts').textContent = attempts;
   $('c-accuracy').textContent = Math.round(total / attempts * 100) + '%';
   $('c-errors').textContent   = attempts - total;
@@ -413,6 +478,17 @@ function initGame() {
   updateProg();
   renderCard();
 }
+
+// 🔀 flips direction and starts a fresh round in the new direction
+function setReversed(rev) {
+  reversed = rev;
+  const btn = $('rev-btn');
+  btn.setAttribute('aria-pressed', String(rev));
+  btn.setAttribute('aria-label', rev ? 'Reverse direction: Diacritics to IPA' : 'Reverse direction: IPA to Diacritics');
+  $('g-title').textContent = rev ? 'IPA → Diacritics' : 'Diacritics → IPA';
+  initGame();
+}
+$('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
 // ⋮ menu: open/close, "Show categories" and "Shuffle keyboard" live in game-menu.js
 GameMenu.init({
