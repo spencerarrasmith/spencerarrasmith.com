@@ -53,6 +53,8 @@
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       padding: 11px 24px 10px;
+      position: relative;
+      z-index: 20;              /* the options menu drops over the game area */
     }
 
     .g-header-top {
@@ -72,8 +74,8 @@
 
     .g-title-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
 
-    /* Direction toggle (🔀) next to the title */
-    .rev-btn {
+    /* Small icon buttons: direction toggle (🔀) and options menu (⋮) */
+    .rev-btn, .menu-btn {
       appearance: none;
       -webkit-appearance: none;
       display: inline-flex;
@@ -91,10 +93,13 @@
       cursor: pointer;
       transition: background .12s, border-color .12s, transform .08s;
     }
-    .rev-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
-    .rev-btn:active { transform: scale(.92); }
-    .rev-btn:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
-    .rev-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-glow); }
+    .rev-btn:hover, .menu-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .rev-btn:active, .menu-btn:active { transform: scale(.92); }
+    .rev-btn:focus-visible, .menu-btn:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+    .rev-btn[aria-pressed="true"], .menu-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-glow); }
+    .menu-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+    .g-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 
     .g-stats {
       display: flex;
@@ -120,23 +125,41 @@
       transition: width .5s ease;
     }
 
-    /* ── Controls bar ─────────────────────────── */
-    .g-controls {
-      flex-shrink: 0;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 7px 24px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px 20px;
+    /* ── Options menu (⋮, top right) ──────────── */
+    .menu-wrap { position: relative; }
+
+    .menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 30;
+      min-width: 244px;
+      padding: 6px;
+      background: var(--surface-up);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, .65);
     }
 
-    .g-controls-sep {
-      width: 1px;
-      height: 14px;
-      background: var(--border);
+    .menu .cat-toggle {
+      gap: 11px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: var(--text-dim);
+      transition: background .1s;
     }
+    .menu .cat-toggle:hover { background: var(--accent-glow); }
+    .menu .cat-toggle:focus-within { outline: 2px solid var(--accent-light); outline-offset: -2px; }
+    .menu .cat-toggle input[type=checkbox] { width: 16px; height: 16px; }
+    .menu .cat-toggle input[type=checkbox]:checked::after { top: 1.5px; left: 4.5px; width: 4px; height: 8px; }
+    .menu .menu-txt { display: flex; flex-direction: column; gap: 2px; }
+    .menu .menu-note { font-size: 11px; color: var(--text-muted); }
+
+    /* a checkbox the app is holding in place (categories while the keyboard is shuffled) */
+    .cat-toggle.disabled { opacity: .55; cursor: default; }
+    .cat-toggle.disabled:hover { background: transparent; }
+    .cat-toggle input[type=checkbox]:disabled { cursor: default; }
 
     /* ── Rare badge (card corner pip) ─────────── */
     .rare-badge {
@@ -459,9 +482,9 @@
 
     @media (max-width: 520px) {
       .g-header   { padding-left: 16px; padding-right: 16px; }
-      .g-controls { padding-left: 16px; padding-right: 16px; gap: 6px 16px; }
-      .g-controls-sep { display: none; }
       .g-main     { padding-left: 16px; padding-right: 16px; }
+      .g-right    { gap: 10px; }
+      .g-stats    { gap: 12px; }
     }
   </style>
 </head>
@@ -476,24 +499,29 @@
         <button class="rev-btn" id="rev-btn" type="button" aria-pressed="false"
                 aria-label="Reverse direction: IPA to Telugu" title="Reverse direction">🔀</button>
       </div>
-      <div class="g-stats">
-        <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">48</span></span>
-        <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">48</span></span>
+      <div class="g-right">
+        <div class="g-stats">
+          <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">48</span></span>
+          <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">48</span></span>
+        </div>
+        <div class="menu-wrap" id="menu-wrap">
+          <button class="menu-btn" id="menu-btn" type="button" aria-haspopup="true" aria-expanded="false"
+                  aria-controls="opts-menu" aria-label="Options" title="Options">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="2.8" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="8" cy="13.2" r="1.6"/></svg>
+          </button>
+          <div class="menu" id="opts-menu" role="group" aria-label="Options" hidden>
+            <label class="cat-toggle"><input type="checkbox" id="show-cat" checked> <span class="menu-txt"><span>Show categories</span><span class="menu-note" id="cat-note" hidden>Off while keyboard is shuffled</span></span></label>
+            <label class="cat-toggle"><input type="checkbox" id="shuffle-kb"> <span>Shuffle keyboard</span></label>
+            <label class="cat-toggle"><input type="checkbox" id="include-extra"> <span>Include extra letters</span></label>
+            <label class="cat-toggle"><input type="checkbox" id="highlight-correct" checked> <span>Highlight correct answer</span></label>
+          </div>
+        </div>
       </div>
     </div>
     <div class="g-prog-track">
       <div class="g-prog-fill" id="prog-fill"></div>
     </div>
   </header>
-
-  <!-- ── Controls bar ── -->
-  <div class="g-controls">
-    <label class="cat-toggle"><input type="checkbox" id="show-cat" checked> Show category</label>
-    <div class="g-controls-sep"></div>
-    <label class="cat-toggle"><input type="checkbox" id="include-extra"> Include extra letters</label>
-    <div class="g-controls-sep"></div>
-    <label class="cat-toggle"><input type="checkbox" id="highlight-correct" checked> Highlight correct answer</label>
-  </div>
 
   <!-- ── Game main ── -->
   <div class="g-main" id="g-main">
@@ -584,15 +612,20 @@ function btnForLetter(letter) {
 /* ─────────────────────────────────────────────────────────
    BUILD KEYBOARD  (layout comes from telugu-data.js)
 ───────────────────────────────────────────────────────── */
-// "Show category" also drives the Telugu keyboard: ticked → grouped and
-// labelled by place of articulation, unticked → one plain block of keys.
-// (The IPA keyboard is always grouped.) Rebuilding keeps the round going.
+// Both keyboards (IPA and Telugu) follow the options menu:
+//   Show categories ticked   → grouped and labelled by place of articulation
+//   Show categories unticked → one plain block of keys, alphabet order
+//   Shuffle keyboard ticked  → that block in a random order (kbOrder), which
+//                              stays fixed for the round so keys can be found
+// Rebuilding (e.g. when an option changes) never restarts the round.
 let activeLetters = new Set();
+let kbOrder = null;                      // null = alphabet order
 function buildKB() {
   TeluguData.buildKeyboard(document.getElementById('kb-area'), {
     face:    reversed ? 'telugu' : 'ipa',
     visible: activeLetters,
-    grouped: !reversed || document.getElementById('show-cat').checked,
+    grouped: document.getElementById('show-cat').checked,
+    order:   kbOrder,
     onPick:  onAnswer,
   });
 }
@@ -735,6 +768,7 @@ function initGame() {
   document.getElementById('kb-area').scrollTop = 0;
 
   activeLetters = new Set(pool);
+  kbOrder = document.getElementById('shuffle-kb').checked ? shuffle(CHARS) : null;   // fresh order each round
   buildKB();
   updateProg();
   renderCard();
@@ -752,14 +786,50 @@ function setReversed(rev) {
 
 document.getElementById('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
-document.getElementById('show-cat').addEventListener('change', e => {
-  document.getElementById('cat-badge').style.visibility = e.target.checked ? '' : 'hidden';
-  if (reversed) buildKB();          // regroup / flatten the Telugu keyboard
+/* ── Options menu ─────────────────────────────────────── */
+const menuWrap = document.getElementById('menu-wrap');
+const menuBtn  = document.getElementById('menu-btn');
+const menu     = document.getElementById('opts-menu');
+
+function setMenu(open) {
+  menu.hidden = !open;
+  menuBtn.setAttribute('aria-expanded', String(open));
+}
+menuBtn.addEventListener('click', () => setMenu(menu.hidden));
+// Stays open while ticking boxes; closes on a tap anywhere else, or Escape.
+document.addEventListener('pointerdown', e => { if (!menu.hidden && !menuWrap.contains(e.target)) setMenu(false); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); }
+});
+
+/* ── Options ──────────────────────────────────────────── */
+// Shuffling forces categories off (a shuffled keyboard has no groups) and
+// holds the box there. Un-shuffling frees it again but leaves it unticked.
+function syncCategoryControl() {
+  const cat      = document.getElementById('show-cat');
+  const shuffled = document.getElementById('shuffle-kb').checked;
+  if (shuffled) cat.checked = false;
+  cat.disabled = shuffled;
+  cat.closest('.cat-toggle').classList.toggle('disabled', shuffled);
+  document.getElementById('cat-note').hidden = !shuffled;
+  document.getElementById('cat-badge').style.visibility = cat.checked ? '' : 'hidden';
+}
+
+document.getElementById('show-cat').addEventListener('change', () => {
+  syncCategoryControl();            // card label follows the box
+  buildKB();                        // regroup / flatten both keyboards
+});
+
+document.getElementById('shuffle-kb').addEventListener('change', e => {
+  syncCategoryControl();
+  kbOrder = e.target.checked ? shuffle(CHARS) : null;
+  buildKB();
 });
 
 document.getElementById('include-extra').addEventListener('change', initGame);
 
 document.getElementById('retry-btn').addEventListener('click', initGame);
+syncCategoryControl();              // browsers can restore ticked boxes on reload
 initGame();
 </script>
 </body>

@@ -247,6 +247,10 @@
                                         false: a single unlabelled block,
                                         like an ordinary keyboard, still
                                         in alphabet order
+         order:   [letter, …]           only with grouped:false: the order
+                                        to lay the keys out in (e.g. a
+                                        shuffled copy of letters). Default:
+                                        alphabet order
          onPick:  fn(letter, button)
        })
 
@@ -256,7 +260,7 @@
               Styling is left to the page.
      Returns  the buttons, in alphabet order.                      */
   function buildKeyboard(container, opts = {}) {
-    const { face = 'ipa', visible, onPick, grouped = true } = opts;
+    const { face = 'ipa', visible, onPick, grouped = true, order } = opts;
     const doc    = container.ownerDocument;
     const isShown = visible instanceof Set ? l => visible.has(l)
                   : typeof visible === 'function' ? visible
@@ -264,7 +268,7 @@
     const buttons = [];
     container.innerHTML = '';
     const blocks = grouped ? letterGroups
-                           : [{ lbl: null, letters: letterGroups.flatMap(g => g.letters) }];
+                           : [{ lbl: null, letters: order || letterGroups.flatMap(g => g.letters) }];
     blocks.forEach(grp => {
       const g = doc.createElement('div');
       g.className = 'kb-group';
