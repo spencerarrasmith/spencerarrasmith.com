@@ -251,6 +251,12 @@
                                         to lay the keys out in (e.g. a
                                         shuffled copy of letters). Default:
                                         alphabet order
+         skipHidden: true | false       false (default): letters that are
+                                        not `visible` are still rendered,
+                                        just display:none. true: they are
+                                        left out entirely, and a group left
+                                        with no keys is dropped (so a page
+                                        can show e.g. consonants only)
          onPick:  fn(letter, button)
        })
 
@@ -260,7 +266,7 @@
               Styling is left to the page.
      Returns  the buttons, in alphabet order.                      */
   function buildKeyboard(container, opts = {}) {
-    const { face = 'ipa', visible, onPick, grouped = true, order } = opts;
+    const { face = 'ipa', visible, onPick, grouped = true, order, skipHidden = false } = opts;
     const doc    = container.ownerDocument;
     const isShown = visible instanceof Set ? l => visible.has(l)
                   : typeof visible === 'function' ? visible
@@ -281,6 +287,7 @@
       const row = doc.createElement('div');
       row.className = 'kb-row';
       grp.letters.forEach(l => {
+        if (skipHidden && !isShown(l)) return;
         const btn = doc.createElement('button');
         btn.type        = 'button';
         btn.className   = 'kb-btn' + (face === 'telugu' ? ' te' : '');
@@ -292,6 +299,7 @@
         row.appendChild(btn);
         buttons.push(btn);
       });
+      if (skipHidden && !row.childNodes.length) return;   // nothing to show in this group
       g.appendChild(row);
       container.appendChild(g);
     });
