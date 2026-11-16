@@ -49,7 +49,7 @@ select:hover, input[type=text]:hover { border-color: var(--accent); }
 }
 .glyph.empty { font-family: 'Inter', system-ui, sans-serif; font-weight: 400; font-size: 14px; color: var(--text-muted); padding: 40px 16px; line-height: 1.4; min-height: 0; }
 .prompt-name { text-align: center; font-size: 13px; color: var(--text-muted); }
-.prompt-name b { color: var(--text); font-weight: 600; font-size: 15px; }
+.prompt-name b { font-family: 'Noto Sans', 'Inter', sans-serif; color: var(--text); font-weight: 500; font-size: 17px; }
 .tray { display: grid; gap: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 42px; align-items: center; }
 .chip {
@@ -101,7 +101,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-v
 .key[aria-pressed="true"] { background: var(--accent); color: #0b0c18; border-color: var(--accent-light); border-style: solid; }
 .key:disabled { opacity: .32; cursor: default; }
 .key.self:disabled { opacity: 1; background: var(--bg); color: var(--accent-light); border-color: var(--accent); }
-.key small { display: block; font-family: 'Inter', sans-serif; font-size: 10px; line-height: 1.1; color: var(--text-muted); padding-bottom: 4px; }
+.key small { display: block; font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 10px; line-height: 1.1; color: var(--text-muted); padding-bottom: 4px; }
 .key[aria-pressed="true"] small { color: #0b0c18; }
 .keys.arming .key { border-color: var(--accent); border-style: dashed; }
 .stack { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 4px; }
@@ -279,28 +279,42 @@ textarea {
 
 </div>
 
+<script src="telugu-data.js"></script>
+<script src="lookalikes-data.js"></script>
 <script>
 (function(){
 'use strict';
 
-/* ---------- character data: [character, ISO 15919, uncommon?] ---------- */
+/* ---------- character data: [character, IPA, uncommon?] ----------
+   The sound column is filled in from telugu-data.js just below, so the builder
+   shows the same IPA as the games. Which characters are offered, and which count
+   as uncommon, is decided by the lists here. */
 var VIRAMA='్', RING='◌', BOX='▢';
-var VOWELS=[['అ','a'],['ఆ','ā'],['ఇ','i'],['ఈ','ī'],['ఉ','u'],['ఊ','ū'],
-  ['ఋ','r̥',1],['ౠ','r̥̄',1],['ఌ','l̥',1],['ౡ','l̥̄',1],
-  ['ఎ','e'],['ఏ','ē'],['ఐ','ai'],['ఒ','o'],['ఓ','ō'],['ఔ','au']];
-var CONS=[['క','k'],['ఖ','kh'],['గ','g'],['ఘ','gh'],['ఙ','ṅ',1],
-  ['చ','c'],['ఛ','ch'],['జ','j'],['ఝ','jh'],['ఞ','ñ',1],
-  ['ట','ṭ'],['ఠ','ṭh'],['డ','ḍ'],['ఢ','ḍh'],['ణ','ṇ'],
-  ['త','t'],['థ','th'],['ద','d'],['ధ','dh'],['న','n'],
-  ['ప','p'],['ఫ','ph'],['బ','b'],['భ','bh'],['మ','m'],
-  ['య','y'],['ర','r'],['ల','l'],['వ','v'],['శ','ś'],
-  ['ష','ṣ'],['స','s'],['హ','h'],['ళ','ḷ'],['ఱ','ṟ']];
-var SIGNS=[['ా','ā'],['ి','i'],['ీ','ī'],['ు','u'],['ూ','ū'],
-  ['ృ','r̥'],['ౄ','r̥̄',1],['ౢ','l̥',1],['ౣ','l̥̄',1],
-  ['ె','e'],['ే','ē'],['ై','ai'],['ొ','o'],['ో','ō'],['ౌ','au'],
-  ['ం','ṁ'],['ః','ḥ'],[VIRAMA,'']];
+var VOWELS=[['అ',''],['ఆ',''],['ఇ',''],['ఈ',''],['ఉ',''],['ఊ',''],
+  ['ఋ','',1],['ౠ','',1],['ఌ','',1],['ౡ','',1],
+  ['ఎ',''],['ఏ',''],['ఐ',''],['ఒ',''],['ఓ',''],['ఔ','']];
+var CONS=[['క',''],['ఖ',''],['గ',''],['ఘ',''],['ఙ','',1],
+  ['చ',''],['ఛ',''],['జ',''],['ఝ',''],['ఞ','',1],
+  ['ట',''],['ఠ',''],['డ',''],['ఢ',''],['ణ',''],
+  ['త',''],['థ',''],['ద',''],['ధ',''],['న',''],
+  ['ప',''],['ఫ',''],['బ',''],['భ',''],['మ',''],
+  ['య',''],['ర',''],['ల',''],['వ',''],['శ',''],
+  ['ష',''],['స',''],['హ',''],['ళ',''],['ఱ','']];
+var SIGNS=[['ా',''],['ి',''],['ీ',''],['ు',''],['ూ',''],
+  ['ృ',''],['ౄ','',1],['ౢ','',1],['ౣ','',1],
+  ['ె',''],['ే',''],['ై',''],['ొ',''],['ో',''],['ౌ',''],
+  ['ం',''],['ః',''],[VIRAMA,'']];
 var DIGITS=[];
 for(var d=0;d<10;d++) DIGITS.push([String.fromCharCode(0x0C66+d),String(d)]);
+
+/* sounds come from the shared data (the same IPA the games show) */
+var TD=window.TeluguData, LD=window.LookalikeData;
+if(!TD||!LD) throw new Error('telugu-data.js and lookalikes-data.js must be next to this page');
+var LET={}, SGN={};
+TD.letters.forEach(function(l){LET[l.ch]=l;});
+TD.signs.forEach(function(g){SGN[g.sign]=g;});
+VOWELS.concat(CONS).forEach(function(x){ if(LET[x[0]]) x[1]=LET[x[0]].ipa; });
+SIGNS.forEach(function(x){ if(SGN[x[0]]) x[1]=SGN[x[0]].sound; });
 
 function toMap(list){var m=new Map();list.forEach(function(x){m.set(x[0],x[1]);});return m;}
 var VOW_R=toMap(VOWELS), CONS_R=toMap(CONS), SIGN_R=toMap(SIGNS), DIG_R=toMap(DIGITS);
@@ -318,16 +332,22 @@ var FONTS={
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function clean(s){var t=String(s).replace(/[\s,"'<>&﻿]/g,'');return t.normalize?t.normalize('NFC'):t;}
 
-function romanize(s){
-  var out='',pend=false;
+/* The sound of a character, written /like this/. Letters and letters with a sign come from
+   the shared data; a stack it doesn't list (three consonants, a conjunct with a sign) is built
+   from its consonants. Digits show their number. */
+function phon(s){
+  if(DIG_R.has(s)) return DIG_R.get(s);
+  var it=LD.item(s); if(it) return '/'+it.ipa+'/';
+  var parts=[], sign=null, virama=false, ok=true;
   Array.from(s).forEach(function(ch){
-    if(CONS_R.has(ch)){ if(pend) out+='a'; out+=CONS_R.get(ch); pend=true; }
-    else if(ch===VIRAMA){ pend=false; }
-    else if(ch==='ం'||ch==='ః'){ if(pend){out+='a';pend=false;} out+=SIGN_R.get(ch); }
-    else if(SIGN_R.has(ch)){ out+=SIGN_R.get(ch); pend=false; }
-    else { if(pend){out+='a';pend=false;} out+=VOW_R.has(ch)?VOW_R.get(ch):DIG_R.has(ch)?DIG_R.get(ch):ch; }
+    var l=LET[ch];
+    if(l&&l.kind==='consonant'&&!sign){ parts.push(l.ipa); virama=false; }
+    else if(ch===VIRAMA&&parts.length){ virama=true; }
+    else if(SGN[ch]&&parts.length&&!sign&&!virama){ sign=SGN[ch]; }
+    else ok=false;
   });
-  return pend?out+'a':out;
+  if(!ok||!parts.length) return s;
+  return '/'+parts.join('')+(sign?sign.sound:(virama?'':'a'))+'/';
 }
 function kindOf(s){
   if(VOW_R.has(s)) return 'vowel';
@@ -443,7 +463,7 @@ function keyHTML(ch,o){
   var P=current(), self=ch===P, pressed=!!P&&!self&&linked(P,ch);
   var off=!P||o.off||self;
   return '<button type="button" class="key'+(o.rare?' rare':'')+(self?' self':'')+'" data-k="ch:'+esc(ch)+'" data-ch="'+esc(ch)+'"'+
-    (o.base?' data-base="'+esc(o.base)+'"':'')+' aria-pressed="'+pressed+'" title="'+esc(romanize(ch))+(self?' (the character shown)':'')+'"'+(off?' disabled':'')+'>'+esc(ch)+'</button>';
+    (o.base?' data-base="'+esc(o.base)+'"':'')+' aria-pressed="'+pressed+'" title="'+esc(phon(ch))+(self?' (the character shown)':'')+'"'+(off?' disabled':'')+'>'+esc(ch)+'</button>';
 }
 function renderKeyboard(){
   var combining=!!(kb.sign||kb.prefix.length);
@@ -468,7 +488,7 @@ function renderKeyboard(){
   stack.textContent=kb.arming?'Now tap a consonant…':(kb.prefix.length?'Add another on top':'Choose top consonant');
   stack.disabled=!kb.arming&&kb.prefix.length>=2;
   $('prefixChips').innerHTML=kb.prefix.map(function(p,i){
-    return '<button type="button" class="chip ghost" data-k="unprefix:'+i+'" data-unprefix="'+i+'" title="Remove '+esc(romanize(p))+'">'+p+VIRAMA+' <small>×</small></button>';
+    return '<button type="button" class="chip ghost" data-k="unprefix:'+i+'" data-unprefix="'+i+'" title="Remove '+esc(phon(p))+'">'+p+VIRAMA+' <small>×</small></button>';
   }).join('');
   $('stackHint').textContent=kb.prefix.length?'':'Every consonant key then shows its form stacked under the one you choose.';
 }
@@ -485,9 +505,9 @@ function renderPrompt(){
   var pill=$('pill'), done=reviewed.has(P);
   pill.className='pill'+(done?' done':'');
   pill.textContent=done?(n.length?'reviewed':'reviewed, none'):'not reviewed';
-  $('promptName').innerHTML='<b>'+esc(romanize(P))+'</b> &middot; '+esc(kindOf(P));
+  $('promptName').innerHTML='<b>'+esc(phon(P))+'</b> &middot; '+esc(kindOf(P));
   $('chips').innerHTML=n.length?n.map(function(c){
-    return '<button type="button" class="chip" data-k="rm:'+esc(c)+'" data-remove="'+esc(c)+'" title="Remove '+esc(romanize(c))+'">'+esc(c)+' <small>×</small></button>';
+    return '<button type="button" class="chip" data-k="rm:'+esc(c)+'" data-remove="'+esc(c)+'" title="Remove '+esc(phon(c))+'">'+esc(c)+' <small>×</small></button>';
   }).join(''):'<span class="hint">Nothing picked yet.</span>';
   $('prev').disabled=custom===null&&S.pos===0;
   $('next').disabled=false;
@@ -498,7 +518,7 @@ function renderResults(){
   $('groupCount').textContent=groups.length?'('+groups.length+')':'';
   $('groups').innerHTML=groups.length?groups.map(function(grp,i){
     return '<div class="group"><span class="n">'+(i+1)+'</span>'+grp.map(function(c,j){
-      return '<button type="button" class="chip ghost'+(j===0?' anchor':'')+'" data-k="go:'+esc(c)+'" data-goto="'+esc(c)+'" title="'+esc(romanize(c))+'">'+esc(c)+'</button>';
+      return '<button type="button" class="chip ghost'+(j===0?' anchor':'')+'" data-k="go:'+esc(c)+'" data-goto="'+esc(c)+'" title="'+esc(phon(c))+'">'+esc(c)+'</button>';
     }).join('')+'</div>';
   }).join(''):'<p class="hint">No groups yet. Pick a lookalike on the keyboard, for example <span class="te">బ</span> for <span class="te">ఒ</span>.</p>';
   $('csv').value=csvText();
@@ -508,7 +528,7 @@ function renderRun(){
   var P=current(), done=0;
   $('tiles').innerHTML=queue.map(function(c,i){
     var r=reviewed.has(c); if(r) done++;
-    return '<button type="button" class="tile'+(r?' done':'')+(adj.has(c)?' has':'')+((custom===null&&i===S.pos)?' cur':'')+'" data-k="tile:'+c+'" data-goto="'+c+'" title="'+esc(romanize(c))+'">'+c+'</button>';
+    return '<button type="button" class="tile'+(r?' done':'')+(adj.has(c)?' has':'')+((custom===null&&i===S.pos)?' cur':'')+'" data-k="tile:'+c+'" data-goto="'+c+'" title="'+esc(phon(c))+'">'+c+'</button>';
   }).join('');
   var groups=groupRows().length;
   $('progressText').textContent=done+' of '+queue.length+' reviewed · '+groups+(groups===1?' group':' groups');
