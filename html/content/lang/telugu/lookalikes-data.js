@@ -1,14 +1,14 @@
 /* ═════════════════════════════════════════════════════════
    lookalikes-data.js — the lookalike groups: letters (and letters
    with a vowel sign) that are written alike but sound different.
-   Needs telugu-data.js loaded first. Used by lookalikes.html.
+   Needs telugu-data.js loaded first. Used by alphabet/04_lookalike-builder.html and alphabet/05_lookalikes.html.
 
    BUILT-IN GROUPS   Edit GROUPS below, once. One string per group;
                      spaces are ignored and each item is a letter plus
                      its vowel sign (వు, బౌ) or a conjunct (క్ష), so
                      ఘమవుపు is ఘ · మ · వు · పు.
 
-   YOUR OWN GROUPS   parseCsv(text) reads the file lookalike-builder.html
+   YOUR OWN GROUPS   parseCsv(text) reads the file alphabet/04_lookalike-builder.html
                      exports: one group per row, characters separated by
                      commas. A row of two is just a pair.
 

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Signs &amp; Conjuncts</title>
+<link rel="stylesheet" href="../game.css">
+<style>
+/* ── Signs & Conjuncts-specific (header, ⋮-menu checkbox and colours come from game.css / base.css) ── */
+
+html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; this page scrolls */
+body { min-height: 100vh; min-height: 100dvh; }
+.g-header { position: sticky; top: 0; z-index: 5; }
+.g-header-top { margin-bottom: 0; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 16px 24px calc(48px + var(--safe-bottom)); display: grid; gap: 16px; }
+@media (max-width: 520px) { .wrap { padding-left: 14px; padding-right: 14px; } }
+
+.hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.55; max-width: 74ch; }
+.hint b { color: var(--text-dim); font-weight: 600; }
+.te { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; }
+.te.bare { display: inline-block; padding: 0 .5em 0 .6em; }          /* a lone sign in running text must not attach to the letter before it */
+.note .te { font-size: 1.3em; line-height: 1.2; }
+
+.tools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.jump { display: flex; gap: 6px; margin-left: auto; }
+.jump a { font-size: 12px; font-weight: 600; color: var(--text-dim); text-decoration: none; background: var(--surface-up); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; }
+.jump a:hover { border-color: var(--accent); background: var(--accent-glow); }
+
+section.part { display: grid; gap: 12px; scroll-margin-top: 64px; }
+section.part > h2 { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; margin-top: 6px; }
+
+/* the chart */
+.chart { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+@media (max-width: 1180px) { .chart { overflow-x: auto; } }   /* on a narrow screen the chart scrolls sideways; on a wide one the header row can stay in view */
+table.sg { border-collapse: separate; border-spacing: 0; width: 100%; }
+.sg th, .sg td { text-align: center; padding: 2px 4px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.sg tr:last-child td, .sg tr:last-child th { border-bottom: none; }
+.sg thead th { z-index: 2; background: var(--surface-up); padding: 6px 4px 5px; border-bottom: 1px solid var(--border); font-weight: 500; }
+@media (min-width: 1181px) { .sg thead th { position: sticky; top: var(--hdr, 0px); } }
+.sg thead th .mark { display: block; height: 34px; font-family: 'Noto Sans Telugu', serif; font-size: 22px; line-height: 34px; color: var(--text); }
+.sg thead th small { display: block; font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 10px; color: var(--text-muted); }
+.sg th.row, .sg td.row { position: sticky; left: 0; z-index: 1; background: var(--surface-up); border-right: 1px solid var(--border); padding: 2px 8px; }
+.sg thead th.row { z-index: 3; }
+@media (max-width: 1180px) { .sg thead th.row { position: sticky; left: 0; } }
+.sg th.row { font-family: 'Noto Sans Telugu', serif; font-size: 26px; font-weight: 700; color: var(--accent-light); }
+.sg th.row small { display: block; font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 9px; font-weight: 400; color: var(--text-muted); }
+.sg td.c { font-family: 'Noto Sans Telugu', serif; font-size: 26px; line-height: 1.5; color: var(--text); position: relative; min-width: 54px; }
+.sg td.c.n { background: var(--accent-glow); }
+.sg td.c sup { position: absolute; top: 1px; right: 3px; font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; color: var(--accent-light); line-height: 1; }
+.sg tr.rare th.row { border-left: 2px dashed var(--accent); }
+.sg tr.divide th, .sg tr.divide td { border-top: 2px solid var(--border); }
+
+/* notes */
+ol.notes { list-style: none; display: grid; gap: 10px; counter-reset: n; }
+.note { display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.note .num { grid-row: 1 / span 2; width: 24px; height: 24px; border-radius: 50%; background: var(--accent-glow); border: 1px solid var(--accent); color: var(--accent-light); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.note h4 { font-size: 14.5px; font-weight: 600; color: var(--text); font-family: 'Noto Sans Telugu', 'Inter', sans-serif; }
+.note p { font-size: 13px; line-height: 1.55; color: var(--text-dim); max-width: 80ch; }
+.chips { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chips .lbl { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin: 0 2px 0 6px; }
+.chips .lbl:first-child { margin-left: 0; }
+.chip { font-family: 'Noto Sans Telugu', serif; font-size: 24px; line-height: 1.4; padding: 0 10px; background: var(--surface-up); border: 1px solid var(--accent); border-radius: 10px; color: var(--text); }
+.chip.usual { border-color: var(--border); color: var(--text-dim); }
+
+/* conjunct cards */
+.cjgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 10px; }
+.cj { display: grid; grid-template-columns: auto auto 1fr; gap: 4px 12px; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.cj.rare { border-style: dashed; }
+.cj .full { font-family: 'Noto Sans Telugu', serif; font-weight: 700; font-size: 38px; line-height: 1.3; color: var(--accent-light); min-width: 44px; text-align: center; }
+.cj .arrow { color: var(--text-muted); font-size: 16px; }
+.cj .ex { font-family: 'Noto Sans Telugu', serif; font-size: 40px; line-height: 1.5; color: var(--text); }
+.cj .ex small { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--text-muted); margin-left: 8px; }
+.cj .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tag { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; background: var(--surface-up); border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; }
+.tag.flag { color: var(--accent-light); border-color: var(--accent); }
+.tag.ipa { font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text-dim); }
+.cj sup { font-size: 10px; font-weight: 700; color: var(--accent-light); font-family: 'Inter', sans-serif; margin-left: 2px; }
+</style>
+</head>
+<body>
+
+<header class="g-header">
+  <div class="g-header-top">
+    <span class="g-title">Signs &amp; Conjuncts</span>
+    <div class="g-right"><div class="g-stats"><span id="count"></span></div></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="hint">Two charts. <b>Vowel signs</b> shows every consonant on its own and then with each sign, the way a Telugu chart is laid out. <b>Conjunct forms</b> shows each consonant in full and as the <i>second</i> letter of a cluster. Gold numbers mark combinations that are not drawn the usual way; the notes explain each one. Shapes are as drawn in Noto Sans Telugu, the font this app uses, and handwriting or other fonts differ in detail.</p>
+
+  <div class="tools">
+    <label class="menu-opt" for="show-rare"><input type="checkbox" id="show-rare" checked> <span>Include rare and extra letters</span></label>
+    <nav class="jump" aria-label="Jump to"><a href="#sec-signs">Vowel signs</a><a href="#sec-conjuncts">Conjunct forms</a></nav>
+  </div>
+
+  <section class="part" id="sec-signs">
+    <h2>Vowel signs</h2>
+    <div class="chart"><table class="sg" id="chart"></table></div>
+    <h3>Notes</h3>
+    <ol class="notes" id="sign-notes"></ol>
+  </section>
+
+  <section class="part" id="sec-conjuncts">
+    <h2>Conjunct forms</h2>
+    <p class="hint">Each card: the letter in full, then it as the second letter after <span class="te" id="host"></span>. <b>Below</b> forms are tucked under the first letter; <b>beside</b> forms are added after it, at the lower right.</p>
+    <div class="cjgrid" id="cjgrid"></div>
+    <h3>Notes</h3>
+    <ol class="notes" id="conj-notes"></ol>
+  </section>
+
+</div>
+
+<script src="../telugu-data.js"></script>
+<script src="signs-conjuncts-data.js"></script>
+<script>
+if (!window.TeluguData)          throw new Error('../telugu-data.js was not found');
+if (!window.SignsConjunctsData)  throw new Error('signs-conjuncts-data.js was not found next to this page');
+
+/* ─────────────────────────────────────────────────────────
+   DATA
+   Letters, signs and their IPA come from telugu-data.js. The column
+   order, the conjunct families and the notes come from
+   signs-conjuncts-data.js. Edit the notes there.
+───────────────────────────────────────────────────────── */
+const TD = TeluguData, SD = SignsConjunctsData;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const SIGN = Object.fromEntries(TD.signs.map(s => [s.sign, s]));
+const ROWS = TD.letters.filter(l => l.cat !== 'Vowel');                    // every consonant, then క్ష
+const CONS = ROWS.filter(l => l.cat !== 'Conjunct');                       // the ones that have a conjunct form
+const isRare = x => x.rare || !x.inBook;                                   // rare and extra both go dashed
+
+/* Which notes cover a cell? → "consonant + sign" → [note numbers] */
+const noteNo = {};                                                         // combo → [1-based numbers]
+SD.signNotes.forEach((n, i) => [...n.letters].forEach(c => [...n.signs].forEach(s => { (noteNo[c + s] = noteNo[c + s] || []).push(i + 1); })));
+
+function chartHTML() {
+  const signs = SD.SIGN_ORDER.map(s => SIGN[s]);
+  const head = `<thead><tr><th class="row" scope="col"></th>` +
+    `<th scope="col"><span class="mark te">క</span><small>no sign</small></th>` +
+    signs.map(g => `<th scope="col" class="s${isRare(g) ? ' rare' : ''}" data-rare="${isRare(g) ? 1 : 0}"><span class="mark">${esc(g.sign)}</span><small>/${esc(g.sound)}/</small></th>`).join('') + `</tr></thead>`;
+  const body = ROWS.map((l, i) => {
+    const cells = signs.map(g => {
+      const c = l.ch + g.sign, n = noteNo[c];
+      return `<td class="c${n ? ' n' : ''}${isRare(g) ? ' s' : ''}" data-rare="${isRare(g) ? 1 : 0}"${n ? ` title="Note ${n.join(', ')}"` : ''}>${esc(c)}${n ? `<sup>${n.join(',')}</sup>` : ''}</td>`;
+    }).join('');
+    return `<tr class="${isRare(l) ? 'rare ' : ''}${l.cat === 'Conjunct' ? 'divide' : ''}" data-rare="${isRare(l) ? 1 : 0}"><th class="row" scope="row">${esc(l.ch)}<small>/${esc(l.ipa)}/</small></th><td class="c">${esc(l.ch)}</td>${cells}</tr>`;
+  }).join('');
+  return head + '<tbody>' + body + '</tbody>';
+}
+
+/* Telugu inside running text: give each run its own font, and keep a bare sign from attaching to the Latin letter before it */
+const teRuns = s => esc(s).replace(/[\u0C00-\u0C7F\u200C\u200D]+/g, m => `<span class="te${/^[\u0C02\u0C03\u0C3E-\u0C4D\u0C55\u0C56\u0C62\u0C63]/.test(m) ? ' bare' : ''}">${m}</span>`);
+const chip = (t, usual) => `<span class="chip${usual ? ' usual' : ''}">${esc(t)}</span>`;
+
+function signNotesHTML() {
+  return SD.signNotes.map((n, i) => {
+    const combos = [...n.letters].flatMap(c => [...n.signs].map(s => c + s));
+    const chips = (combos.length ? `<span class="lbl">drawn differently</span>` + combos.map(c => chip(c)).join('') : '') +
+                  (n.usual.length ? `<span class="lbl">usual</span>` + n.usual.map(c => chip(c, true)).join('') : '');
+    return `<li class="note"><span class="num">${i + 1}</span><h4>${teRuns(n.title)}</h4><p>${teRuns(n.text)}</p>${chips ? `<div class="chips">${chips}</div>` : ''}</li>`;
+  }).join('');
+}
+
+function conjCardsHTML() {
+  const noteOf = id => SD.conjNotes.findIndex(n => n.id === id) + 1;
+  return CONS.map(l => {
+    const ex = SD.HOST + '్' + l.ch;
+    const below = SD.BELOW.includes(l.ch);
+    const sup = l.ch === 'ష' ? [noteOf('kssa')] : l.ch === 'ర' ? [noteOf('ra')] : l.ch === 'త' ? [noteOf('ta')] : 'జటడదల'.includes(l.ch) ? [noteOf('low')] : [];
+    const alt = SD.ALT[l.ch];
+    return `<div class="cj${isRare(l) ? ' rare' : ''}" data-rare="${isRare(l) ? 1 : 0}" data-ch="${esc(l.ch)}">
+      <span class="full">${esc(l.ch)}</span><span class="arrow" aria-hidden="true">→</span>
+      <span class="ex">${esc(ex)}${alt ? `<small>then</small> ${esc(alt)}` : ''}${sup.length ? `<sup>${sup.join(',')}</sup>` : ''}</span>
+      <div class="meta"><span class="tag ipa">/${esc(l.ipa)}/</span><span class="tag">${below ? 'below' : 'beside'}</span>${isRare(l) ? '<span class="tag flag">rare</span>' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function conjNotesHTML() {
+  return SD.conjNotes.map((n, i) => {
+    const chips = n.examples.map(c => chip(c)).join('') + (n.usual.length ? `<span class="lbl">usual</span>` + n.usual.map(c => chip(c, true)).join('') : '');
+    return `<li class="note"><span class="num">${i + 1}</span><h4>${teRuns(n.title)}</h4><p>${teRuns(n.text)}</p><div class="chips">${chips}</div></li>`;
+  }).join('');
+}
+
+/* "Include rare and extra letters": hide dashed rows, cards and the extra sign columns */
+function applyRare() {
+  const on = $('show-rare').checked;
+  document.querySelectorAll('[data-rare="1"]').forEach(el => { el.hidden = !on; });
+  const rows = document.querySelectorAll('#chart tbody tr:not([hidden])').length;
+  $('count').textContent = rows + ' letters';
+}
+
+function stickyOffset() { document.documentElement.style.setProperty('--hdr', document.querySelector('.g-header').offsetHeight + 'px'); }
+
+$('host').textContent = SD.HOST;
+$('chart').innerHTML = chartHTML();
+$('sign-notes').innerHTML = signNotesHTML();
+$('cjgrid').innerHTML = conjCardsHTML();
+$('conj-notes').innerHTML = conjNotesHTML();
+$('show-rare').addEventListener('change', applyRare);
+window.addEventListener('resize', stickyOffset);
+stickyOffset(); applyRare();
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Rosetta Stone</title>
-<link rel="stylesheet" href="game.css">
+<link rel="stylesheet" href="../game.css">
 <style>
 /* ── Rosetta Stone-specific (the header, ⋮-menu checkbox and colours come from game.css / base.css) ── */
 
@@ -105,10 +105,10 @@ section.group h2 span { color: var(--text-muted); font-weight: 500; letter-spaci
 
 </div>
 
-<script src="telugu-data.js"></script>
+<script src="../telugu-data.js"></script>
 <script src="rosetta-data.js"></script>
 <script>
-if (!window.TeluguData)  throw new Error('telugu-data.js was not found next to this page');
+if (!window.TeluguData)  throw new Error('../telugu-data.js was not found');
 if (!window.RosettaData) throw new Error('rosetta-data.js was not found next to this page');
 
 /* ─────────────────────────────────────────────────────────

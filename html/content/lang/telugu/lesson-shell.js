@@ -6,7 +6,7 @@
    Remarks → Practice flow, completion + the ✓ on the home tile.
 
    Page needs:
-     <link rel="stylesheet" href="shell.css">
+     <link rel="stylesheet" href="../shell.css">   (from a page inside a section folder)
      script tags (src=…) for progress.js and lesson-shell.js
      <div id="lesson"></div>
    then:

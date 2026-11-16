@@ -34,7 +34,7 @@
 <script src="progress.js"></script>
 <script>
 const Progress = window.TeluguProgress;
-if (!Progress) throw new Error('progress.js was not found next to this page');
+if (!Progress) throw new Error('progress.js was not found');
 
 const body = document.getElementById('rv-body');
 const esc  = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));

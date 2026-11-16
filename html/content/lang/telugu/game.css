@@ -1,9 +1,9 @@
 /* ═════════════════════════════════════════════════════════
    game.css — shared look for every practice game
-   (phonemes.html, diacritics.html, conjuncts.html, …).
+   (alphabet/01_phonemes.html, 02_diacritics.html, 03_conjuncts.html, …).
 
    Link it from a game page with one line:
-       <link rel="stylesheet" href="game.css">
+       <link rel="stylesheet" href="../game.css">          (from a page inside a section folder)
    It pulls in base.css (fonts, colours, reset) itself.
 
    Holds only what games have in common. Anything that belongs
