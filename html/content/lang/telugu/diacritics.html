@@ -34,11 +34,13 @@
       border-bottom: 1px solid var(--border);
     }
 
-    /* Reversed: vowel signs are small marks, so their keys run a little larger */
+    /* Reversed: bare vowel signs are small marks, so their keys run larger and
+       a fixed width, which keeps the row even whatever each mark's own width */
     .kb-btn.sign {
-      font-size: 26px;
-      line-height: 1.2;
-      padding: 3px 13px;
+      font-size: 28px;
+      line-height: 1.4;
+      min-width: 52px;
+      padding: 3px 10px;
     }
 
     /* Pending selection (before both pieces are chosen) */
@@ -202,12 +204,11 @@ function buildDeck(cons, vows) {
 }
 // <<TEST-END>>
 
-// A vowel sign can't stand alone, so each key shows it on క, the way
-// textbooks do (కా కి కీ …). The "no sign" key is plain క: the consonant's
-// own short a. (An isolated mark would get a dotted circle, which each
-// browser draws differently.)
-const SIGN_BASE = '\u0C15';
-const signLabel = v => SIGN_BASE + v.sign;
+// Vowel keys show the sign on its own, with no consonant (ా ి ీ … ం ః ్).
+// The "no sign" key (the consonant's own short a) has nothing to draw, so it
+// shows ◌, a placeholder meaning "nothing attached".
+const NO_SIGN = '\u25CC';
+const signLabel = v => v.sign === '' ? NO_SIGN : v.sign;
 
 // What a pending pick looks like in its slot, in the current direction
 function pickLabel(kind, ipa) {
@@ -262,7 +263,7 @@ function buildPanel(title, kind, items, key, grouped) {
       const btn = document.createElement('button');
       btn.className   = 'kb-btn' + (reversed ? ' te sign' : '');
       btn.textContent = reversed ? signLabel(it) : it.ipa;
-      if (reversed && it.sign === '') btn.setAttribute('aria-label', 'no sign: the consonant on its own');
+      if (reversed) btn.setAttribute('aria-label', it.sign === '' ? 'no sign: the consonant on its own' : 'vowel sign /' + it.ipa + '/');
       btn.dataset.ipa  = it.ipa;
       btn.dataset.kind = kind;
       btn.addEventListener('click', () => onPick(kind, it.ipa, btn));
@@ -296,7 +297,7 @@ function buildKB() {
   wrap.className = 'kb-cols';
   wrap.append(
     buildPanel('Consonant', 'c', src.c, 'cat', grouped),
-    buildPanel(reversed ? 'Vowel sign (on క)' : 'Vowel', 'v', src.v, 'grp', grouped),
+    buildPanel(reversed ? 'Vowel sign' : 'Vowel', 'v', src.v, 'grp', grouped),
   );
   area.appendChild(wrap);
 
