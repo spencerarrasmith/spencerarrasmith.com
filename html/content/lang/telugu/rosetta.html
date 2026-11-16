@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rosetta Stone</title>
+<link rel="stylesheet" href="game.css">
+<style>
+/* ── Rosetta Stone-specific (the header, ⋮-menu checkbox and colours come from game.css / base.css) ── */
+
+html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; this page scrolls */
+body { min-height: 100vh; min-height: 100dvh; }
+.g-header { position: sticky; top: 0; }               /* the title and count stay in view */
+.g-header-top { margin-bottom: 0; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 16px 24px calc(48px + var(--safe-bottom)); display: grid; gap: 14px; }
+@media (max-width: 520px) { .wrap { padding-left: 14px; padding-right: 14px; } }
+
+.hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.55; max-width: 70ch; }
+.hint b { color: var(--text-dim); font-weight: 600; }
+
+/* search + options */
+.tools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.tools input[type=search] {
+  flex: 1 1 220px; min-width: 0; max-width: 360px;
+  font: inherit; font-size: 14px; color: var(--text-dim);
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px;
+}
+.tools input[type=search]:hover, .tools input[type=search]:focus { border-color: var(--accent); outline: none; }
+.tools input[type=search]:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+.jump { display: flex; gap: 6px; margin-left: auto; }
+.jump a {
+  font-size: 12px; font-weight: 600; color: var(--text-dim); text-decoration: none;
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
+}
+.jump a:hover { border-color: var(--accent); background: var(--accent-glow); }
+
+/* sections */
+#list { display: grid; gap: 22px; }
+section.group { display: grid; gap: 10px; scroll-margin-top: 64px; }
+section.group h2 {
+  font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+section.group h2 span { color: var(--text-muted); font-weight: 500; letter-spacing: .06em; }
+.entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 10px; }
+
+/* one character */
+.entry {
+  display: flex; gap: 14px; align-items: flex-start; padding: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+}
+.entry.rare { border-style: dashed; }
+.tile {
+  flex: 0 0 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  height: 84px; border: 1.5px solid var(--border); border-radius: 14px;
+  background: radial-gradient(ellipse at 50% 45%, #1e1830 0%, #111221 70%);
+}
+.tile .g { font-family: 'Noto Sans Telugu', serif; font-weight: 700; font-size: 38px; line-height: 1.2; color: var(--text); margin-top: 6px; }
+.tile.wide .g { font-size: 30px; }
+.tile .cap { font-size: 9px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; }
+.body { flex: 1; min-width: 0; display: grid; gap: 7px; }
+.sounds { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.snd {
+  display: inline-flex; align-items: baseline; gap: 6px; padding: 3px 9px;
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 8px;
+  font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 17px; color: var(--text);
+}
+.snd small { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; }
+.tag { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; background: var(--surface-up); border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; }
+.tag.flag { color: var(--accent-light); border-color: var(--accent); }
+.line { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+.line .lbl { flex: 0 0 52px; font-size: 9px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
+.line .te { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; font-size: 18px; color: var(--text); }
+.line .rom { font-family: 'Noto Sans', 'Inter', sans-serif; color: var(--text-muted); }
+.line .en { font-weight: 600; color: var(--text); font-size: 14px; }
+.line .what { color: var(--text-muted); font-size: 12px; }
+.line.none { color: var(--text-muted); font-style: italic; }
+.note { font-size: 12px; line-height: 1.45; color: var(--text-muted); border-left: 2px solid var(--border); padding-left: 9px; }
+.empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 30px 0; }
+</style>
+</head>
+<body>
+
+<header class="g-header">
+  <div class="g-header-top">
+    <span class="g-title">Rosetta Stone</span>
+    <div class="g-right"><div class="g-stats"><span id="count"></span></div></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="hint">Every Telugu letter and vowel sign with its sound written two ways: <b>IPA</b> (how it sounds) and <b>ISO 15919</b> (the standard Latin spelling of the letter), plus a Telugu word that uses it and an English word that sounds close. English matches are approximate, so the notes say where to adjust. Letters with no real example word say so rather than invent one.</p>
+
+  <div class="tools">
+    <input type="search" id="q" placeholder="Search a letter, sound or word" aria-label="Search" autocomplete="off">
+    <label class="menu-opt" for="show-rare"><input type="checkbox" id="show-rare" checked> <span>Include rare and extra letters</span></label>
+    <nav class="jump" aria-label="Jump to">
+      <a href="#sec-vowels">Vowels</a><a href="#sec-consonants">Consonants</a><a href="#sec-signs">Vowel signs</a>
+    </nav>
+  </div>
+
+  <div id="list"></div>
+  <p class="empty" id="empty" hidden>Nothing matches that.</p>
+
+</div>
+
+<script src="telugu-data.js"></script>
+<script src="rosetta-data.js"></script>
+<script>
+if (!window.TeluguData)  throw new Error('telugu-data.js was not found next to this page');
+if (!window.RosettaData) throw new Error('rosetta-data.js was not found next to this page');
+
+/* ─────────────────────────────────────────────────────────
+   DATA
+   The characters, their IPA, categories and rare/extra flags
+   come from telugu-data.js; ISO 15919, the example words and the
+   English matches come from rosetta-data.js. Edit them there.
+───────────────────────────────────────────────────────── */
+const TD = TeluguData, RD = RosettaData;
+const SIGN_BASE = 'క';          // signs are shown on క, the way textbooks print them (కా కి కీ …)
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// lower-case, with the Latin accents dropped so “sh” finds ś and ṣ
+const fold = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+/* One entry per character: { kind, glyph, caption, ipa, iso, place, rare, extra, word, eng, note } */
+function buildEntries() {
+  const out = [];
+  TD.letters.forEach(l => {
+    const r = RD.letters[l.ch];
+    out.push({
+      kind: 'letter', section: l.cat === 'Vowel' ? 'vowels' : 'consonants',
+      heading: l.cat === 'Vowel' ? 'Vowels' : l.cat, key: l.ch,
+      glyph: l.ch, caption: '', ipa: l.ipa, iso: r.iso, place: l.cat,
+      rare: l.rare, extra: !l.inBook, word: r.word, eng: r.eng, note: r.note || '',
+    });
+  });
+  TD.signs.forEach(s => {
+    const r = RD.signs[s.sign];
+    out.push({
+      kind: 'sign', section: 'signs', heading: s.grp, key: s.sign || '(none)',
+      glyph: SIGN_BASE + s.sign,
+      caption: s.sign === '' ? 'no sign' : s.sign === '్' ? 'virama' : 'sign',
+      ipa: s.sound === '' ? '∅' : s.sound, iso: r.iso || '—', place: s.grp,
+      rare: s.rare, extra: !s.inBook, word: r.word, eng: r.eng, note: r.note || '',
+    });
+  });
+  return out;
+}
+
+function entryHTML(e) {
+  const ipaShown = e.ipa === '∅' ? '∅' : '/' + esc(e.ipa) + '/';
+  const flags = (e.rare ? '<span class="tag flag">rare</span>' : '') + (e.extra ? '<span class="tag flag">extra</span>' : '');
+  const word = e.word
+    ? `<div class="line"><span class="lbl">Telugu</span><span class="te">${esc(e.word[0])}</span><span class="rom">${esc(e.word[1])}</span><span class="what">${esc(e.word[2])}</span></div>`
+    : `<div class="line none"><span class="lbl">Telugu</span>no everyday word</div>`;
+  const eng = e.eng
+    ? `<div class="line"><span class="lbl">English</span><span class="en">${esc(e.eng[0])}</span><span class="what">${esc(e.eng[1])}</span></div>`
+    : `<div class="line none"><span class="lbl">English</span>no English match</div>`;
+  const hay = fold([e.glyph, e.ipa, e.iso, e.place, e.word ? e.word.join(' ') : '', e.eng ? e.eng.join(' ') : '', e.note].join(' '));
+  return `<article class="entry${e.rare || e.extra ? ' rare' : ''}" data-rare="${e.rare || e.extra ? 1 : 0}" data-hay="${esc(hay)}" data-key="${esc(e.key)}">
+    <div class="tile${[...e.glyph].length > 2 ? ' wide' : ''}"><span class="g">${esc(e.glyph)}</span>${e.caption ? `<span class="cap">${esc(e.caption)}</span>` : ''}</div>
+    <div class="body">
+      <div class="sounds"><span class="snd"><small>IPA</small>${ipaShown}</span><span class="snd"><small>ISO</small>${esc(e.iso)}</span><span class="tag">${esc(e.place)}</span>${flags}</div>
+      ${word}${eng}
+      ${e.note ? `<p class="note">${esc(e.note)}</p>` : ''}
+    </div>
+  </article>`;
+}
+
+function render() {
+  const entries = buildEntries();
+  // group by section, then by heading, keeping first-seen order
+  const SECTIONS = [['vowels', 'Vowels'], ['consonants', 'Consonants'], ['signs', 'Vowel signs']];
+  $('list').innerHTML = SECTIONS.map(([id, title]) => {
+    const inSec = entries.filter(e => e.section === id);
+    const heads = [...new Set(inSec.map(e => e.heading))];
+    return heads.map((h, i) => `<section class="group" ${i === 0 ? `id="sec-${id}"` : ''} data-section="${id}">
+      <h2>${id === 'vowels' ? 'Vowels' : esc(h)}${i === 0 && id !== 'vowels' ? ` <span>· ${title}</span>` : ''}</h2>
+      <div class="entries">${inSec.filter(e => e.heading === h).map(entryHTML).join('')}</div>
+    </section>`).join('');
+  }).join('');
+  filter();
+}
+
+// Search and the rare/extra option: hide what doesn't match, and any group left empty.
+function filter() {
+  const q = fold($('q').value.trim()), showRare = $('show-rare').checked;
+  let shown = 0, total = 0;
+  document.querySelectorAll('.entry').forEach(el => {
+    total++;
+    const ok = (showRare || el.dataset.rare === '0') && (!q || el.dataset.hay.includes(q));
+    el.hidden = !ok;
+    if (ok) shown++;
+  });
+  document.querySelectorAll('section.group').forEach(s => { s.hidden = !s.querySelector('.entry:not([hidden])'); });
+  $('count').textContent = shown === total ? `${total} characters` : `${shown} of ${total} characters`;
+  $('empty').hidden = shown > 0;
+}
+
+$('q').addEventListener('input', filter);
+$('show-rare').addEventListener('change', filter);
+render();
+</script>
+</body>
+</html>
