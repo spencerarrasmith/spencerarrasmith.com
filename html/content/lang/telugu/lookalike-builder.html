@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lookalike Builder</title>
+<link rel="stylesheet" href="game.css">
+<!-- the two extra Telugu faces offered by the font picker (Noto Sans Telugu comes from base.css) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Telugu:wght@400;600&family=Tiro+Telugu&display=swap">
+<style>
+/* ── Lookalike Builder-specific (the header, ⋮-menu checkboxes and colours come from game.css / base.css) ── */
+
+html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; this page scrolls */
+:root { --telugu: 'Noto Sans Telugu', 'Noto Sans', sans-serif; --hdr: 52px; }
+body { min-height: 100vh; min-height: 100dvh; }
+.te { font-family: var(--telugu); }
+
+.g-header { position: sticky; top: 0; }               /* progress stays in view while you work */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 16px 24px calc(48px + var(--safe-bottom)); display: grid; gap: 14px; }
+@media (max-width: 520px) { .wrap { padding-left: 14px; padding-right: 14px; } }
+
+h2 { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; }
+h3 { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
+.hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.5; max-width: 65ch; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+
+/* run settings */
+.settings { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center; padding: 6px 12px; }
+.settings h3 { margin-right: 6px; }
+.settings .sep { width: 1px; align-self: stretch; margin: 6px 6px; background: var(--border); }
+select, input[type=text] {
+  font: inherit; font-size: 13.5px; color: var(--text-dim);
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
+}
+select:hover, input[type=text]:hover { border-color: var(--accent); }
+.settings label[for=font] { display: inline-flex; gap: 8px; align-items: center; font-size: 13.5px; color: var(--text-dim); }
+
+/* the character being judged, in the app's amber-halo tile */
+.work { display: grid; grid-template-columns: minmax(270px, 340px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.prompt { position: sticky; top: calc(var(--hdr) + 14px); display: grid; gap: 12px; }
+.prompt-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.pill { border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); background: var(--surface-up); }
+.pill.done { border-color: var(--accent); color: var(--accent-light); }
+.glyph {
+  font-family: var(--telugu); font-weight: 700; font-size: clamp(88px, 13vw, 132px); line-height: 1.55; text-align: center; color: var(--text);
+  background: radial-gradient(ellipse at 50% 45%, #1e1830 0%, #111221 70%);
+  border: 1.5px solid var(--border); border-radius: 20px; min-height: 1.55em; overflow-wrap: anywhere;
+  box-shadow: 0 8px 32px rgba(0,0,0,.55), inset 0 0 48px rgba(201, 152, 26, 0.05);
+}
+.glyph.empty { font-family: 'Inter', system-ui, sans-serif; font-weight: 400; font-size: 14px; color: var(--text-muted); padding: 40px 16px; line-height: 1.4; min-height: 0; }
+.prompt-name { text-align: center; font-size: 13px; color: var(--text-muted); }
+.prompt-name b { color: var(--text); font-weight: 600; font-size: 15px; }
+.tray { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 42px; align-items: center; }
+.chip {
+  font-family: var(--telugu); font-size: 22px; line-height: 1.5; padding: 0 10px; cursor: pointer;
+  display: inline-flex; gap: 6px; align-items: center;
+  background: var(--accent); color: #0b0c18; border: 1px solid var(--accent-light); border-radius: 8px;
+}
+.chip small { font-family: 'Inter', sans-serif; font-size: 13px; opacity: .7; }
+.chip.ghost { background: var(--surface-up); color: var(--text); border-color: var(--border); }
+.chip.ghost:hover { border-color: var(--accent); }
+.chip.ghost.anchor { border-color: var(--accent); color: var(--accent-light); }   /* whose group this is */
+.nav { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; }
+
+/* buttons (the primary one is the app's gold button) */
+.btn {
+  font: inherit; font-size: 13.5px; font-weight: 600; color: var(--text-dim); cursor: pointer;
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 9px; padding: 9px 14px;
+  transition: background .12s, border-color .12s, filter .14s;
+}
+.btn:hover { border-color: var(--accent); background: var(--accent-glow); }
+.btn.primary { background: var(--accent); color: #0b0c18; border-color: var(--accent); font-weight: 700; }
+.btn.primary:hover { filter: brightness(1.1); background: var(--accent); }
+.btn.danger { color: var(--error); }
+.btn.danger:hover { border-color: var(--error); background: var(--error-dim); }
+.btn[aria-pressed="true"] { border-color: var(--accent-light); color: var(--accent-light); border-style: dashed; }
+.btn:disabled { opacity: .4; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+
+/* keyboard */
+.kb { display: grid; gap: 14px; }
+.kbhead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.readout { font-size: 12.5px; color: var(--text-muted); }
+.readout b { font-family: var(--telugu); font-weight: 400; font-size: 18px; color: var(--accent-light); margin-left: 6px; }
+.kbrow { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: start; }
+.kbrow h3 { padding-top: 14px; }
+.keys { display: grid; gap: 5px; }
+.keys.signs { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
+.keys.v { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.keys.c { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.keys.d { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+.key {
+  font-family: var(--telugu); font-size: 22px; line-height: 1.55; min-height: 50px; padding: 2px; cursor: pointer; overflow-wrap: anywhere;
+  background: var(--surface-up); color: var(--text-dim); border: 1px solid var(--border); border-radius: 8px;
+  transition: background .1s, border-color .1s, color .1s, transform .08s;
+}
+.key:hover:not(:disabled) { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-light); }
+.key:active:not(:disabled) { transform: scale(.94); }
+.key.rare { border-style: dashed; }
+.key[aria-pressed="true"] { background: var(--accent); color: #0b0c18; border-color: var(--accent-light); border-style: solid; }
+.key:disabled { opacity: .32; cursor: default; }
+.key.self:disabled { opacity: 1; background: var(--bg); color: var(--accent-light); border-color: var(--accent); }
+.key small { display: block; font-family: 'Inter', sans-serif; font-size: 10px; line-height: 1.1; color: var(--text-muted); padding-bottom: 4px; }
+.key[aria-pressed="true"] small { color: #0b0c18; }
+.keys.arming .key { border-color: var(--accent); border-style: dashed; }
+.stack { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 4px; }
+.other { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; }
+.other label { font-size: 12.5px; color: var(--text-muted); }
+.other input { flex: 1 1 140px; min-width: 0; font-family: var(--telugu); font-size: 18px; }
+
+/* groups + CSV */
+.results { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.results .card { display: grid; gap: 12px; }
+.results h2 span { color: var(--text-muted); }
+.group-list { display: grid; gap: 8px; }
+.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+.group .n { font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: 11px; min-width: 1.6em; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row label { font-size: 12.5px; color: var(--text-muted); }
+textarea {
+  width: 100%; min-height: 150px; resize: vertical; padding: 10px;
+  font-family: var(--telugu); font-size: 17px; line-height: 1.7; color: var(--text-dim);
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+}
+#status { min-height: 1.4em; color: var(--accent-light); font-size: 12.5px; }
+
+/* every character in the run */
+.queue summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; }
+.queue .legend { margin: 10px 0 8px; }
+.tiles { display: flex; flex-wrap: wrap; gap: 4px; max-height: 230px; overflow-y: auto; padding: 2px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.tile { font-family: var(--telugu); font-size: 17px; line-height: 1.6; min-width: 38px; padding: 0 4px; cursor: pointer; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; }
+.tile:hover { border-color: var(--accent); }
+.tile.done { color: var(--text); background: var(--surface-up); }
+.tile.has { border-color: var(--accent); color: var(--accent-light); }
+.tile.cur { outline: 2px solid var(--accent-light); outline-offset: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--text-muted); font-size: 12px; }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); margin-right: 6px; vertical-align: -1px; }
+.legend .l-done::before { background: var(--surface-up); }
+.legend .l-has::before { border-color: var(--accent); }
+
+@media (max-width: 860px) {
+  .work, .results { grid-template-columns: minmax(0, 1fr); }
+  .prompt { top: var(--hdr); z-index: 5; gap: 8px; padding: 12px; box-shadow: 0 8px 18px rgba(0,0,0,.45); }
+  .glyph { font-size: 76px; }
+  .prompt .hint { display: none; }
+  .kbrow { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .kbrow h3 { padding-top: 0; }
+  .keys.d { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .key { font-size: 19px; min-height: 46px; }
+  .settings .sep { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="g-header">
+  <div class="g-header-top">
+    <span class="g-title">Lookalike Builder</span>
+    <div class="g-right"><div class="g-stats"><span id="progressText"></span></div></div>
+  </div>
+  <div class="g-prog-track"><div class="g-prog-fill" id="progressBar"></div></div>
+</header>
+
+<div class="wrap">
+
+  <p class="hint">One character at a time: tap every character that looks like it to you, then export the groups as a CSV. Upload that file in Lookalikes (its ⋮ menu) to practise your own groups.</p>
+
+  <section class="card settings" aria-label="Run settings">
+    <h3>Show me</h3>
+    <label class="menu-opt" for="setVowels"><input type="checkbox" id="setVowels" data-set="vowels"> <span>Vowels</span></label>
+    <label class="menu-opt" for="setConsonants"><input type="checkbox" id="setConsonants" data-set="consonants"> <span>Consonants</span></label>
+    <label class="menu-opt" for="setMarks"><input type="checkbox" id="setMarks" data-set="marks"> <span>Consonants with vowel signs</span></label>
+    <label class="menu-opt" for="setDigits"><input type="checkbox" id="setDigits" data-set="digits"> <span>Digits</span></label>
+    <span class="sep"></span>
+    <label class="menu-opt" for="uncommon"><input type="checkbox" id="uncommon"> <span>Include uncommon</span></label>
+    <span class="sep"></span>
+    <label for="font">Telugu font
+      <select id="font">
+        <option value="sans">Noto Sans Telugu</option>
+        <option value="serif">Noto Serif Telugu</option>
+        <option value="tiro">Tiro Telugu</option>
+        <option value="device">This device's font</option>
+      </select>
+    </label>
+  </section>
+
+  <main class="work">
+    <section class="card prompt" aria-label="Character to judge">
+      <div class="prompt-meta"><span id="pos"></span><span id="pill" class="pill"></span></div>
+      <div id="glyph" class="glyph te" aria-live="polite"></div>
+      <div class="prompt-name" id="promptName"></div>
+      <div class="tray">
+        <h3>Looks like</h3>
+        <div id="chips" class="chips"></div>
+        <p class="hint">Characters already linked to this one are filled in for you.</p>
+      </div>
+      <div class="nav">
+        <button type="button" class="btn" id="prev">&larr; Previous</button>
+        <button type="button" class="btn primary" id="next">Done, next &rarr;</button>
+      </div>
+      <p class="hint">Picks save as you tap. Done marks this character reviewed, even with nothing picked. The arrow keys also move between characters.</p>
+    </section>
+
+    <section class="card kb" id="kb" aria-label="Telugu keyboard">
+      <div class="kbhead">
+        <h2>Keyboard</h2>
+        <span class="readout">Consonant keys show <b id="readout"></b></span>
+        <button type="button" class="btn" id="kbReset">Back to plain letters</button>
+      </div>
+      <div class="kbrow">
+        <h3>Vowel sign</h3>
+        <div id="signs" class="keys signs"></div>
+      </div>
+      <div class="kbrow">
+        <h3>Conjunct</h3>
+        <div class="stack">
+          <button type="button" class="btn" id="stack" aria-pressed="false">Choose top consonant</button>
+          <span id="prefixChips" class="row"></span>
+          <span class="hint" id="stackHint"></span>
+        </div>
+      </div>
+      <div class="kbrow">
+        <h3>Vowels</h3>
+        <div id="kVowels" class="keys v"></div>
+      </div>
+      <div class="kbrow">
+        <h3>Consonants</h3>
+        <div id="kCons" class="keys c"></div>
+      </div>
+      <div class="kbrow">
+        <h3>Digits</h3>
+        <div id="kDigits" class="keys d"></div>
+      </div>
+      <form class="other" id="otherForm">
+        <label for="other">Anything else</label>
+        <input type="text" id="other" autocomplete="off" placeholder="type or paste a character">
+        <button type="submit" class="btn">Add as lookalike</button>
+        <button type="button" class="btn" id="otherPrompt">Judge this one now</button>
+      </form>
+    </section>
+  </main>
+
+  <div class="results">
+    <section class="card" aria-label="Lookalike groups">
+      <h2>Groups <span id="groupCount"></span></h2>
+      <p class="hint">Each character gets its own group: itself (outlined) plus the characters you picked for it. Picks work both ways, but groups are never merged. Tap a character to go back to it.</p>
+      <div id="groups" class="group-list"></div>
+    </section>
+
+    <section class="card" aria-label="CSV export">
+      <h2>CSV</h2>
+      <div class="row">
+        <label for="format">Rows</label>
+        <select id="format">
+          <option value="groups">One group per character</option>
+          <option value="pairs">One picked pair per row</option>
+        </select>
+        <span class="hint">UTF-8, no header row.</span>
+      </div>
+      <textarea id="csv" readonly aria-label="CSV preview" placeholder="Your CSV appears here once you pick a lookalike."></textarea>
+      <div class="row">
+        <button type="button" class="btn primary" id="download">Download CSV</button>
+        <button type="button" class="btn" id="copy">Copy CSV</button>
+        <button type="button" class="btn" id="importBtn">Import CSV</button>
+        <input type="file" id="importFile" accept=".csv,.txt,text/csv,text/plain" hidden>
+        <button type="button" class="btn danger" id="clear">Clear all picks</button>
+      </div>
+      <p id="status" role="status"></p>
+      <p class="hint">Picks are kept in this browser only. Download or copy the CSV to keep them. Importing a CSV adds its links to what is here.</p>
+    </section>
+  </div>
+
+  <details class="card queue" open>
+    <summary>Every character in this run</summary>
+    <p class="legend"><span class="l-new">not reviewed</span><span class="l-done">reviewed</span><span class="l-has">has lookalikes</span></p>
+    <div id="tiles" class="tiles"></div>
+  </details>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- character data: [character, ISO 15919, uncommon?] ---------- */
+var VIRAMA='్', RING='◌', BOX='▢';
+var VOWELS=[['అ','a'],['ఆ','ā'],['ఇ','i'],['ఈ','ī'],['ఉ','u'],['ఊ','ū'],
+  ['ఋ','r̥',1],['ౠ','r̥̄',1],['ఌ','l̥',1],['ౡ','l̥̄',1],
+  ['ఎ','e'],['ఏ','ē'],['ఐ','ai'],['ఒ','o'],['ఓ','ō'],['ఔ','au']];
+var CONS=[['క','k'],['ఖ','kh'],['గ','g'],['ఘ','gh'],['ఙ','ṅ',1],
+  ['చ','c'],['ఛ','ch'],['జ','j'],['ఝ','jh'],['ఞ','ñ',1],
+  ['ట','ṭ'],['ఠ','ṭh'],['డ','ḍ'],['ఢ','ḍh'],['ణ','ṇ'],
+  ['త','t'],['థ','th'],['ద','d'],['ధ','dh'],['న','n'],
+  ['ప','p'],['ఫ','ph'],['బ','b'],['భ','bh'],['మ','m'],
+  ['య','y'],['ర','r'],['ల','l'],['వ','v'],['శ','ś'],
+  ['ష','ṣ'],['స','s'],['హ','h'],['ళ','ḷ'],['ఱ','ṟ']];
+var SIGNS=[['ా','ā'],['ి','i'],['ీ','ī'],['ు','u'],['ూ','ū'],
+  ['ృ','r̥'],['ౄ','r̥̄',1],['ౢ','l̥',1],['ౣ','l̥̄',1],
+  ['ె','e'],['ే','ē'],['ై','ai'],['ొ','o'],['ో','ō'],['ౌ','au'],
+  ['ం','ṁ'],['ః','ḥ'],[VIRAMA,'']];
+var DIGITS=[];
+for(var d=0;d<10;d++) DIGITS.push([String.fromCharCode(0x0C66+d),String(d)]);
+
+function toMap(list){var m=new Map();list.forEach(function(x){m.set(x[0],x[1]);});return m;}
+var VOW_R=toMap(VOWELS), CONS_R=toMap(CONS), SIGN_R=toMap(SIGNS), DIG_R=toMap(DIGITS);
+var ORDER=new Map();
+VOWELS.concat(CONS,[[VIRAMA]],SIGNS,DIGITS).forEach(function(x){if(!ORDER.has(x[0])) ORDER.set(x[0],ORDER.size);});
+
+var FONTS={
+  sans:'"Noto Sans Telugu","Kohinoor Telugu","Nirmala UI","Gautami",sans-serif',
+  serif:'"Noto Serif Telugu","Telugu MN","Gautami",serif',
+  tiro:'"Tiro Telugu","Noto Serif Telugu","Telugu MN",serif',
+  device:'"Nirmala UI","Kohinoor Telugu","Telugu Sangam MN","Gautami",system-ui,sans-serif'
+};
+
+/* ---------- pure helpers ---------- */
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function clean(s){var t=String(s).replace(/[\s,"'<>&﻿]/g,'');return t.normalize?t.normalize('NFC'):t;}
+
+function romanize(s){
+  var out='',pend=false;
+  Array.from(s).forEach(function(ch){
+    if(CONS_R.has(ch)){ if(pend) out+='a'; out+=CONS_R.get(ch); pend=true; }
+    else if(ch===VIRAMA){ pend=false; }
+    else if(ch==='ం'||ch==='ః'){ if(pend){out+='a';pend=false;} out+=SIGN_R.get(ch); }
+    else if(SIGN_R.has(ch)){ out+=SIGN_R.get(ch); pend=false; }
+    else { if(pend){out+='a';pend=false;} out+=VOW_R.has(ch)?VOW_R.get(ch):DIG_R.has(ch)?DIG_R.get(ch):ch; }
+  });
+  return pend?out+'a':out;
+}
+function kindOf(s){
+  if(VOW_R.has(s)) return 'vowel';
+  if(DIG_R.has(s)) return 'digit';
+  if(CONS_R.has(s)) return 'consonant';
+  var chars=Array.from(s), n=chars.filter(function(c){return CONS_R.has(c);}).length;
+  var last=chars[chars.length-1], signed=SIGN_R.has(last);
+  if(n>=2) return (n===2?'conjunct':n+'-consonant conjunct')+(signed?(last===VIRAMA?', no vowel':' with vowel sign'):'');
+  if(n===1&&signed) return last===VIRAMA?'consonant, no vowel':'consonant with vowel sign';
+  return 'other';
+}
+function ranks(s){return Array.from(s,function(ch){return ORDER.has(ch)?ORDER.get(ch):1000+ch.codePointAt(0);});}
+function cmp(a,b){
+  var x=ranks(a),y=ranks(b),n=Math.min(x.length,y.length);
+  for(var i=0;i<n;i++){ if(x[i]!==y[i]) return x[i]-y[i]; }
+  return x.length-y.length;
+}
+
+/* ---------- state ---------- */
+var KEY='telugu-lookalikes-v1';
+var S={sets:{vowels:true,consonants:true,marks:false,digits:false},uncommon:false,font:'sans',format:'groups',pos:0};
+var adj=new Map();          /* character -> Set of characters picked as lookalikes (symmetric) */
+var reviewed=new Set();
+var queue=[];
+var custom=null;            /* a character being judged that is outside the run */
+var kb={sign:'',prefix:[],arming:false};
+var clearArmed=0;
+
+function link(a,b){
+  if(!a||!b||a===b) return false;
+  if(!adj.has(a)) adj.set(a,new Set());
+  if(!adj.has(b)) adj.set(b,new Set());
+  if(adj.get(a).has(b)) return false;
+  adj.get(a).add(b); adj.get(b).add(a); return true;
+}
+function unlink(a,b){
+  [[a,b],[b,a]].forEach(function(p){
+    var set=adj.get(p[0]); if(!set) return;
+    set.delete(p[1]); if(!set.size) adj.delete(p[0]);
+  });
+}
+function linked(a,b){return adj.has(a)&&adj.get(a).has(b);}
+function neighbours(a){return adj.has(a)?Array.from(adj.get(a)).sort(cmp):[];}
+function edges(){
+  var out=[];
+  adj.forEach(function(set,a){set.forEach(function(b){ if(cmp(a,b)<0) out.push([a,b]); });});
+  return out.sort(function(x,y){return cmp(x[0],y[0])||cmp(x[1],y[1]);});
+}
+/* One group per character: the character first, then everything linked to it.
+   Links work both ways (pick బ for ఒ and ఒ is already in బ's list), but groups are
+   never merged, so a group is only ever a character and its own direct picks.
+   Mirrored duplicates (ఒ→బ and బ→ఒ are the same two characters) are listed once. */
+function groupRows(){
+  var seen=new Set(),out=[];
+  Array.from(adj.keys()).sort(cmp).forEach(function(a){
+    var row=[a].concat(neighbours(a));
+    var key=row.slice().sort(cmp).join('|');
+    if(seen.has(key)) return;
+    seen.add(key); out.push(row);
+  });
+  return out;
+}
+function csvText(){
+  var rows=S.format==='pairs'?edges():groupRows();
+  return rows.map(function(r){return r.join(',');}).join('\n');
+}
+function importCsv(text){
+  var added=0;
+  String(text).split(/\r?\n/).forEach(function(line){
+    var cells=line.split(',').map(clean).filter(Boolean);
+    for(var i=1;i<cells.length;i++){ if(link(cells[0],cells[i])) added++; }
+  });
+  return added;
+}
+
+function load(){
+  try{
+    var raw=localStorage.getItem(KEY); if(!raw) return;
+    var o=JSON.parse(raw);
+    (o.links||[]).forEach(function(p){ if(Array.isArray(p)) link(clean(p[0]),clean(p[1])); });
+    (o.reviewed||[]).forEach(function(c){ reviewed.add(c); });
+    if(o.sets) Object.keys(S.sets).forEach(function(k){ if(typeof o.sets[k]==='boolean') S.sets[k]=o.sets[k]; });
+    S.uncommon=!!o.uncommon;
+    if(FONTS[o.font]) S.font=o.font;
+    if(o.format==='pairs') S.format='pairs';
+    if(typeof o.pos==='number') S.pos=o.pos;
+  }catch(e){}
+}
+function persist(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify({links:edges(),reviewed:Array.from(reviewed),sets:S.sets,uncommon:S.uncommon,font:S.font,format:S.format,pos:S.pos}));
+  }catch(e){}
+}
+
+function buildQueue(){
+  var keep=function(x){return S.uncommon||!x[2];}, q=[];
+  if(S.sets.vowels) VOWELS.filter(keep).forEach(function(x){q.push(x[0]);});
+  if(S.sets.consonants) CONS.filter(keep).forEach(function(x){q.push(x[0]);});
+  if(S.sets.marks) CONS.filter(keep).forEach(function(c){SIGNS.filter(keep).forEach(function(s){q.push(c[0]+s[0]);});});
+  if(S.sets.digits) DIGITS.forEach(function(x){q.push(x[0]);});
+  queue=q;
+  S.pos=Math.max(0,Math.min(S.pos,q.length-1));
+}
+function current(){return custom!==null?custom:(queue.length?queue[S.pos]:null);}
+function form(c){return kb.prefix.map(function(p){return p+VIRAMA;}).join('')+c+kb.sign;}
+function resetKb(){kb.sign='';kb.prefix=[];kb.arming=false;}
+
+/* ---------- rendering ---------- */
+function $(id){return document.getElementById(id);}
+function say(msg){$('status').textContent=msg;}
+
+function keyHTML(ch,o){
+  var P=current(), self=ch===P, pressed=!!P&&!self&&linked(P,ch);
+  var off=!P||o.off||self;
+  return '<button type="button" class="key'+(o.rare?' rare':'')+(self?' self':'')+'" data-k="ch:'+esc(ch)+'" data-ch="'+esc(ch)+'"'+
+    (o.base?' data-base="'+esc(o.base)+'"':'')+' aria-pressed="'+pressed+'" title="'+esc(romanize(ch))+(self?' (the character shown)':'')+'"'+(off?' disabled':'')+'>'+esc(ch)+'</button>';
+}
+function renderKeyboard(){
+  var combining=!!(kb.sign||kb.prefix.length);
+  $('signs').innerHTML=SIGNS.filter(function(s){return S.uncommon||!s[2];}).map(function(s){
+    return '<button type="button" class="key'+(s[2]?' rare':'')+'" data-k="sign:'+s[0]+'" data-sign="'+s[0]+'" aria-pressed="'+(kb.sign===s[0])+'" title="'+(s[1]?'vowel sign '+s[1]:'no vowel (pollu)')+'">'+RING+s[0]+'<small>'+(s[1]||'none')+'</small></button>';
+  }).join('');
+  $('kVowels').innerHTML=VOWELS.map(function(v){return keyHTML(v[0],{rare:v[2],off:combining||kb.arming});}).join('');
+  $('kDigits').innerHTML=DIGITS.map(function(v){return keyHTML(v[0],{off:combining||kb.arming});}).join('');
+  var cons=$('kCons');
+  cons.className='keys c'+(kb.arming?' arming':'');
+  cons.innerHTML=CONS.map(function(c){
+    if(kb.arming) return '<button type="button" class="key'+(c[2]?' rare':'')+'" data-k="base:'+c[0]+'" data-base="'+c[0]+'" aria-pressed="false" title="'+c[1]+'">'+c[0]+'</button>';
+    return keyHTML(form(c[0]),{rare:c[2],base:c[0]});
+  }).join('');
+
+  var parts=kb.prefix.map(function(p){return p+VIRAMA;}).concat([BOX]);
+  if(kb.sign) parts.push(RING+kb.sign);
+  $('readout').textContent=combining?parts.join(' + '):'plain letters';
+  $('kbReset').disabled=!combining&&!kb.arming;
+  var stack=$('stack');
+  stack.setAttribute('aria-pressed',String(kb.arming));
+  stack.textContent=kb.arming?'Now tap a consonant…':(kb.prefix.length?'Add another on top':'Choose top consonant');
+  stack.disabled=!kb.arming&&kb.prefix.length>=2;
+  $('prefixChips').innerHTML=kb.prefix.map(function(p,i){
+    return '<button type="button" class="chip ghost" data-k="unprefix:'+i+'" data-unprefix="'+i+'" title="Remove '+esc(romanize(p))+'">'+p+VIRAMA+' <small>×</small></button>';
+  }).join('');
+  $('stackHint').textContent=kb.prefix.length?'':'Every consonant key then shows its form stacked under the one you choose.';
+}
+function renderPrompt(){
+  var P=current(), g=$('glyph');
+  if(!P){
+    g.className='glyph empty'; g.textContent='Tick at least one set under Show me.';
+    $('pos').textContent=''; $('pill').textContent=''; $('pill').className='pill'; $('promptName').textContent='';
+    $('chips').innerHTML=''; $('prev').disabled=$('next').disabled=true; return;
+  }
+  g.className='glyph te'; g.textContent=P;
+  var n=neighbours(P);
+  $('pos').textContent=custom!==null?'Outside this run':(S.pos+1)+' of '+queue.length;
+  var pill=$('pill'), done=reviewed.has(P);
+  pill.className='pill'+(done?' done':'');
+  pill.textContent=done?(n.length?'reviewed':'reviewed, none'):'not reviewed';
+  $('promptName').innerHTML='<b>'+esc(romanize(P))+'</b> &middot; '+esc(kindOf(P));
+  $('chips').innerHTML=n.length?n.map(function(c){
+    return '<button type="button" class="chip" data-k="rm:'+esc(c)+'" data-remove="'+esc(c)+'" title="Remove '+esc(romanize(c))+'">'+esc(c)+' <small>×</small></button>';
+  }).join(''):'<span class="hint">Nothing picked yet.</span>';
+  $('prev').disabled=custom===null&&S.pos===0;
+  $('next').disabled=false;
+  $('next').innerHTML=(custom===null&&S.pos>=queue.length-1)?'Done':'Done, next &rarr;';
+}
+function renderResults(){
+  var groups=groupRows();
+  $('groupCount').textContent=groups.length?'('+groups.length+')':'';
+  $('groups').innerHTML=groups.length?groups.map(function(grp,i){
+    return '<div class="group"><span class="n">'+(i+1)+'</span>'+grp.map(function(c,j){
+      return '<button type="button" class="chip ghost'+(j===0?' anchor':'')+'" data-k="go:'+esc(c)+'" data-goto="'+esc(c)+'" title="'+esc(romanize(c))+'">'+esc(c)+'</button>';
+    }).join('')+'</div>';
+  }).join(''):'<p class="hint">No groups yet. Pick a lookalike on the keyboard, for example <span class="te">బ</span> for <span class="te">ఒ</span>.</p>';
+  $('csv').value=csvText();
+  $('format').value=S.format;
+}
+function renderRun(){
+  var P=current(), done=0;
+  $('tiles').innerHTML=queue.map(function(c,i){
+    var r=reviewed.has(c); if(r) done++;
+    return '<button type="button" class="tile'+(r?' done':'')+(adj.has(c)?' has':'')+((custom===null&&i===S.pos)?' cur':'')+'" data-k="tile:'+c+'" data-goto="'+c+'" title="'+esc(romanize(c))+'">'+c+'</button>';
+  }).join('');
+  var groups=groupRows().length;
+  $('progressText').textContent=done+' of '+queue.length+' reviewed · '+groups+(groups===1?' group':' groups');
+  $('progressBar').style.width=(queue.length?100*done/queue.length:0)+'%';
+}
+function renderSettings(){
+  Array.prototype.forEach.call(document.querySelectorAll('[data-set]'),function(el){el.checked=S.sets[el.dataset.set];});
+  $('uncommon').checked=S.uncommon;
+  $('font').value=S.font;
+  document.documentElement.style.setProperty('--telugu',FONTS[S.font]);
+}
+function render(){
+  var active=document.activeElement, k=active&&active.dataset?active.dataset.k:null;
+  renderSettings(); renderPrompt(); renderKeyboard(); renderResults(); renderRun();
+  if(k){
+    var again=Array.prototype.filter.call(document.querySelectorAll('[data-k]'),function(el){return el.dataset.k===k;})[0];
+    if(again&&!again.disabled) again.focus();
+  }
+}
+
+/* ---------- actions ---------- */
+function toggle(ch){
+  var P=current(); if(!P||!ch||ch===P) return;
+  if(linked(P,ch)) unlink(P,ch); else link(P,ch);
+  persist(); render();
+}
+function goTo(ch){
+  var i=queue.indexOf(ch);
+  if(i>=0){S.pos=i;custom=null;} else custom=ch;
+  resetKb(); persist(); render();
+}
+function next(){
+  var P=current(); if(!P) return;
+  reviewed.add(P);
+  var atEnd=custom===null&&S.pos>=queue.length-1;
+  if(custom!==null) custom=null; else if(!atEnd) S.pos++;
+  resetKb(); persist(); render();
+  if(atEnd) say('That was the last character in this run. Your CSV is ready below.');
+}
+function prev(){
+  if(custom!==null) custom=null; else if(S.pos>0) S.pos--;
+  resetKb(); persist(); render();
+}
+
+$('kb').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b||b.disabled) return;
+  if(b.dataset.sign!==undefined){ kb.sign=kb.sign===b.dataset.sign?'':b.dataset.sign; kb.arming=false; render(); }
+  else if(b.dataset.unprefix!==undefined){ kb.prefix.splice(Number(b.dataset.unprefix),1); render(); }
+  else if(kb.arming&&b.dataset.base){ kb.prefix.push(b.dataset.base); kb.arming=false; render(); }
+  else if(b.dataset.ch){ toggle(b.dataset.ch); }
+  else if(b.id==='stack'){ kb.arming=!kb.arming; render(); }
+  else if(b.id==='kbReset'){ resetKb(); render(); }
+  else if(b.id==='otherPrompt'){ var t=clean($('other').value); if(t){ $('other').value=''; goTo(t); } }
+});
+$('otherForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var t=clean($('other').value); if(!t) return;
+  $('other').value='';
+  var P=current(); if(P&&t!==P&&!linked(P,t)) toggle(t);
+});
+$('chips').addEventListener('click',function(e){var b=e.target.closest('[data-remove]'); if(b) toggle(b.dataset.remove);});
+$('groups').addEventListener('click',function(e){var b=e.target.closest('[data-goto]'); if(b) goTo(b.dataset.goto);});
+$('tiles').addEventListener('click',function(e){var b=e.target.closest('[data-goto]'); if(b) goTo(b.dataset.goto);});
+$('next').addEventListener('click',next);
+$('prev').addEventListener('click',prev);
+document.addEventListener('keydown',function(e){
+  if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if(e.key==='ArrowRight'){e.preventDefault();next();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();if(!$('prev').disabled) prev();}
+});
+
+Array.prototype.forEach.call(document.querySelectorAll('[data-set]'),function(el){
+  el.addEventListener('change',function(){
+    var P=custom===null?current():null;
+    S.sets[el.dataset.set]=el.checked;
+    buildQueue();
+    if(P&&queue.indexOf(P)>=0) S.pos=queue.indexOf(P);
+    persist(); render();
+  });
+});
+$('uncommon').addEventListener('change',function(e){
+  var P=custom===null?current():null;
+  S.uncommon=e.target.checked; buildQueue();
+  if(P&&queue.indexOf(P)>=0) S.pos=queue.indexOf(P);
+  if(kb.sign&&!S.uncommon&&SIGNS.some(function(s){return s[0]===kb.sign&&s[2];})) kb.sign='';
+  persist(); render();
+});
+$('font').addEventListener('change',function(e){S.font=e.target.value;persist();render();});
+$('format').addEventListener('change',function(e){S.format=e.target.value;persist();renderResults();});
+
+$('download').addEventListener('click',function(){
+  var text=csvText(); if(!text){say('Nothing to export yet. Pick a lookalike first.');return;}
+  var filename='telugu_lookalikes_'+S.format+'.csv';
+  try{
+    var url=URL.createObjectURL(new Blob([text+'\n'],{type:'text/csv;charset=utf-8'}));
+    var a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},2000);
+    say('Saved '+filename+'.');
+  }catch(err){ say('Download did not go through. Use Copy CSV instead.'); }
+});
+$('copy').addEventListener('click',async function(){
+  var text=csvText(); if(!text){say('Nothing to copy yet. Pick a lookalike first.');return;}
+  try{ await navigator.clipboard.writeText(text+'\n'); say('CSV copied.'); }
+  catch(err){ $('csv').focus(); $('csv').select(); say('Copying was blocked. The CSV is selected: press Ctrl+C or ⌘C.'); }
+});
+$('importBtn').addEventListener('click',function(){$('importFile').click();});
+$('importFile').addEventListener('change',function(e){
+  var file=e.target.files&&e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(){
+    var added=importCsv(reader.result);
+    persist(); render();
+    say(added?'Imported '+added+(added===1?' link':' links')+' from '+file.name+'.':'No new links found in '+file.name+'. Each row needs two or more characters separated by commas.');
+  };
+  reader.onerror=function(){say('That file could not be read. Choose a .csv saved as UTF-8.');};
+  reader.readAsText(file);
+  e.target.value='';
+});
+$('clear').addEventListener('click',function(){
+  var btn=$('clear');
+  if(Date.now()-clearArmed<5000){
+    adj.clear(); reviewed.clear(); custom=null; S.pos=0; clearArmed=0;
+    btn.textContent='Clear all picks'; persist(); render(); say('All picks cleared.');
+  }else{
+    clearArmed=Date.now(); btn.textContent='Click again to clear everything';
+    setTimeout(function(){ if(clearArmed&&Date.now()-clearArmed>=5000){clearArmed=0;btn.textContent='Clear all picks';} },5100);
+  }
+});
+
+/* ---------- start ---------- */
+load(); buildQueue(); render();
+})();
+</script>
+</body>
+</html>

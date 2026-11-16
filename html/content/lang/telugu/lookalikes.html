@@ -1,42 +1,443 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="te">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Lookalikes · Telugu Suite</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0b0c18;--surface:#111221;--border:#252648;--accent:#c9981a;--accent-glow:rgba(201,152,26,.14);--accent-light:#f5c842;--text:#fbf8ee;--text-dim:#d0d0e8;--text-muted:#9c9cc8;
---safe-bottom:env(safe-area-inset-bottom,var(--safe-area-inset-bottom,0px))}
-html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif}
-body{min-height:100vh;min-height:100dvh;display:flex;justify-content:center;padding:36px 20px calc(36px + var(--safe-bottom))}
-main{width:100%;max-width:560px}
-.eyebrow{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.12em}
-.head{display:flex;align-items:center;gap:14px;margin:12px 0 10px}
-.icon{width:52px;height:52px;border-radius:14px;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-family:'Noto Sans Telugu','Inter',sans-serif;font-size:26px;flex-shrink:0}
-h1{font-size:26px;line-height:1.2}
-.pill{display:inline-block;margin:4px 0 18px;padding:3px 11px;border:1px solid var(--accent);border-radius:999px;font-size:12px;font-weight:600;color:var(--accent-light)}
-.lead{color:var(--text-dim);font-size:15px;line-height:1.55;margin-bottom:20px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px 18px}
-.row{padding:14px 0;border-bottom:1px solid var(--border)}
-.row:last-child{border-bottom:none}
-.label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
-.row p{font-size:14.5px;line-height:1.55;color:var(--text)}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Lookalikes</title>
+  <link rel="stylesheet" href="game.css">
+  <style>
+    /* ── Lookalikes-specific (everything shared lives in game.css) ── */
+
+    /* The choices: big Telugu keys, one block per card */
+    .kb-btn.choice {
+      min-width: 72px;
+      padding: 6px 18px;
+      font-size: 34px;
+      line-height: 1.35;
+    }
+    .kb-btn.choice.long { font-size: 28px; }      /* syllables and conjuncts run wider */
+
+    /* Lookalike sets, inside the ⋮ menu */
+    .menu-sep { height: 1px; margin: 5px 4px; background: var(--border); }
+    .menu-head {
+      padding: 6px 10px 2px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .menu-act {
+      display: flex;
+      gap: 8px;
+      padding: 4px 10px 6px;
+    }
+    .menu-act button {
+      flex: 1;
+      padding: 7px 10px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-dim);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .12s, border-color .12s;
+    }
+    .menu-act button:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .menu-act button:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+    .menu-status { padding: 0 10px 6px; max-width: 280px; font-size: 11px; line-height: 1.4; color: var(--text-muted); }
+    .menu-status.err { color: var(--error); }
+
+    /* Nothing to practise */
+    .empty-note { max-width: 320px; text-align: center; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+  </style>
 </head>
 <body>
-<main>
-  <div class="eyebrow">Alphabet</div>
-  <div class="head"><div class="icon" aria-hidden="true">👀</div><h1>Lookalikes</h1></div>
-  <span class="pill">Coming soon</span>
-  <p class="lead">Tell apart letters that are easy to confuse.</p>
-  <div class="card">
-    <div class="row"><div class="label">What you'll learn</div><p>Pairs and small groups of letters whose shapes or sounds are easily mixed up, shown side by side with what sets them apart.</p></div>
-    <div class="row"><div class="label">How you'll practise</div><p>Rapid pick-the-right-one rounds that focus on the pairs you slip on.</p></div>
-    <div class="row"><div class="label">Where it fits</div><p>Slips here will feed review rounds once progress tracking exists.</p></div>
+<div class="game-wrap">
+
+  <!-- ── Progress header ── -->
+  <header class="g-header">
+    <div class="g-header-top">
+      <span class="g-title">Lookalikes</span>
+      <div class="g-right">
+        <div class="g-stats">
+          <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
+          <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">0</span></span>
+        </div>
+        <div class="menu-wrap" id="menu-wrap">
+          <button class="menu-btn" id="menu-btn" type="button" aria-haspopup="true" aria-expanded="false"
+                  aria-controls="opts-menu" aria-label="Options" title="Options">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="2.8" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="8" cy="13.2" r="1.6"/></svg>
+          </button>
+          <div class="menu" id="opts-menu" role="group" aria-label="Options" hidden>
+            <label class="menu-opt"><input type="checkbox" id="shuffle-kb" checked> <span>Shuffle choices</span></label>
+            <label class="menu-opt"><input type="checkbox" id="include-extra"> <span>Include extra letters</span></label>
+            <div class="menu-sep"></div>
+            <div class="menu-head">Lookalike sets</div>
+            <label class="menu-opt"><input type="checkbox" id="use-builtin" checked> <span>Built-in groups</span></label>
+            <label class="menu-opt" id="custom-row"><input type="checkbox" id="use-custom" disabled> <span class="menu-txt"><span>My CSV groups</span><span class="menu-note" id="custom-note">None uploaded yet</span></span></label>
+            <div class="menu-act">
+              <button type="button" id="csv-btn">Upload CSV…</button>
+              <button type="button" id="csv-clear" hidden>Remove mine</button>
+            </div>
+            <input type="file" id="csv-file" accept=".csv,.txt,text/csv,text/plain" hidden>
+            <div class="menu-status" id="csv-status" role="status">One group per row, characters separated by commas. Make one with the Lookalike Builder.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="g-prog-track">
+      <div class="g-prog-fill" id="prog-fill"></div>
+    </div>
+  </header>
+
+  <!-- ── Game main ── -->
+  <div class="g-main" id="g-main">
+    <div class="card-area">
+      <div class="char-card" id="char-card">
+        <span class="cat-badge" id="cat-badge"></span>
+        <span class="tel-char ipa-face" id="tel-char"></span>
+        <span class="rare-badge" id="rare-badge" style="display:none">rare</span>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="kb-area" id="kb-area"></div>
   </div>
-</main>
+
+  <!-- ── Complete screen ── -->
+  <div class="g-complete" id="g-complete">
+    <div class="trophy">🏆</div>
+    <div class="c-title">Session Complete!</div>
+    <div class="c-sub" id="c-sub"></div>
+    <div class="c-stats">
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-attempts">—</span>
+        <span class="c-stat-lbl">Total Attempts</span>
+      </div>
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-accuracy">—</span>
+        <span class="c-stat-lbl">Accuracy</span>
+      </div>
+      <div class="c-stat">
+        <span class="c-stat-val" id="c-errors">—</span>
+        <span class="c-stat-lbl">Errors</span>
+      </div>
+    </div>
+    <button class="retry-btn" id="retry-btn">Practice Again</button>
+  </div>
+
+</div>
+
+<script src="telugu-data.js"></script>
+<script src="lookalikes-data.js"></script>
+<script src="progress.js"></script>
+<script src="game-menu.js"></script>
+<script>
+if (!window.TeluguData)    throw new Error('telugu-data.js was not found next to this page');
+if (!window.LookalikeData) throw new Error('lookalikes-data.js was not found next to this page');
+
+/* ─────────────────────────────────────────────────────────
+   DATA
+   A card shows one sound; the answer is the one Telugu character,
+   out of ALL the characters in its lookalike group, that makes it.
+     built-in groups   lookalikes-data.js (edit GROUPS there)
+     your groups       a CSV from the Lookalike Builder, uploaded
+                       from the ⋮ menu and kept in this browser
+   Every character in a group becomes a card, each with its whole
+   group as the choices (a character in two groups gets two cards).
+   Items carry rare / core flags from telugu-data.js: rare shows the
+   "rare" pip; extras (ఱ ఌ ౡ …) wait for "Include extra letters".
+───────────────────────────────────────────────────────── */
+const GAME     = 'lookalikes';
+const Progress = window.TeluguProgress || { miss() {}, complete() {} };
+const BUILTIN  = LookalikeData.groups;
+const STORE    = 'telugu-lookalikes-csv';     // the raw text of the uploaded file
+
+const SESSION_SIZE = 40;    // cards per session, sampled from the pool
+const OK_MS        = 500;   // pause after a correct round
+const ERR_MS       = 1000;  // pause after a wrong round
+const IPA_SIZE     = ['', '5rem', '5rem', '4.2rem', '3.6rem', '3.1rem', '2.7rem'];   // by length of the sound; the last applies to anything longer
+
+/* ─────────────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────────────── */
+let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
+let custom = [];         // groups parsed from the uploaded CSV
+let order  = [];         // the current card's choices, as drawn
+let marks  = new Map();  // text → 'ok' | 'err' once the card is answered
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const escHtml = s => String(s).replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// One card per character of every group in the ticked sets. A group that
+// shrinks below two characters (extras hidden) has nothing to tell apart.
+function buildCards(sources, includeExtra) {
+  const cards = [];
+  sources.forEach(groups => groups.forEach(g => {
+    const items = g.items.filter(i => includeExtra || i.core);
+    if (items.length < 2) return;
+    items.forEach(item => cards.push({ item, options: items }));
+  }));
+  return cards;
+}
+// <<TEST-END>>
+
+/* ─────────────────────────────────────────────────────────
+   YOUR CSV  (upload, remember, remove)
+───────────────────────────────────────────────────────── */
+function say(msg, isErr) {
+  const s = $('csv-status');
+  s.textContent = msg;
+  s.classList.toggle('err', !!isErr);
+}
+
+function syncSets() {
+  const has = custom.length > 0;
+  $('use-custom').disabled = !has;
+  if (!has) $('use-custom').checked = false;
+  $('csv-clear').hidden = !has;
+  $('custom-row').classList.toggle('disabled', !has);
+  const n = custom.reduce((s, g) => s + g.items.length, 0);
+  $('custom-note').textContent = has
+    ? `${custom.length} group${custom.length === 1 ? '' : 's'} · ${n} characters`
+    : 'None uploaded yet';
+}
+
+function loadSaved() {
+  let text = null;
+  try { text = localStorage.getItem(STORE); } catch (e) {}
+  if (!text) return;
+  custom = LookalikeData.parseCsv(text).groups;
+  if (custom.length) $('use-custom').checked = true;
+}
+
+function onFile(file) {
+  const reader = new FileReader();
+  reader.onerror = () => say('That file could not be read. Choose a .csv saved as UTF-8.', true);
+  reader.onload  = () => {
+    const text = String(reader.result);
+    const r = LookalikeData.parseCsv(text);
+    if (!r.groups.length) {
+      say(`No lookalike groups found in ${file.name}. Each row needs two or more Telugu characters separated by commas.`, true);
+      return;
+    }
+    custom = r.groups;
+    try { localStorage.setItem(STORE, text); } catch (e) {}
+    syncSets();
+    $('use-custom').checked  = true;
+    $('use-builtin').checked = false;            // your own set replaces the baseline until you tick it again
+    say(`Loaded ${custom.length} group${custom.length === 1 ? '' : 's'} from ${file.name}. Built-in groups are switched off; tick them to practise both.` +
+        (r.skipped.length ? ` Skipped ${r.skipped.length} I can't give a sound for: ${r.skipped.slice(0, 8).join(' ')}${r.skipped.length > 8 ? ' …' : ''}` : ''));
+    initGame();
+  };
+  reader.readAsText(file);
+}
+
+function clearCsv() {
+  custom = [];
+  try { localStorage.removeItem(STORE); } catch (e) {}
+  $('use-builtin').checked = true;
+  syncSets();
+  say('Removed your CSV. Back to the built-in groups.');
+  initGame();
+}
+
+/* ─────────────────────────────────────────────────────────
+   CHOICES
+───────────────────────────────────────────────────────── */
+const orderFor = card => GameMenu.shuffled() ? shuffle(card.options) : card.options;
+
+// Follows the options menu: "Shuffle choices" ticked → a random order that
+// stays fixed for the card, so keys can be found. Rebuilding (e.g. when an
+// option changes) never restarts the round.
+function buildKB() {
+  const area = $('kb-area');
+  area.innerHTML = '';
+  if (!deck.length) return;
+  const g = document.createElement('div');
+  g.className = 'kb-group';
+  const l = document.createElement('div');
+  l.className   = 'kb-label';
+  l.textContent = 'Which one makes this sound?';
+  g.appendChild(l);
+  const row = document.createElement('div');
+  row.className = 'kb-row';
+  order.forEach(it => {
+    const btn = document.createElement('button');
+    btn.className   = 'kb-btn te choice' + ([...it.text].length > 1 ? ' long' : '');
+    btn.textContent = it.text;
+    btn.dataset.text = it.text;
+    if (marks.has(it.text)) btn.classList.add(marks.get(it.text));
+    btn.addEventListener('click', () => onPick(it));
+    row.appendChild(btn);
+  });
+  g.appendChild(row);
+  area.appendChild(g);
+}
+
+/* ─────────────────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────────────────── */
+function renderCard() {
+  const c = deck[0];
+  const tel = $('tel-char'), n = [...c.item.ipa].length;
+  tel.className      = 'tel-char ipa-face';
+  tel.innerHTML      = `<span class="sl">/</span>${escHtml(c.item.ipa)}<span class="sl">/</span>`;
+  tel.style.fontSize = IPA_SIZE[Math.min(n, IPA_SIZE.length - 1)];
+
+  $('cat-badge').textContent    = `${c.options.length} lookalikes`;
+  $('rare-badge').style.display = (c.item.rare || !c.item.core) ? '' : 'none';
+
+  const fb = $('feedback');
+  fb.textContent = '';
+  fb.className   = 'feedback';
+  $('char-card').className = 'char-card';
+
+  marks = new Map();
+  order = orderFor(c);
+  buildKB();
+}
+
+function updateProg() {
+  $('s-rem').textContent   = deck.length;
+  $('s-done').textContent  = completed;
+  $('s-total').textContent = total;
+  $('prog-fill').style.width = (total ? completed / total * 100 : 0).toFixed(1) + '%';
+}
+
+/* ─────────────────────────────────────────────────────────
+   ANSWER HANDLING
+   One tap judges the card. Characters that make the same sound
+   all count (a letter and the same letter with a virama, say).
+───────────────────────────────────────────────────────── */
+function onPick(it) {
+  if (locked) return;
+  locked = true;
+  attempts++;
+
+  const cur  = deck[0];
+  const ok   = it.ipa === cur.item.ipa;
+  const card = $('char-card');
+  const fb   = $('feedback');
+
+  cur.options.forEach(o => { if (o.ipa === cur.item.ipa) marks.set(o.text, 'ok'); });
+  if (!ok) marks.set(it.text, 'err');
+  buildKB();
+
+  fb.textContent = `${ok ? '✓' : '✗'}  ${cur.item.text}`;
+  fb.className   = 'feedback te ' + (ok ? 'ok' : 'err');
+  if (!ok) Progress.miss({ game: GAME, key: cur.item.text, prompt: `/${cur.item.ipa}/`, answer: cur.item.text,
+                           note: 'Among ' + cur.options.map(o => o.text).join(' ') });
+
+  if (ok) {
+    card.classList.add('correct');
+    deck.shift();
+    completed++;
+    updateProg();
+    setTimeout(() => {
+      if (deck.length === 0) showComplete();
+      else { renderCard(); locked = false; }
+    }, OK_MS);
+  } else {
+    card.classList.add('wrong');
+
+    // Reinsert at a random position (never straight back to the front)
+    const removed  = deck.shift();
+    const insertAt = Math.max(1, Math.floor(Math.random() * (deck.length + 1)));
+    deck.splice(insertAt, 0, removed);
+
+    setTimeout(() => { renderCard(); locked = false; }, ERR_MS);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   COMPLETE SCREEN
+───────────────────────────────────────────────────────── */
+function showComplete() {
+  $('g-main').style.display = 'none';
+  $('g-complete').classList.add('show');
+
+  $('c-sub').textContent =
+    `All ${total} sounds correctly picked out from their lookalikes.`;
+  $('c-attempts').textContent = attempts;
+  $('c-accuracy').textContent = Math.round(total / attempts * 100) + '%';
+  $('c-errors').textContent   = attempts - total;
+  Progress.complete(GAME, { accuracy: Math.round(total / attempts * 100), attempts });
+}
+
+/* ─────────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────────── */
+function initGame() {
+  const sources = [];
+  if ($('use-builtin').checked) sources.push(BUILTIN);
+  if ($('use-custom').checked && custom.length) sources.push(custom);
+
+  deck      = shuffle(buildCards(sources, $('include-extra').checked)).slice(0, SESSION_SIZE);
+  total     = deck.length;
+  completed = 0;
+  attempts  = 0;
+  locked    = false;
+  marks     = new Map();
+
+  $('g-complete').classList.remove('show');
+  $('g-main').style.display = '';
+  $('kb-area').scrollTop = 0;
+  updateProg();
+
+  if (!deck.length) {                       // every group emptied by the options
+    order = [];
+    $('tel-char').innerHTML = '';
+    $('cat-badge').textContent = '';
+    $('rare-badge').style.display = 'none';
+    $('char-card').className = 'char-card';
+    $('feedback').textContent = '';
+    $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practise with these options. Tick a set, or “Include extra letters”, in the ⋮ menu.</p>';
+    return;
+  }
+  renderCard();
+}
+
+// ⋮ menu: open/close and "Shuffle choices" live in game-menu.js
+GameMenu.init({
+  rebuild: () => { if (deck.length) buildKB(); },
+  reorder: () => { if (deck.length) order = orderFor(deck[0]); },
+});
+
+// A set can't be switched off if it's the only one on: the game needs cards.
+['use-builtin', 'use-custom'].forEach(id => $(id).addEventListener('change', e => {
+  if (!$('use-builtin').checked && !$('use-custom').checked) e.target.checked = true;
+  initGame();
+}));
+$('include-extra').addEventListener('change', initGame);
+$('csv-btn').addEventListener('click', () => $('csv-file').click());
+$('csv-file').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  if (f) onFile(f);
+  e.target.value = '';
+});
+$('csv-clear').addEventListener('click', clearCsv);
+$('retry-btn').addEventListener('click', initGame);
+
+loadSaved();
+syncSets();
+initGame();
+</script>
 </body>
 </html>
