@@ -1,5 +1,14 @@
 [
   {
+    "id": "seakr",
+    "title": "SEAKR",
+    "description": "October 2026 - ",
+    "tags": ["Career", "C", "Python", "Embedded", "Yocto", "Linux", "CI/CD"],
+    "thumb": "img/thumb/seakr.jpg",
+    "hero": "img/project/wip.jpg",
+    "wip": true
+  },
+  {
     "id": "ball-bae",
     "title": "Ball Aerospace / BAE SMS",
     "description": "April 2020 - April 2026",
