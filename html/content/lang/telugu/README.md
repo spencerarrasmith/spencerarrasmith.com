@@ -17,7 +17,7 @@ At the top level: `index.html` (the tile launcher), `review.html` (replay of mis
 | File | What it is |
 |---|---|
 | `units.js` | The one list of sections and tiles. The home page, Review and the "Coming soon" pages all read it. |
-| `telugu-data.js`, `lookalikes-data.js` | Letters, signs, clusters, lookalike groups. |
+| `telugu-data.js`, `lookalikes-data.js` | Letters, signs, digits, clusters, lookalike groups, and the CSV reader the Lookalikes game and the Lookalike Builder share. |
 | `progress.js` | Completed units and missed items (this browser only). |
 | `game-core.js`, `game-menu.js` | The round every game plays (deck, counters, complete screen) and the ⋮ menu. |
 | `lesson-shell.js` | The frame for lesson pages and the "Coming soon" placeholders. |
@@ -31,5 +31,5 @@ At the top level: `index.html` (the tile launcher), `review.html` (replay of mis
 - Tile ids in `units.js` never change when a file is renamed, so saved progress is kept.
 - A page's title, description and placeholder text are written once, in its tile in `units.js`.
 - To build a lesson: copy `lesson-template.html` over the placeholder in its folder (and put `../` in front of its five links), then delete the `soon` block from its tile in `units.js`.
-- To build a game: start from `alphabet/01_phonemes.html`. `GameCore.create({ id, pool, render, … })` runs the round; the page draws its card and keyboard and calls `game.judge(right, …)`. The other three games still carry their own copy of the round and move onto `game-core.js` one at a time.
+- To build a game: start from `alphabet/01_phonemes.html`. `GameCore.create({ id, pool, render, … })` runs the round; the page draws its card and keyboard and calls `game.judge(right, …)`. All four games are built this way.
 - A page only gets a `<style>` block for layout that is its own. Colours and fonts are never set in a page.

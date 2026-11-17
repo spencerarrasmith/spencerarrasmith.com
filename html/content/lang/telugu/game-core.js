@@ -21,7 +21,10 @@
        id: 'phonemes',                  // the tile id in units.js: gets the ✓
        pool:     () => [cards…],        // the cards of a new round
        render:   card => { … },         // draw this card
+       size:     40,                    // optional: play at most this many cards a round,
+                                        //           picked at random from the pool
        onStart:  game => { … },         // optional: a round was just dealt (build the keyboard)
+       onEmpty:  game => { … },         // optional: the pool was empty (say so in the page)
        doneText: game => 'All … done.', // the sentence on the complete screen
        okMs: 500, errMs: 1000,          // optional: pause before the next card
      });
@@ -44,6 +47,9 @@
      game.render()       redraw the current card (an option changed)
      game.front(pred)    bring the first card matching pred to the front and
                          draw it; used by the tests to pick a card
+     game.put(card)      put a card on top of the deck and draw it; used by the
+                         tests to play a card the round didn't deal (the
+                         total is left as it was)
      GameCore.current    the game most recently created on this page
 
    Helpers the games share:
@@ -88,7 +94,7 @@
     <button class="retry-btn" id="retry-btn" type="button">Practice Again</button>`;
 
   function create(opts) {
-    const { id, pool, render, onStart, doneText, okMs = 500, errMs = 1000 } = opts || {};
+    const { id, pool, render, size, onStart, onEmpty, doneText, okMs = 500, errMs = 1000 } = opts || {};
     if (!id || typeof pool !== 'function' || typeof render !== 'function') {
       throw new Error('game-core: create() needs id, pool() and render()');
     }
@@ -125,9 +131,9 @@
     }
 
     function start() {
-      const cards = pool();
-      deck      = shuffle(cards);
-      total     = cards.length;
+      deck      = shuffle(pool());
+      if (size > 0) deck = deck.slice(0, size);
+      total     = deck.length;
       completed = 0;
       attempts  = 0;
       locked    = false;
@@ -136,7 +142,8 @@
       $('g-main').style.display = '';
       if (onStart) onStart(game);
       updateProgress();
-      draw();
+      if (deck.length) draw();
+      else if (onEmpty) onEmpty(game);
     }
 
     function judge(ok, info = {}) {
@@ -174,8 +181,13 @@
       draw();
     }
 
+    function put(card) {
+      deck.unshift(card);
+      draw();
+    }
+
     const game = {
-      id, start, judge, front,
+      id, start, judge, front, put,
       render: draw,
       get deck()      { return deck; },
       get current()   { return deck[0] || null; },

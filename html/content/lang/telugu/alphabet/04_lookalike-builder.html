@@ -173,7 +173,7 @@ textarea {
     <label class="menu-opt" for="setMarks"><input type="checkbox" id="setMarks" data-set="marks"> <span>Consonants with vowel signs</span></label>
     <label class="menu-opt" for="setDigits"><input type="checkbox" id="setDigits" data-set="digits"> <span>Digits</span></label>
     <span class="sep"></span>
-    <label class="menu-opt" for="uncommon"><input type="checkbox" id="uncommon"> <span>Include uncommon</span></label>
+    <label class="menu-opt" for="uncommon"><input type="checkbox" id="uncommon"> <span>Include extra letters</span></label>
     <span class="sep"></span>
     <label for="font">Telugu font
       <select id="font">
@@ -285,36 +285,44 @@ textarea {
 (function(){
 'use strict';
 
-/* ---------- character data: [character, IPA, uncommon?] ----------
-   The sound column is filled in from telugu-data.js just below, so the builder
-   shows the same IPA as the games. Which characters are offered, and which count
-   as uncommon, is decided by the lists here. */
-var VIRAMA='్', RING='◌', BOX='▢';
-var VOWELS=[['అ',''],['ఆ',''],['ఇ',''],['ఈ',''],['ఉ',''],['ఊ',''],
-  ['ఋ','',1],['ౠ','',1],['ఌ','',1],['ౡ','',1],
-  ['ఎ',''],['ఏ',''],['ఐ',''],['ఒ',''],['ఓ',''],['ఔ','']];
-var CONS=[['క',''],['ఖ',''],['గ',''],['ఘ',''],['ఙ','',1],
-  ['చ',''],['ఛ',''],['జ',''],['ఝ',''],['ఞ','',1],
-  ['ట',''],['ఠ',''],['డ',''],['ఢ',''],['ణ',''],
-  ['త',''],['థ',''],['ద',''],['ధ',''],['న',''],
-  ['ప',''],['ఫ',''],['బ',''],['భ',''],['మ',''],
-  ['య',''],['ర',''],['ల',''],['వ',''],['శ',''],
-  ['ష',''],['స',''],['హ',''],['ళ',''],['ఱ','']];
-var SIGNS=[['ా',''],['ి',''],['ీ',''],['ు',''],['ూ',''],
-  ['ృ',''],['ౄ','',1],['ౢ','',1],['ౣ','',1],
-  ['ె',''],['ే',''],['ై',''],['ొ',''],['ో',''],['ౌ',''],
-  ['ం',''],['ః',''],[VIRAMA,'']];
-var DIGITS=[];
-for(var d=0;d<10;d++) DIGITS.push([String.fromCharCode(0x0C66+d),String(d)]);
-
-/* sounds come from the shared data (the same IPA the games show) */
+/* ---------- character data ----------
+   Everything about a character comes from telugu-data.js, the same letters,
+   sounds and flags the games use; nothing is listed twice.
+   A row is [character, sound, rare, extra]:
+     rare    drawn with a dashed edge (the games' "rare" badge)
+     extra   outside the book's set: only in a run with "Include extra letters"
+   Vowels are the single letters (అం and అః are అ with a sign, and signs have their
+   own row). Signs run in the order of the vowels they stand for, then the pollu. */
 var TD=window.TeluguData, LD=window.LookalikeData;
 if(!TD||!LD) throw new Error('../telugu-data.js and ../lookalikes-data.js are required');
+var VIRAMA=TD.VIRAMA, RING='◌', BOX='▢';
 var LET={}, SGN={};
 TD.letters.forEach(function(l){LET[l.ch]=l;});
 TD.signs.forEach(function(g){SGN[g.sign]=g;});
-VOWELS.concat(CONS).forEach(function(x){ if(LET[x[0]]) x[1]=LET[x[0]].ipa; });
-SIGNS.forEach(function(x){ if(SGN[x[0]]) x[1]=SGN[x[0]].sound; });
+function row(ch,sound,flags){return [ch,sound,flags.rare?1:0,flags.core?0:1];}
+
+var VOWELS=TD.vowels.filter(function(l){return Array.from(l.ch).length===1;}).map(function(l){return row(l.ch,l.ipa,l);});
+
+/* The consonant keys are laid out as the varnamala is recited, five to a row (the
+   games' keyboards group by where a sound is made instead). Only the ORDER is
+   kept here; it must name every consonant in telugu-data.js exactly once. */
+var CONS_ORDER='కఖగఘఙ చఛజఝఞ టఠడఢణ తథదధన పఫబభమ యరలవశ షసహళఱ';
+var CONS=Array.from(CONS_ORDER.replace(/\s/g,'')).map(function(ch){
+  var l=LET[ch];
+  if(!l||l.kind!=='consonant') throw new Error('lookalike builder: '+ch+' is not a consonant in telugu-data.js');
+  return row(l.ch,l.ipa,l);
+});
+if(CONS.length!==TD.consonants.length||new Set(CONS.map(function(c){return c[0];})).size!==CONS.length)
+  throw new Error('lookalike builder: CONS_ORDER must list each of the '+TD.consonants.length+' consonants in telugu-data.js once');
+
+var VOWEL_AT={};
+TD.vowels.forEach(function(l,i){VOWEL_AT[l.ipa]=i;});
+function signRank(g){return g.ipa in VOWEL_AT?VOWEL_AT[g.ipa]:1000;}
+var SIGNS=TD.signs.filter(function(g){return g.sign!=='';})
+  .sort(function(a,b){return signRank(a)-signRank(b);})
+  .map(function(g){return row(g.sign,g.sound,g);});
+
+var DIGITS=TD.digits.map(function(g){return [g.ch,String(g.value)];});
 
 function toMap(list){var m=new Map();list.forEach(function(x){m.set(x[0],x[1]);});return m;}
 var VOW_R=toMap(VOWELS), CONS_R=toMap(CONS), SIGN_R=toMap(SIGNS), DIG_R=toMap(DIGITS);
@@ -330,7 +338,7 @@ var FONTS={
 
 /* ---------- pure helpers ---------- */
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function clean(s){var t=String(s).replace(/[\s,"'<>&﻿]/g,'');return t.normalize?t.normalize('NFC'):t;}
+var clean=LD.clean;          /* the same tidying the Lookalikes game applies to an uploaded CSV */
 
 /* The sound of a character, written /like this/. Letters and letters with a sign come from
    the shared data; a stack it doesn't list (three consonants, a conjunct with a sign) is built
@@ -416,8 +424,7 @@ function csvText(){
 }
 function importCsv(text){
   var added=0;
-  String(text).split(/\r?\n/).forEach(function(line){
-    var cells=line.split(',').map(clean).filter(Boolean);
+  LD.rows(text).forEach(function(cells){
     for(var i=1;i<cells.length;i++){ if(link(cells[0],cells[i])) added++; }
   });
   return added;
@@ -443,7 +450,7 @@ function persist(){
 }
 
 function buildQueue(){
-  var keep=function(x){return S.uncommon||!x[2];}, q=[];
+  var keep=function(x){return S.uncommon||!x[3];}, q=[];     /* extras wait for "Include extra letters" */
   if(S.sets.vowels) VOWELS.filter(keep).forEach(function(x){q.push(x[0]);});
   if(S.sets.consonants) CONS.filter(keep).forEach(function(x){q.push(x[0]);});
   if(S.sets.marks) CONS.filter(keep).forEach(function(c){SIGNS.filter(keep).forEach(function(s){q.push(c[0]+s[0]);});});
@@ -467,7 +474,7 @@ function keyHTML(ch,o){
 }
 function renderKeyboard(){
   var combining=!!(kb.sign||kb.prefix.length);
-  $('signs').innerHTML=SIGNS.filter(function(s){return S.uncommon||!s[2];}).map(function(s){
+  $('signs').innerHTML=SIGNS.filter(function(s){return S.uncommon||!s[3];}).map(function(s){
     return '<button type="button" class="key'+(s[2]?' rare':'')+'" data-k="sign:'+s[0]+'" data-sign="'+s[0]+'" aria-pressed="'+(kb.sign===s[0])+'" title="'+(s[1]?'vowel sign '+s[1]:'no vowel (pollu)')+'">'+RING+s[0]+'<small>'+(s[1]||'none')+'</small></button>';
   }).join('');
   $('kVowels').innerHTML=VOWELS.map(function(v){return keyHTML(v[0],{rare:v[2],off:combining||kb.arming});}).join('');
@@ -614,7 +621,7 @@ $('uncommon').addEventListener('change',function(e){
   var P=custom===null?current():null;
   S.uncommon=e.target.checked; buildQueue();
   if(P&&queue.indexOf(P)>=0) S.pos=queue.indexOf(P);
-  if(kb.sign&&!S.uncommon&&SIGNS.some(function(s){return s[0]===kb.sign&&s[2];})) kb.sign='';
+  if(kb.sign&&!S.uncommon&&SIGNS.some(function(s){return s[0]===kb.sign&&s[3];})) kb.sign='';
   persist(); render();
 });
 $('font').addEventListener('change',function(e){S.font=e.target.value;persist();render();});

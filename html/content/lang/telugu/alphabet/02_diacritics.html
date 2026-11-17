@@ -107,35 +107,18 @@
     <div class="kb-area" id="kb-area"></div>
   </div>
 
-  <!-- ── Complete screen ── -->
-  <div class="g-complete" id="g-complete">
-    <div class="trophy">🏆</div>
-    <div class="c-title">Session Complete!</div>
-    <div class="c-sub" id="c-sub"></div>
-    <div class="c-stats">
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-attempts">—</span>
-        <span class="c-stat-lbl">Total Attempts</span>
-      </div>
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-accuracy">—</span>
-        <span class="c-stat-lbl">Accuracy</span>
-      </div>
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-errors">—</span>
-        <span class="c-stat-lbl">Errors</span>
-      </div>
-    </div>
-    <button class="retry-btn" id="retry-btn">Practice Again</button>
-  </div>
+  <!-- ── Complete screen (filled in by game-core.js) ── -->
+  <div class="g-complete" id="g-complete"></div>
 
 </div>
 
 <script src="../telugu-data.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
+<script src="../game-core.js"></script>
 <script>
 if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
+if (!window.GameCore)   throw new Error('../game-core.js was not found');
 
 /* ─────────────────────────────────────────────────────────
    DATA
@@ -145,20 +128,22 @@ if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
      rare    → "rare" badge
      inBook  → false for the extras (ఱ ౢ ౣ), hidden until
                "Include extra letters" is ticked
+
+   The round itself (deck, counters, re-queueing a missed card,
+   the complete screen, the ✓ on the home tile) is game-core.js.
+   This page draws the card, the two keyboards and the slots,
+   and checks the pair of picks.
 ───────────────────────────────────────────────────────── */
 const GAME       = 'diacritics';
 const CONSONANTS = [...TeluguData.consonants, ...TeluguData.conjunctLetters];   // ends with క్ష
 const VOWELS     = TeluguData.signs;
-const Progress   = window.TeluguProgress || { miss() {}, complete() {} };
+const { $, shuffle, esc } = GameCore;
 
 const PER_VOWEL = 3;     // cards per vowel sign (each with a different consonant)
-const OK_MS     = 500;   // pause after a correct round
-const ERR_MS    = 1000;  // pause after a wrong round (two answers to read)
 
 /* ─────────────────────────────────────────────────────────
    STATE
 ───────────────────────────────────────────────────────── */
-let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
 let reversed = false;             // false: card shows the syllable, keys show IPA
                                   // true:  card shows the sound, keys show Telugu
 let sel = { c: null, v: null };   // pending picks (the key's IPA, whichever face it wears)
@@ -168,17 +153,6 @@ let kbOrder = null;               // null, or { c, v }: shuffled copies (fixed f
 /* ─────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────── */
-const $ = id => document.getElementById(id);
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 // [[label, [items…]], …] keeping first-seen order
 function groupBy(items, key) {
   const m = new Map();
@@ -200,9 +174,8 @@ function buildDeck(cons, vows) {
       rare:     c.rare || v.rare,
     }));
   });
-  return shuffle(cards);
+  return cards;
 }
-// <<TEST-END>>
 
 // Vowel keys show the sign on its own, with no consonant (ా ి ీ … ం ః ్).
 // The "no sign" key (the consonant's own short a) has nothing to draw, so it
@@ -302,14 +275,12 @@ function buildKB() {
   area.appendChild(wrap);
 
   // keep a half-made answer visible across a rebuild
-  if (!locked) ['c', 'v'].forEach(k => {
+  if (!game.locked) ['c', 'v'].forEach(k => {
     const b = sel[k] !== null && btnFor(k, sel[k]);
     if (b) b.classList.add('sel');
   });
 }
 
-const escHtml = s => String(s).replace(/[&<>"']/g,
-  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const IPA_SIZE = ['', '5rem', '5rem', '4.2rem', '3.6rem', '3.1rem', '2.7rem'];   // by length of the sound; the last applies to anything longer
 
 const newOrder = () => ({ c: shuffle(keys.c), v: shuffle(keys.v) });
@@ -335,14 +306,13 @@ function clearRound() {
   updateSlots();
 }
 
-function renderCard() {
-  const c = deck[0];
+function renderCard(c) {
   const tel = $('tel-char');
   if (reversed) {
     // the sound, written /like this/; longer strings (kʰaː, tʃʰai) step down a size
     const sound = c.c.ipa + c.v.sound, n = [...sound].length;
     tel.className      = 'tel-char ipa-face';
-    tel.innerHTML      = `<span class="sl">/</span>${escHtml(sound)}<span class="sl">/</span>`;
+    tel.innerHTML      = `<span class="sl">/</span>${esc(sound)}<span class="sl">/</span>`;
     tel.style.fontSize = IPA_SIZE[Math.min(n, IPA_SIZE.length - 1)];
   } else {
     tel.className      = 'tel-char';
@@ -354,19 +324,7 @@ function renderCard() {
   badge.textContent      = c.cat;
   badge.style.visibility = $('show-cat').checked ? '' : 'hidden';
   $('rare-badge').style.display = c.rare ? '' : 'none';
-
-  const fb = $('feedback');
-  fb.textContent = '';
-  fb.className   = 'feedback';
-  $('char-card').className = 'char-card';
   clearRound();
-}
-
-function updateProg() {
-  $('s-rem').textContent   = deck.length;
-  $('s-done').textContent  = completed;
-  $('s-total').textContent = total;
-  $('prog-fill').style.width = (total ? completed / total * 100 : 0).toFixed(1) + '%';
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -375,7 +333,7 @@ function updateProg() {
    soon as BOTH a consonant and a vowel have been chosen.
 ───────────────────────────────────────────────────────── */
 function onPick(kind, ipa, btn) {
-  if (locked) return;
+  if (game.locked) return;
   sel[kind] = ipa;
   document.querySelectorAll(`.kb-btn[data-kind="${kind}"]`)
     .forEach(b => b.classList.toggle('sel', b === btn));
@@ -384,14 +342,9 @@ function onPick(kind, ipa, btn) {
 }
 
 function evaluate() {
-  locked = true;
-  attempts++;
-
-  const cur    = deck[0];
+  const cur    = game.current;
   const answer = { c: cur.c.ipa, v: cur.v.ipa };
   const allOk  = sel.c === answer.c && sel.v === answer.v;
-  const card   = $('char-card');
-  const fb     = $('feedback');
   let scrollTarget = null;
 
   ['c', 'v'].forEach(k => {
@@ -409,76 +362,41 @@ function evaluate() {
       }
     }
   });
+  if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   const sound = `/${cur.c.ipa}${cur.v.sound}/`;
-  fb.textContent = `${allOk ? '✓' : '✗'}  ${reversed ? cur.glyph : sound}`;
-  fb.className   = 'feedback ' + (allOk ? 'ok' : 'err') + (reversed ? ' te' : '');
-  if (!allOk) Progress.miss(reversed
-    ? { game: GAME + '-reverse', key: cur.glyph, prompt: sound, answer: cur.glyph, note: cur.v.grp }
-    : { game: GAME,              key: cur.glyph, prompt: cur.glyph, answer: sound, note: cur.v.grp });
-
-  if (allOk) {
-    card.classList.add('correct');
-    deck.shift();
-    completed++;
-    updateProg();
-    setTimeout(() => {
-      if (deck.length === 0) showComplete();
-      else { renderCard(); locked = false; }
-    }, OK_MS);
-  } else {
-    card.classList.add('wrong');
-    if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    // Reinsert at a random position (never straight back to the front)
-    const removed  = deck.shift();
-    const insertAt = Math.max(1, Math.floor(Math.random() * (deck.length + 1)));
-    deck.splice(insertAt, 0, removed);
-
-    setTimeout(() => { renderCard(); locked = false; }, ERR_MS);
-  }
+  game.judge(allOk, {
+    feedback: `${allOk ? '✓' : '✗'}  ${reversed ? cur.glyph : sound}`,
+    te:       reversed,
+    miss:     reversed
+      ? { game: GAME + '-reverse', key: cur.glyph, prompt: sound, answer: cur.glyph, note: cur.v.grp }
+      : { game: GAME,              key: cur.glyph, prompt: cur.glyph, answer: sound, note: cur.v.grp },
+  });
 }
 
 /* ─────────────────────────────────────────────────────────
-   COMPLETE SCREEN
+   THE ROUND  (game-core.js)
 ───────────────────────────────────────────────────────── */
-function showComplete() {
-  $('g-main').style.display = 'none';
-  $('g-complete').classList.add('show');
-
-  $('c-sub').textContent = reversed
-    ? `All ${total} sounds correctly written as Telugu syllables.`
-    : `All ${total} syllables correctly matched to their IPA sounds.`;
-  $('c-attempts').textContent = attempts;
-  $('c-accuracy').textContent = Math.round(total / attempts * 100) + '%';
-  $('c-errors').textContent   = attempts - total;
-  Progress.complete(GAME, { accuracy: Math.round(total / attempts * 100), attempts });
+// What a new round is dealt from: the consonants and signs the options allow.
+function deal() {
+  const all = $('include-extra').checked;
+  keys = { c: TeluguData.pool(CONSONANTS, all), v: TeluguData.pool(VOWELS, all) };
+  return buildDeck(keys.c, keys.v);
 }
 
-/* ─────────────────────────────────────────────────────────
-   INIT
-───────────────────────────────────────────────────────── */
-function initGame() {
-  const all  = $('include-extra').checked;
-  const cons = TeluguData.pool(CONSONANTS, all);
-  const vows = TeluguData.pool(VOWELS, all);
-
-  deck      = buildDeck(cons, vows);
-  total     = deck.length;
-  completed = 0;
-  attempts  = 0;
-  locked    = false;
-
-  $('g-complete').classList.remove('show');
-  $('g-main').style.display = '';
-  $('kb-area').scrollTop = 0;
-
-  keys    = { c: cons, v: vows };
-  kbOrder = GameMenu.shuffled() ? newOrder() : null;   // fresh order each round
-  buildKB();
-  updateProg();
-  renderCard();
-}
+const game = GameCore.create({
+  id:   GAME,
+  pool: deal,
+  onStart() {
+    $('kb-area').scrollTop = 0;
+    kbOrder = GameMenu.shuffled() ? newOrder() : null;   // fresh order each round
+    buildKB();
+  },
+  render:   renderCard,
+  doneText: g => reversed
+    ? `All ${g.total} sounds correctly written as Telugu syllables.`
+    : `All ${g.total} syllables correctly matched to their IPA sounds.`,
+});
 
 // 🔀 flips direction and starts a fresh round in the new direction
 function setReversed(rev) {
@@ -487,7 +405,7 @@ function setReversed(rev) {
   btn.setAttribute('aria-pressed', String(rev));
   btn.setAttribute('aria-label', rev ? 'Reverse direction: Diacritics to IPA' : 'Reverse direction: IPA to Diacritics');
   $('g-title').textContent = rev ? 'IPA → Diacritics' : 'Diacritics → IPA';
-  initGame();
+  game.start();
 }
 $('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
@@ -496,9 +414,8 @@ GameMenu.init({
   rebuild: buildKB,
   reorder: on => { kbOrder = on ? newOrder() : null; },
 });
-$('include-extra').addEventListener('change', initGame);
-$('retry-btn').addEventListener('click', initGame);
-initGame();
+$('include-extra').addEventListener('change', game.start);
+game.start();
 </script>
 </body>
 </html>

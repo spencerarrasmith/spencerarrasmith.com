@@ -106,27 +106,8 @@
     <div class="kb-area" id="kb-area"></div>
   </div>
 
-  <!-- ── Complete screen ── -->
-  <div class="g-complete" id="g-complete">
-    <div class="trophy">🏆</div>
-    <div class="c-title">Session Complete!</div>
-    <div class="c-sub" id="c-sub"></div>
-    <div class="c-stats">
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-attempts">—</span>
-        <span class="c-stat-lbl">Total Attempts</span>
-      </div>
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-accuracy">—</span>
-        <span class="c-stat-lbl">Accuracy</span>
-      </div>
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-errors">—</span>
-        <span class="c-stat-lbl">Errors</span>
-      </div>
-    </div>
-    <button class="retry-btn" id="retry-btn">Practice Again</button>
-  </div>
+  <!-- ── Complete screen (filled in by game-core.js) ── -->
+  <div class="g-complete" id="g-complete"></div>
 
 </div>
 
@@ -134,9 +115,11 @@
 <script src="../lookalikes-data.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
+<script src="../game-core.js"></script>
 <script>
 if (!window.TeluguData)    throw new Error('../telugu-data.js was not found');
 if (!window.LookalikeData) throw new Error('../lookalikes-data.js was not found');
+if (!window.GameCore)      throw new Error('../game-core.js was not found');
 
 /* ─────────────────────────────────────────────────────────
    DATA
@@ -149,21 +132,23 @@ if (!window.LookalikeData) throw new Error('../lookalikes-data.js was not found'
    group as the choices (a character in two groups gets two cards).
    Items carry rare / core flags from telugu-data.js: rare shows the
    "rare" pip; extras (ఱ ఌ ౡ …) wait for "Include extra letters".
+
+   The round itself (deck, counters, re-queueing a missed card,
+   the complete screen, the ✓ on the home tile) is game-core.js.
+   This page draws the card and its choices, checks the pick,
+   and looks after your CSV.
 ───────────────────────────────────────────────────────── */
 const GAME     = 'lookalikes';
-const Progress = window.TeluguProgress || { miss() {}, complete() {} };
+const { $, shuffle, esc } = GameCore;
 const BUILTIN  = LookalikeData.groups;
 const STORE    = 'telugu-lookalikes-csv';     // the raw text of the uploaded file
 
 const SESSION_SIZE = 40;    // cards per session, sampled from the pool
-const OK_MS        = 500;   // pause after a correct round
-const ERR_MS       = 1000;  // pause after a wrong round
 const IPA_SIZE     = ['', '5rem', '5rem', '4.2rem', '3.6rem', '3.1rem', '2.7rem'];   // by length of the sound; the last applies to anything longer
 
 /* ─────────────────────────────────────────────────────────
    STATE
 ───────────────────────────────────────────────────────── */
-let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
 let custom = [];         // groups parsed from the uploaded CSV
 let order  = [];         // the current card's choices, as drawn
 let marks  = new Map();  // text → 'ok' | 'err' once the card is answered
@@ -171,20 +156,6 @@ let marks  = new Map();  // text → 'ok' | 'err' once the card is answered
 /* ─────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────── */
-const $ = id => document.getElementById(id);
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-const escHtml = s => String(s).replace(/[&<>"']/g,
-  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
 // One card per character of every group in the ticked sets. A group that
 // shrinks below two characters (extras hidden) has nothing to tell apart.
 function buildCards(sources, includeExtra) {
@@ -196,7 +167,6 @@ function buildCards(sources, includeExtra) {
   }));
   return cards;
 }
-// <<TEST-END>>
 
 /* ─────────────────────────────────────────────────────────
    YOUR CSV  (upload, remember, remove)
@@ -244,7 +214,7 @@ function onFile(file) {
     $('use-builtin').checked = false;            // your own set replaces the baseline until you tick it again
     say(`Loaded ${custom.length} group${custom.length === 1 ? '' : 's'} from ${file.name}. Built-in groups are switched off; tick them to practise both.` +
         (r.skipped.length ? ` Skipped ${r.skipped.length} I can't give a sound for: ${r.skipped.slice(0, 8).join(' ')}${r.skipped.length > 8 ? ' …' : ''}` : ''));
-    initGame();
+    game.start();
   };
   reader.readAsText(file);
 }
@@ -255,7 +225,7 @@ function clearCsv() {
   $('use-builtin').checked = true;
   syncSets();
   say('Removed your CSV. Back to the built-in groups.');
-  initGame();
+  game.start();
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -269,7 +239,7 @@ const orderFor = card => GameMenu.shuffled() ? shuffle(card.options) : card.opti
 function buildKB() {
   const area = $('kb-area');
   area.innerHTML = '';
-  if (!deck.length) return;
+  if (!game.current) return;
   const g = document.createElement('div');
   g.className = 'kb-group';
   const l = document.createElement('div');
@@ -294,31 +264,18 @@ function buildKB() {
 /* ─────────────────────────────────────────────────────────
    RENDER
 ───────────────────────────────────────────────────────── */
-function renderCard() {
-  const c = deck[0];
+function renderCard(c) {
   const tel = $('tel-char'), n = [...c.item.ipa].length;
   tel.className      = 'tel-char ipa-face';
-  tel.innerHTML      = `<span class="sl">/</span>${escHtml(c.item.ipa)}<span class="sl">/</span>`;
+  tel.innerHTML      = `<span class="sl">/</span>${esc(c.item.ipa)}<span class="sl">/</span>`;
   tel.style.fontSize = IPA_SIZE[Math.min(n, IPA_SIZE.length - 1)];
 
   $('cat-badge').textContent    = `${c.options.length} lookalikes`;
   $('rare-badge').style.display = (c.item.rare || !c.item.core) ? '' : 'none';
 
-  const fb = $('feedback');
-  fb.textContent = '';
-  fb.className   = 'feedback';
-  $('char-card').className = 'char-card';
-
   marks = new Map();
   order = orderFor(c);
   buildKB();
-}
-
-function updateProg() {
-  $('s-rem').textContent   = deck.length;
-  $('s-done').textContent  = completed;
-  $('s-total').textContent = total;
-  $('prog-fill').style.width = (total ? completed / total * 100 : 0).toFixed(1) + '%';
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -327,105 +284,69 @@ function updateProg() {
    all count (a letter and the same letter with a virama, say).
 ───────────────────────────────────────────────────────── */
 function onPick(it) {
-  if (locked) return;
-  locked = true;
-  attempts++;
-
-  const cur  = deck[0];
-  const ok   = it.ipa === cur.item.ipa;
-  const card = $('char-card');
-  const fb   = $('feedback');
+  if (game.locked) return;
+  const cur = game.current;
+  const ok  = it.ipa === cur.item.ipa;
 
   cur.options.forEach(o => { if (o.ipa === cur.item.ipa) marks.set(o.text, 'ok'); });
   if (!ok) marks.set(it.text, 'err');
   buildKB();
 
-  fb.textContent = `${ok ? '✓' : '✗'}  ${cur.item.text}`;
-  fb.className   = 'feedback te ' + (ok ? 'ok' : 'err');
-  if (!ok) Progress.miss({ game: GAME, key: cur.item.text, prompt: `/${cur.item.ipa}/`, answer: cur.item.text,
-                           note: 'Among ' + cur.options.map(o => o.text).join(' ') });
-
-  if (ok) {
-    card.classList.add('correct');
-    deck.shift();
-    completed++;
-    updateProg();
-    setTimeout(() => {
-      if (deck.length === 0) showComplete();
-      else { renderCard(); locked = false; }
-    }, OK_MS);
-  } else {
-    card.classList.add('wrong');
-
-    // Reinsert at a random position (never straight back to the front)
-    const removed  = deck.shift();
-    const insertAt = Math.max(1, Math.floor(Math.random() * (deck.length + 1)));
-    deck.splice(insertAt, 0, removed);
-
-    setTimeout(() => { renderCard(); locked = false; }, ERR_MS);
-  }
+  game.judge(ok, {
+    feedback: `${ok ? '✓' : '✗'}  ${cur.item.text}`,
+    te:       true,
+    miss:     { key: cur.item.text, prompt: `/${cur.item.ipa}/`, answer: cur.item.text,
+                note: 'Among ' + cur.options.map(o => o.text).join(' ') },
+  });
 }
 
 /* ─────────────────────────────────────────────────────────
-   COMPLETE SCREEN
+   THE ROUND  (game-core.js)
 ───────────────────────────────────────────────────────── */
-function showComplete() {
-  $('g-main').style.display = 'none';
-  $('g-complete').classList.add('show');
-
-  $('c-sub').textContent =
-    `All ${total} sounds correctly picked out from their lookalikes.`;
-  $('c-attempts').textContent = attempts;
-  $('c-accuracy').textContent = Math.round(total / attempts * 100) + '%';
-  $('c-errors').textContent   = attempts - total;
-  Progress.complete(GAME, { accuracy: Math.round(total / attempts * 100), attempts });
-}
-
-/* ─────────────────────────────────────────────────────────
-   INIT
-───────────────────────────────────────────────────────── */
-function initGame() {
+// The cards of the ticked sets, with the options applied.
+function deal() {
   const sources = [];
   if ($('use-builtin').checked) sources.push(BUILTIN);
   if ($('use-custom').checked && custom.length) sources.push(custom);
-
-  deck      = shuffle(buildCards(sources, $('include-extra').checked)).slice(0, SESSION_SIZE);
-  total     = deck.length;
-  completed = 0;
-  attempts  = 0;
-  locked    = false;
-  marks     = new Map();
-
-  $('g-complete').classList.remove('show');
-  $('g-main').style.display = '';
-  $('kb-area').scrollTop = 0;
-  updateProg();
-
-  if (!deck.length) {                       // every group emptied by the options
-    order = [];
-    $('tel-char').innerHTML = '';
-    $('cat-badge').textContent = '';
-    $('rare-badge').style.display = 'none';
-    $('char-card').className = 'char-card';
-    $('feedback').textContent = '';
-    $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practise with these options. Tick a set, or “Include extra letters”, in the ⋮ menu.</p>';
-    return;
-  }
-  renderCard();
+  return buildCards(sources, $('include-extra').checked);
 }
+
+// Every group emptied by the options: nothing to play, so say what to change.
+function showEmpty() {
+  order = [];
+  $('tel-char').innerHTML = '';
+  $('cat-badge').textContent = '';
+  $('rare-badge').style.display = 'none';
+  $('char-card').className = 'char-card';
+  $('feedback').textContent = '';
+  $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practise with these options. Tick a set, or “Include extra letters”, in the ⋮ menu.</p>';
+}
+
+const game = GameCore.create({
+  id:   GAME,
+  size: SESSION_SIZE,
+  pool: deal,
+  onStart() {
+    marks = new Map();
+    $('kb-area').scrollTop = 0;
+  },
+  onEmpty:  showEmpty,
+  render:   renderCard,
+  doneText: g => `All ${g.total} sounds correctly picked out from their lookalikes.`,
+});
 
 // ⋮ menu: open/close and "Shuffle choices" live in game-menu.js
 GameMenu.init({
-  rebuild: () => { if (deck.length) buildKB(); },
-  reorder: () => { if (deck.length) order = orderFor(deck[0]); },
+  rebuild: () => { if (game.current) buildKB(); },
+  reorder: () => { if (game.current) order = orderFor(game.current); },
 });
 
 // A set can't be switched off if it's the only one on: the game needs cards.
 ['use-builtin', 'use-custom'].forEach(id => $(id).addEventListener('change', e => {
   if (!$('use-builtin').checked && !$('use-custom').checked) e.target.checked = true;
-  initGame();
+  game.start();
 }));
-$('include-extra').addEventListener('change', initGame);
+$('include-extra').addEventListener('change', game.start);
 $('csv-btn').addEventListener('click', () => $('csv-file').click());
 $('csv-file').addEventListener('change', e => {
   const f = e.target.files && e.target.files[0];
@@ -433,11 +354,10 @@ $('csv-file').addEventListener('change', e => {
   e.target.value = '';
 });
 $('csv-clear').addEventListener('click', clearCsv);
-$('retry-btn').addEventListener('click', initGame);
 
 loadSaved();
 syncSets();
-initGame();
+game.start();
 </script>
 </body>
 </html>

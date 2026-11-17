@@ -63,35 +63,18 @@
     <div class="kb-area" id="kb-area"></div>
   </div>
 
-  <!-- ── Complete screen ── -->
-  <div class="g-complete" id="g-complete">
-    <div class="trophy">🏆</div>
-    <div class="c-title">Session Complete!</div>
-    <div class="c-sub" id="c-sub"></div>
-    <div class="c-stats">
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-attempts">—</span>
-        <span class="c-stat-lbl">Total Attempts</span>
-      </div>
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-accuracy">—</span>
-        <span class="c-stat-lbl">Accuracy</span>
-      </div>
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-errors">—</span>
-        <span class="c-stat-lbl">Errors</span>
-      </div>
-    </div>
-    <button class="retry-btn" id="retry-btn">Practice Again</button>
-  </div>
+  <!-- ── Complete screen (filled in by game-core.js) ── -->
+  <div class="g-complete" id="g-complete"></div>
 
 </div>
 
 <script src="../telugu-data.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
+<script src="../game-core.js"></script>
 <script>
 if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
+if (!window.GameCore)   throw new Error('../game-core.js was not found');
 
 /* ─────────────────────────────────────────────────────────
    DATA
@@ -104,22 +87,24 @@ if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
      core    → false for rare clusters and any cluster using
                an extra letter: hidden until "Include
                uncommon clusters" is ticked
+
+   The round itself (deck, counters, re-queueing a missed card,
+   the complete screen, the ✓ on the home tile) is game-core.js.
+   This page draws the card, the keyboard and the slots, and
+   checks the picks.
 ───────────────────────────────────────────────────────── */
 const GAME       = 'conjuncts';
 const CONSONANTS = TeluguData.consonants;
 const CLUSTERS   = TeluguData.clusters;
-const Progress   = window.TeluguProgress || { miss() {}, complete() {} };
+const { $, shuffle } = GameCore;
 
 const SESSION_SIZE = 40;    // cards per session, sampled from the pool
-const OK_MS        = 500;   // pause after a correct round
-const ERR_MS       = 1000;  // pause after a wrong round
 const ORDINALS     = ['1st', '2nd', '3rd', '4th'];
 const HINT         = 'Pick each consonant in order · the vowel is always the short “a”';
 
 /* ─────────────────────────────────────────────────────────
    STATE
 ───────────────────────────────────────────────────────── */
-let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
 let sel = [];        // picked ipa per slot (null = empty)
 let slotEls = [];
 let keys    = [];    // the consonants on the keyboard, in alphabet order
@@ -128,17 +113,6 @@ let kbOrder = null;  // null, or a shuffled copy of keys (fixed for the round)
 /* ─────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────── */
-const $ = id => document.getElementById(id);
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 // [[label, [items…]], …] keeping first-seen order
 function groupBy(items, key) {
   const m = new Map();
@@ -148,7 +122,6 @@ function groupBy(items, key) {
   });
   return [...m];
 }
-// <<TEST-END>>
 
 function btnFor(ipa) {
   return Array.from(document.querySelectorAll('.kb-btn'))
@@ -222,8 +195,7 @@ function updateSlots() {
   });
 }
 
-function renderCard() {
-  const c = deck[0];
+function renderCard(c) {
   $('tel-char').textContent = c.glyph;
 
   const badge = $('cat-badge');
@@ -235,19 +207,12 @@ function renderCard() {
   sel = c.parts.map(() => null);
   buildSlots(c.parts.length);
 
+  // Until the card is answered, the line under it carries the instruction
   const fb = $('feedback');
   fb.textContent = c.spoken
     ? `Pick the letters as written · spoken Telugu usually says /${c.spoken}/`
     : HINT;
   fb.className   = 'feedback hint';
-  $('char-card').className = 'char-card';
-}
-
-function updateProg() {
-  $('s-rem').textContent   = deck.length;
-  $('s-done').textContent  = completed;
-  $('s-total').textContent = total;
-  $('prog-fill').style.width = (total ? completed / total * 100 : 0).toFixed(1) + '%';
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -257,7 +222,7 @@ function updateProg() {
    soon as every slot is filled; tap a filled slot to clear it.
 ───────────────────────────────────────────────────────── */
 function onPick(ipa) {
-  if (locked) return;
+  if (game.locked) return;
   const i = sel.indexOf(null);
   if (i === -1) return;
   sel[i] = ipa;
@@ -266,21 +231,16 @@ function onPick(ipa) {
 }
 
 function onSlot(i) {
-  if (locked || sel[i] === null) return;
+  if (game.locked || sel[i] === null) return;
   sel[i] = null;
   updateSlots();
 }
 
 function evaluate() {
-  locked = true;
-  attempts++;
-
-  const cur     = deck[0];
+  const cur     = game.current;
   const answer  = cur.parts.map(p => p.ipa);
   const results = sel.map((s, i) => s === answer[i]);
   const allOk   = results.every(Boolean);
-  const card    = $('char-card');
-  const fb      = $('feedback');
 
   slotEls.forEach((el, i) => el.classList.add(results[i] ? 'ok' : 'err'));
 
@@ -290,85 +250,42 @@ function evaluate() {
     if (!results[i] && !answerSet.has(s)) btnFor(s).classList.add('err');
   });
   answerSet.forEach(a => btnFor(a).classList.add('ok'));
-
-  fb.textContent = `${allOk ? '✓' : '✗'}  /${cur.sound}/` +
-    (cur.spoken ? `  ·  usually said /${cur.spoken}/` : '');
-  fb.className   = 'feedback ' + (allOk ? 'ok' : 'err');
-  if (!allOk) Progress.miss({ game: GAME, key: cur.glyph, prompt: cur.glyph,
-                              answer: `/${cur.sound}/` + (cur.spoken ? `  ·  usually said /${cur.spoken}/` : ''),
-                              note: cur.cat });
-
-  if (allOk) {
-    card.classList.add('correct');
-    deck.shift();
-    completed++;
-    updateProg();
-    setTimeout(() => {
-      if (deck.length === 0) showComplete();
-      else { renderCard(); locked = false; }
-    }, OK_MS);
-  } else {
-    card.classList.add('wrong');
+  if (!allOk) {
     const firstMiss = answer.findIndex((a, i) => !results[i]);
     btnFor(answer[firstMiss]).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    // Reinsert at a random position (never straight back to the front)
-    const removed  = deck.shift();
-    const insertAt = Math.max(1, Math.floor(Math.random() * (deck.length + 1)));
-    deck.splice(insertAt, 0, removed);
-
-    setTimeout(() => { renderCard(); locked = false; }, ERR_MS);
   }
+
+  const sound = `/${cur.sound}/` + (cur.spoken ? `  ·  usually said /${cur.spoken}/` : '');
+  game.judge(allOk, {
+    feedback: `${allOk ? '✓' : '✗'}  ${sound}`,
+    miss:     { key: cur.glyph, prompt: cur.glyph, answer: sound, note: cur.cat },
+  });
 }
 
 /* ─────────────────────────────────────────────────────────
-   COMPLETE SCREEN
+   THE ROUND  (game-core.js)
 ───────────────────────────────────────────────────────── */
-function showComplete() {
-  $('g-main').style.display = 'none';
-  $('g-complete').classList.add('show');
-
-  $('c-sub').textContent =
-    `All ${total} conjuncts correctly matched to their consonants.`;
-  $('c-attempts').textContent = attempts;
-  $('c-accuracy').textContent = Math.round(total / attempts * 100) + '%';
-  $('c-errors').textContent   = attempts - total;
-  Progress.complete(GAME, { accuracy: Math.round(total / attempts * 100), attempts });
-}
-
-/* ─────────────────────────────────────────────────────────
-   INIT
-───────────────────────────────────────────────────────── */
-function initGame() {
-  const all  = $('include-uncommon').checked;
-  const pool = TeluguData.pool(CLUSTERS, all);
-  const cons = TeluguData.pool(CONSONANTS, all);
-
-  deck      = shuffle(pool).slice(0, SESSION_SIZE);
-  total     = deck.length;
-  completed = 0;
-  attempts  = 0;
-  locked    = false;
-
-  $('g-complete').classList.remove('show');
-  $('g-main').style.display = '';
-  $('kb-area').scrollTop = 0;
-
-  keys    = cons;
-  kbOrder = GameMenu.shuffled() ? shuffle(keys) : null;   // fresh order each round
-  buildKB();
-  updateProg();
-  renderCard();
-}
+const game = GameCore.create({
+  id:   GAME,
+  size: SESSION_SIZE,
+  pool: () => TeluguData.pool(CLUSTERS, $('include-uncommon').checked),
+  onStart() {
+    $('kb-area').scrollTop = 0;
+    keys    = TeluguData.pool(CONSONANTS, $('include-uncommon').checked);
+    kbOrder = GameMenu.shuffled() ? shuffle(keys) : null;   // fresh order each round
+    buildKB();
+  },
+  render:   renderCard,
+  doneText: g => `All ${g.total} conjuncts correctly matched to their consonants.`,
+});
 
 // ⋮ menu: open/close, "Show categories" and "Shuffle keyboard" live in game-menu.js
 GameMenu.init({
   rebuild: buildKB,
   reorder: on => { kbOrder = on ? shuffle(keys) : null; },
 });
-$('include-uncommon').addEventListener('change', initGame);
-$('retry-btn').addEventListener('click', initGame);
-initGame();
+$('include-uncommon').addEventListener('change', game.start);
+game.start();
 </script>
 </body>
 </html>

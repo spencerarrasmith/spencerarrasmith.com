@@ -157,6 +157,12 @@
   const signs = SIGN_ROWS.map(([sign, ipa, grp, f, sound]) =>
     finish({ sign, ipa, grp, sound: sound === undefined ? ipa : sound }, f));
 
+  /* ── Digits ──────────────────────────────────────────────
+     ౦ – ౯. No game drills them yet; the Lookalike Builder offers
+     them as characters to compare.                            */
+  const digits = Array.from({ length: 10 }, (_, n) =>
+    ({ ch: String.fromCharCode(0x0C66 + n), value: n, kind: 'digit' }));
+
   /* ── Conjunct clusters ───────────────────────────────────
      Source rows live in CLUSTER_SETS; clusters are built from
      the single consonants above.                              */
@@ -321,7 +327,7 @@
   const data = Object.freeze({
     VIRAMA, DENT, SYL, NAS,
     letters, vowels, consonants, conjunctLetters,
-    signs, clusterSets: CLUSTER_SETS, clusters,
+    signs, digits, clusterSets: CLUSTER_SETS, clusters,
     letterGroups, pool, buildKeyboard,
   });
 

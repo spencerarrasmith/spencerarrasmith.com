@@ -11,6 +11,8 @@
    YOUR OWN GROUPS   parseCsv(text) reads the file alphabet/04_lookalike-builder.html
                      exports: one group per row, characters separated by
                      commas. A row of two is just a pair.
+                     clean(cell) and rows(text) are the reading steps on
+                     their own; the builder's import uses them too.
 
    WHAT AN ITEM IS   { text, ipa, rare, core }
      ipa   the sound the game shows. A letter keeps its Phonemes sound
@@ -105,21 +107,26 @@
   // The builder's CSV → groups. Cells that aren't a letter, letter + sign or
   // conjunct are skipped (and reported); a row that ends up with fewer than two
   // characters is dropped.
-  const clean = s => { const t = String(s).replace(/[\s"'<>&﻿]/g, ''); return t.normalize ? t.normalize('NFC') : t; };
+  // One CSV cell, tidied: spaces, quotes, stray commas, markup characters and a
+  // BOM removed, and the letters in one normal form (NFC) so the same character
+  // always compares equal.
+  const clean = s => { const t = String(s).replace(/[\s,"'<>&﻿]/g, ''); return t.normalize ? t.normalize('NFC') : t; };
+  // A CSV as rows of tidy cells; empty cells and blank rows are dropped.
+  // Shared with the Lookalike Builder's import, so both read a file the same way.
+  const rows = text => String(text).split(/\r?\n/)
+    .map(line => line.split(',').map(clean).filter(Boolean))
+    .filter(cells => cells.length);
   function parseCsv(text) {
     const skipped = [], out = [];
-    let rows = 0;
-    String(text).split(/\r?\n/).forEach(line => {
-      const cells = line.split(',').map(clean).filter(Boolean);
-      if (!cells.length) return;
-      rows++;
+    const all = rows(text);
+    all.forEach(cells => {
       const items = makeItems(cells, skipped);
       if (items.length >= 2) out.push({ id: out.length + 1, items });
     });
-    return { groups: out, skipped, rows };
+    return { groups: out, skipped, rows: all.length };
   }
 
-  const data = Object.freeze({ GROUPS, groups, split, item, parseCsv });
+  const data = Object.freeze({ GROUPS, groups, split, item, clean, rows, parseCsv });
   root.LookalikeData = data;
   if (typeof module !== 'undefined' && module.exports) module.exports = data;
 })(typeof window !== 'undefined' ? window : globalThis);
