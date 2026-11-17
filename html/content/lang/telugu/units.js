@@ -16,7 +16,10 @@
      id      unique slug: the URL (#/phonemes) and the key saved
              progress is stored under. Never change one, even when
              the file is renamed, or its ✓ is lost.
-     icon    emoji (or a short Telugu string) shown on the tile
+     icon    shown on the tile. A short Telugu string where the page is about
+             the script (క, కా, అఆ): at most two letters, to fit the box.
+             Otherwise a plain object or symbol emoji (📕 🔍 🏠); no faces
+             or playful ones (👀 👋 🎯).
      title   tile heading, and the page's heading
      desc    one-line description
      src     path to the page, from this folder
@@ -38,10 +41,10 @@
     {
       title: "Resources",
       tiles: [
-        { id: "rosetta", icon: "🔤", title: "Rosetta Stone",
+        { id: "rosetta", icon: "అa", title: "Rosetta Stone",
           desc: "Every letter with its IPA and ISO sounds, a Telugu word and an English word.",
           src: "reference/01_rosetta.html" },
-        { id: "signs-conjuncts", icon: "🧩", title: "Signs & conjuncts",
+        { id: "signs-conjuncts", icon: "శ్రీ", title: "Signs & conjuncts",
           desc: "Every letter with each vowel sign, and as the second letter of a conjunct.",
           src: "reference/02_signs-conjuncts.html" },
         { id: "reference-idioms", icon: "📜", title: "Idioms & proverbs",
@@ -70,7 +73,7 @@
     {
       title: "Alphabet",
       tiles: [
-        { id: "phonemes", icon: "🎯", title: "Phonemes",
+        { id: "phonemes", icon: "క", title: "Phonemes",
           desc: "Match each Telugu letter to its IPA phoneme.",
           src: "alphabet/01_phonemes.html",
           review: { "phonemes-reverse": "Phonemes (IPA → Telugu)" } },
@@ -80,11 +83,12 @@
           review: { "diacritics-reverse": "Diacritics (IPA → Diacritics)" } },
         { id: "conjuncts", icon: "క్ష", title: "Conjuncts",
           desc: "Pick every consonant in a combined letter.",
-          src: "alphabet/03_conjuncts.html" },
+          src: "alphabet/03_conjuncts.html",
+          review: { "conjuncts-reverse": "Conjuncts (IPA → Conjuncts)" } },
         { id: "lookalike-builder", icon: "🛠️", title: "Lookalike Builder",
           desc: "Mark which characters look alike and export a CSV.",
           src: "alphabet/04_lookalike-builder.html" },
-        { id: "lookalikes", icon: "👀", title: "Lookalikes",
+        { id: "lookalikes", icon: "ఒబ", title: "Lookalikes",
           desc: "Hear the sound, pick the right lookalike.",
           src: "alphabet/05_lookalikes.html",
           review: { lookalikes: "Lookalikes (IPA → Telugu)" } },
@@ -102,7 +106,7 @@
             learn:    "Stroke order and proportions for each letter, vowel sign and common conjunct.",
             practise: "Trace first, then write from memory and compare against the model.",
             fits:     "Letters you find hardest will come back more often." } },
-        { id: "alphabet-chart", icon: "📖", title: "Alphabet Chart",
+        { id: "alphabet-chart", icon: "అఆ", title: "Alphabet Chart",
           desc: "Every letter grouped by how it is made.",
           src: "alphabet/08_alphabet-chart.html",
           soon: {
@@ -135,7 +139,7 @@
             learn:    "The endings that say who does what to whom, where and with what, and how they attach to nouns.",
             practise: "Choose the right ending for a sentence and decline sample nouns.",
             fits:     "Revisited with pronouns and in Advanced Grammar." } },
-        { id: "grammar-pronouns", icon: "🙋", title: "Pronouns",
+        { id: "grammar-pronouns", icon: "👤", title: "Pronouns",
           desc: "I, you, he, she, it and their forms.",
           src: "grammar/04_pronouns.html",
           soon: {
@@ -163,7 +167,7 @@
             learn:    "A first look at how time is marked on verbs, before the detailed tense units.",
             practise: "Sort sentences by time and convert between simple tenses.",
             fits:     "Each tense gets its own unit under Advanced Grammar." } },
-        { id: "grammar-indeclinables", icon: "🧩", title: "Indeclinables",
+        { id: "grammar-indeclinables", icon: "📌", title: "Indeclinables",
           desc: "Words that never change form.",
           src: "grammar/08_indeclinables.html",
           soon: {
@@ -175,7 +179,7 @@
     {
       title: "Vocabulary",
       tiles: [
-        { id: "vocab-greetings", icon: "👋", title: "Greetings",
+        { id: "vocab-greetings", icon: "🙏", title: "Greetings",
           desc: "Hello, goodbye and polite openers.",
           src: "vocabulary/01_greetings.html",
           soon: {

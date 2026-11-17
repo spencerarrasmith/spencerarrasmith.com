@@ -205,6 +205,13 @@
   const conjunctLetters = letters.filter(l => l.kind === 'conjunct');
   const byCh = new Map(consonants.map(c => [c.ch, c]));
 
+  // How a cluster is described on a card: the class of each consonant, in order
+  // ("Nasal + Velar" for ఙ్క). The five class nasals are called Nasal; every other
+  // consonant goes by its keyboard group. The set name (cat) can't be shown
+  // instead: "+ య (ya)" names one of the letters to be picked.
+  const NASALS  = 'ఙఞణనమ';
+  const classOf = c => NASALS.includes(c.ch) ? 'Nasal' : c.cat;
+
   const clusters = CLUSTER_SETS.flatMap(([cat, ...specs]) => specs.map(spec => {
     const [written, spoken] = spec.split('=').map(s => s.trim());
     const rare  = written.startsWith('*');
@@ -216,6 +223,7 @@
     const inBook = parts.every(p => p.inBook);
     return {
       parts, cat, rare, inBook,
+      classes: parts.map(classOf).join(' + '),
       glyph:  parts.map(p => p.ch).join(VIRAMA),
       sound:  parts.map(p => p.ipa).join('') + 'a',   // as written
       spoken: spoken || null,                          // as usually said, if different
