@@ -19,8 +19,8 @@
       </div>
       <div class="g-right">
         <div class="g-stats">
-          <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">48</span></span>
-          <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">48</span></span>
+          <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
+          <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">0</span></span>
         </div>
         <div class="menu-wrap" id="menu-wrap">
           <button class="menu-btn" id="menu-btn" type="button" aria-haspopup="true" aria-expanded="false"
@@ -54,35 +54,18 @@
     <div class="kb-area" id="kb-area"></div>
   </div>
 
-  <!-- ── Complete screen ── -->
-  <div class="g-complete" id="g-complete">
-    <div class="trophy">🏆</div>
-    <div class="c-title">Session Complete!</div>
-    <div class="c-sub" id="c-sub">All Telugu akshara correctly matched to their IPA phonemes.</div>
-    <div class="c-stats">
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-attempts">—</span>
-        <span class="c-stat-lbl">Total Attempts</span>
-      </div>
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-accuracy">—</span>
-        <span class="c-stat-lbl">Accuracy</span>
-      </div>
-      <div class="c-stat">
-        <span class="c-stat-val" id="c-errors">—</span>
-        <span class="c-stat-lbl">Errors</span>
-      </div>
-    </div>
-    <button class="retry-btn" id="retry-btn">Practice Again</button>
-  </div>
+  <!-- ── Complete screen (filled in by game-core.js) ── -->
+  <div class="g-complete" id="g-complete"></div>
 
 </div>
 
 <script src="../telugu-data.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
+<script src="../game-core.js"></script>
 <script>
 if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
+if (!window.GameCore)   throw new Error('../game-core.js was not found');
 
 /* ─────────────────────────────────────────────────────────
    DATA
@@ -91,10 +74,14 @@ if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
    "Include extra letters" adds ఌ ౡ ఱ.
      rare    → "rare" badge on the card
      inBook  → false for the extras
+
+   The round itself (deck, counters, re-queueing a missed card,
+   the complete screen, the ✓ on the home tile) is game-core.js.
+   This page draws the card and the keyboard and checks answers.
 ───────────────────────────────────────────────────────── */
-const GAME      = 'phonemes';            // tile id: finishing either direction ticks the tile
-const CHARS     = TeluguData.letters;
-const Progress  = window.TeluguProgress || { miss() {}, complete() {} };
+const GAME  = 'phonemes';                // tile id: finishing either direction ticks the tile
+const CHARS = TeluguData.letters;
+const { $, shuffle, esc } = GameCore;
 
 /* ─────────────────────────────────────────────────────────
    STATE
@@ -103,23 +90,7 @@ const Progress  = window.TeluguProgress || { miss() {}, complete() {} };
    The keyboard itself (layout, order, groups) is built by
    TeluguData.buildKeyboard, so it lives with the alphabet data.
 ───────────────────────────────────────────────────────── */
-let deck = [], completed = 0, attempts = 0, locked = false, total = 0;
 let reversed = false;
-
-/* ─────────────────────────────────────────────────────────
-   HELPERS
-───────────────────────────────────────────────────────── */
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-const escHtml = s => String(s).replace(/[&<>"']/g,
-  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // Both keyboards share one key per letter; match by the letter itself
 // (data-ch is unique, data-ipa is unique too, but the glyph is the identity).
@@ -140,7 +111,7 @@ function btnForLetter(letter) {
 let activeLetters = new Set();
 let kbOrder = null;                      // null = alphabet order
 function buildKB() {
-  TeluguData.buildKeyboard(document.getElementById('kb-area'), {
+  TeluguData.buildKeyboard($('kb-area'), {
     face:    reversed ? 'telugu' : 'ipa',
     visible: activeLetters,
     grouped: GameMenu.grouped(),
@@ -152,158 +123,85 @@ function buildKB() {
 /* ─────────────────────────────────────────────────────────
    RENDER CURRENT CARD
 ───────────────────────────────────────────────────────── */
-function renderCard() {
-  const c = deck[0];
-  const tel = document.getElementById('tel-char');
+function renderCard(c) {
+  const tel = $('tel-char');
   if (reversed) {
     // the phoneme, written /like this/; longer strings (tʃʰ, dʒʱ) step down a size
     const n = [...c.ipa].length;
     tel.className      = 'tel-char ipa-face';
-    tel.innerHTML      = `<span class="sl">/</span>${escHtml(c.ipa)}<span class="sl">/</span>`;
+    tel.innerHTML      = `<span class="sl">/</span>${esc(c.ipa)}<span class="sl">/</span>`;
     tel.style.fontSize = n >= 4 ? '3.4rem' : n === 3 ? '4.2rem' : '';
   } else {
     tel.className      = 'tel-char';
     tel.textContent    = c.ch;
     tel.style.fontSize = [...c.ch].length >= 3 ? '4.2rem' : '';   // wide conjunct (క్ష)
   }
-  const badge = document.getElementById('cat-badge');
-  badge.textContent  = c.cat;
-  badge.style.visibility = document.getElementById('show-cat').checked ? '' : 'hidden';
-  const rare = document.getElementById('rare-badge');
-  rare.style.display = c.rare ? '' : 'none';
-  const fb = document.getElementById('feedback');
-  fb.textContent = '';
-  fb.className   = 'feedback';
-  document.getElementById('char-card').className = 'char-card';
-}
-
-/* ─────────────────────────────────────────────────────────
-   PROGRESS BAR + COUNTERS
-───────────────────────────────────────────────────────── */
-function updateProg() {
-  document.getElementById('s-rem').textContent   = deck.length;
-  document.getElementById('s-done').textContent  = completed;
-  document.getElementById('s-total').textContent = total;
-  document.getElementById('prog-fill').style.width =
-    (completed / total * 100).toFixed(1) + '%';
+  $('cat-badge').textContent       = c.cat;
+  $('cat-badge').style.visibility  = $('show-cat').checked ? '' : 'hidden';
+  $('rare-badge').style.display    = c.rare ? '' : 'none';
 }
 
 /* ─────────────────────────────────────────────────────────
    ANSWER HANDLER
 ───────────────────────────────────────────────────────── */
 function onAnswer(letter, btn) {
-  if (locked) return;
-  locked = true;
-  attempts++;
-
-  const cur = deck[0];
+  if (game.locked) return;
+  const cur = game.current;
   const ok  = (letter === cur);
 
-  const card = document.getElementById('char-card');
-  const fb   = document.getElementById('feedback');
+  btn.classList.add(ok ? 'ok' : 'err');
 
-  if (ok) {
-    btn.classList.add('ok');
-    card.classList.add('correct');
-    fb.textContent = '✓  Correct!';
-    fb.className   = 'feedback ok';
-
-    deck.shift();
-    completed++;
-    updateProg();
-
-    setTimeout(() => {
-      btn.classList.remove('ok');
-      if (deck.length === 0) showComplete();
-      else { renderCard(); locked = false; }
-    }, 500);
-
-  } else {
-    btn.classList.add('err');
-    card.classList.add('wrong');
-    if (reversed) {
-      fb.textContent = `✗  ${cur.ch}`;
-      fb.className   = 'feedback err te';
-      Progress.miss({ game: GAME + '-reverse', key: cur.ch, prompt: `/${cur.ipa}/`, answer: cur.ch, note: cur.cat });
-    } else {
-      fb.textContent = `✗  /${cur.ipa}/`;
-      fb.className   = 'feedback err';
-      Progress.miss({ game: GAME, key: cur.ch, prompt: cur.ch, answer: `/${cur.ipa}/`, note: cur.cat });
-    }
-
-    // Highlight the correct key and scroll it into view (optional).
-    // The answer text above is shown either way.
-    const correctBtn = document.getElementById('highlight-correct').checked ? btnForLetter(cur) : null;
-    if (correctBtn) {
-      correctBtn.classList.add('ok');
-      correctBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    // Reinsert the card at a random position (not immediately at front)
-    const removed = deck.shift();
-    const insertAt = Math.max(1, Math.floor(Math.random() * (deck.length + 1)));
-    deck.splice(insertAt, 0, removed);
-
-    setTimeout(() => {
-      btn.classList.remove('err');
-      if (correctBtn) correctBtn.classList.remove('ok');
-      renderCard();
-      locked = false;
-    }, 850);
+  // Wrong: highlight the correct key and scroll it into view (optional).
+  // The answer text under the card is shown either way.
+  const correctBtn = !ok && $('highlight-correct').checked ? btnForLetter(cur) : null;
+  if (correctBtn) {
+    correctBtn.classList.add('ok');
+    correctBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+
+  game.judge(ok, {
+    feedback: ok ? '✓  Correct!' : reversed ? `✗  ${cur.ch}` : `✗  /${cur.ipa}/`,
+    te:       !ok && reversed,
+    miss:     reversed
+      ? { game: GAME + '-reverse', key: cur.ch, prompt: `/${cur.ipa}/`, answer: cur.ch, note: cur.cat }
+      : { game: GAME,              key: cur.ch, prompt: cur.ch, answer: `/${cur.ipa}/`, note: cur.cat },
+    after() {
+      btn.classList.remove('ok', 'err');
+      if (correctBtn) correctBtn.classList.remove('ok');
+    },
+  });
 }
 
 /* ─────────────────────────────────────────────────────────
-   COMPLETE SCREEN
+   THE ROUND  (game-core.js)
 ───────────────────────────────────────────────────────── */
-function showComplete() {
-  document.getElementById('g-main').style.display = 'none';
-  document.getElementById('g-complete').classList.add('show');
-
-  document.getElementById('c-sub').textContent = reversed
-    ? `All ${total} IPA phonemes correctly matched to their Telugu akshara.`
-    : `All ${total} Telugu akshara correctly matched to their IPA phonemes.`;
-  const errors = attempts - total;
-  const acc    = Math.round(total / attempts * 100);
-  document.getElementById('c-attempts').textContent = attempts;
-  document.getElementById('c-accuracy').textContent = acc + '%';
-  document.getElementById('c-errors').textContent   = errors;
-  Progress.complete(GAME, { accuracy: acc, attempts });
-}
-
-/* ─────────────────────────────────────────────────────────
-   INIT
-───────────────────────────────────────────────────────── */
-function initGame() {
-  const pool = TeluguData.pool(CHARS, document.getElementById('include-extra').checked);
-  deck      = shuffle(pool);
-  total     = pool.length;
-  completed = 0;
-  attempts  = 0;
-  locked    = false;
-
-  document.getElementById('g-complete').classList.remove('show');
-  document.getElementById('g-main').style.display = '';
-  document.getElementById('kb-area').scrollTop = 0;
-
-  activeLetters = new Set(pool);
-  kbOrder = GameMenu.shuffled() ? shuffle(CHARS) : null;   // fresh order each round
-  buildKB();
-  updateProg();
-  renderCard();
-}
+const game = GameCore.create({
+  id:    GAME,
+  errMs: 850,
+  pool:  () => TeluguData.pool(CHARS, $('include-extra').checked),
+  onStart(g) {
+    $('kb-area').scrollTop = 0;
+    activeLetters = new Set(g.deck);
+    kbOrder = GameMenu.shuffled() ? shuffle(CHARS) : null;   // fresh order each round
+    buildKB();
+  },
+  render:   renderCard,
+  doneText: g => reversed
+    ? `All ${g.total} IPA phonemes correctly matched to their Telugu akshara.`
+    : `All ${g.total} Telugu akshara correctly matched to their IPA phonemes.`,
+});
 
 // 🔀 flips direction and starts a fresh round in the new direction
 function setReversed(rev) {
   reversed = rev;
-  const btn = document.getElementById('rev-btn');
+  const btn = $('rev-btn');
   btn.setAttribute('aria-pressed', String(rev));
   btn.setAttribute('aria-label', rev ? 'Reverse direction: Telugu to IPA' : 'Reverse direction: IPA to Telugu');
-  document.getElementById('g-title').textContent = rev ? 'IPA → Telugu' : 'Telugu → IPA';
-  initGame();
+  $('g-title').textContent = rev ? 'IPA → Telugu' : 'Telugu → IPA';
+  game.start();
 }
 
-document.getElementById('rev-btn').addEventListener('click', () => setReversed(!reversed));
+$('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
 /* ── Options menu (⋮) ─────────────────────────────────── */
 // Open/close, "Show categories" and "Shuffle keyboard" are shared: game-menu.js.
@@ -312,10 +210,9 @@ GameMenu.init({
   reorder: on => { kbOrder = on ? shuffle(CHARS) : null; },
 });
 
-document.getElementById('include-extra').addEventListener('change', initGame);
+$('include-extra').addEventListener('change', game.start);
 
-document.getElementById('retry-btn').addEventListener('click', initGame);
-initGame();
+game.start();
 </script>
 </body>
 </html>

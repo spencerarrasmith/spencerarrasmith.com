@@ -9,6 +9,9 @@
    Holds only what games have in common. Anything that belongs
    to one game — its tile size, its extra keyboards — stays in
    a small <style> block in that page.
+   The behaviour that goes with it: game-menu.js (the ⋮ menu) and
+   game-core.js (the round, counters and complete screen).
+   The Resources pages add reference.css on top of this file.
 
    Contents
      1. Frame + header          5. Keyboard

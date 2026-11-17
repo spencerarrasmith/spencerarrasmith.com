@@ -1,0 +1,222 @@
+/* ═════════════════════════════════════════════════════════
+   home.css — the home page (index.html): the tile launcher
+   and the bar around a page opened from it.
+   Fonts, reset and the midnight + gold colour tokens come
+   from base.css, as they do for game.css and shell.css.
+
+   Sections:
+     1. Home view (hero)      4. Review strip + badges
+     2. Sections + tile grid  5. App view (bar + iframe)
+     3. Tile                  6. Phone layout
+═════════════════════════════════════════════════════════ */
+@import url('base.css');
+
+a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
+
+/* ── Home view ─────────────────────────────── */
+#home {
+  height: 100vh;   /* fallback */
+  height: 100dvh;
+  overflow-y: auto;
+  padding: 0 24px calc(40px + var(--safe-bottom));
+}
+
+.home-inner { max-width: 960px; margin: 0 auto; }
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 0 30px;
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(140deg, #c9981a 0%, #8b6512 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Noto Sans Telugu', serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 18px rgba(201, 152, 26, 0.35);
+}
+
+.hero-title { font-size: 26px; font-weight: 700; letter-spacing: .01em; }
+.hero-sub   { font-size: 14px; color: var(--text-dim); margin-top: 3px; }
+
+/* ── Sections ──────────────────────────────── */
+.section { margin-bottom: 32px; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 13px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.section-count { margin-left: auto; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+/* ── Tile ──────────────────────────────────── */
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  min-height: 138px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: inherit;
+  text-decoration: none;
+  transition: transform .14s, border-color .14s, background .14s, box-shadow .14s;
+}
+
+a.tile:hover, a.tile:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  background: var(--surface-up);
+  box-shadow: 0 8px 26px rgba(201, 152, 26, 0.16);
+}
+
+a.tile:active { transform: translateY(0); }
+
+.tile-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Noto Sans Telugu', 'Inter', sans-serif;
+  font-size: 22px;
+}
+
+.tile-title { font-size: 15px; font-weight: 600; }
+.tile-desc  { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); margin-top: 3px; }
+
+/* Placeholder tiles stay clickable (they open a "coming soon" page) but sit back visually. */
+.tile.soon { background: transparent; border-style: dashed; }
+.tile.soon .tile-icon, .tile.soon .tile-title, .tile.soon .tile-desc { opacity: .72; }
+a.tile.soon:hover, a.tile.soon:focus-visible { box-shadow: none; }
+a.tile.soon:hover .tile-icon, a.tile.soon:hover .tile-title, a.tile.soon:hover .tile-desc,
+a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.tile.soon:focus-visible .tile-desc { opacity: 1; }
+
+/* Completed ✓ (same corner as the "Soon" badge; a tile is never both) */
+.tile-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0b0c18;
+  background: var(--success);
+}
+
+/* Review strip above the sections */
+.featured { margin-bottom: 30px; }
+.tile.review { flex-direction: row; align-items: center; gap: 16px; min-height: 0; padding: 14px 18px; border-color: var(--accent); background: linear-gradient(120deg, var(--surface-up), var(--surface)); }
+.tile.review .tile-body { flex: 1; min-width: 0; }
+.tile.review .tile-badge { position: static; flex-shrink: 0; font-size: 11.5px; padding: 3px 10px; }
+.tile.review .tile-badge.has { background: var(--accent); color: #0b0c18; font-weight: 700; }
+
+.tile-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, .06);
+  border-radius: 5px;
+  color: var(--text-dim);
+}
+
+/* ── App view ──────────────────────────────── */
+#app {
+  height: 100vh;   /* fallback */
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* Iframes don't receive the device inset, so the shell reserves it
+     here and the embedded app ends above the home indicator. */
+  padding-bottom: var(--safe-bottom);
+}
+
+.app-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: background .12s, color .12s;
+}
+
+.back:hover { background: rgba(255, 255, 255, .06); color: var(--text); }
+
+.app-title { font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; }
+
+#app-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: none;
+  background: var(--bg);
+}
+
+@media (max-width: 520px) {
+  #home { padding-left: 16px; padding-right: 16px; }
+  .hero { padding: 28px 0 22px; }
+  .hero-title { font-size: 22px; }
+  .tiles { grid-template-columns: 1fr; gap: 10px; }
+  /* compact horizontal tiles keep the 35+ item list scannable on a phone */
+  .tile { flex-direction: row; align-items: center; gap: 14px; min-height: 0; padding: 12px 14px; border-radius: 14px; }
+  .tile-icon { width: 40px; height: 40px; flex-shrink: 0; font-size: 20px; }
+  .tile-desc { margin-top: 1px; }
+  .tile-badge { top: 10px; right: 10px; }
+  .tile > div:not(.tile-icon) { padding-right: 38px; }
+  .tile.review > .tile-body { padding-right: 0; }
+  .section-head { flex-wrap: wrap; row-gap: 2px; }
+}

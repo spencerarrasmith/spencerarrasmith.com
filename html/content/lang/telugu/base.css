@@ -1,9 +1,10 @@
 /* ═════════════════════════════════════════════════════════
    base.css — the foundation every page shares.
    Fonts, reset, the midnight + gold colour tokens and the
-   page defaults. Imported by game.css (game pages) and
-   shell.css (lesson pages + Review); a page never needs to
-   link it directly.
+   page defaults. Imported by game.css (game pages),
+   shell.css (lesson pages, placeholders + Review) and
+   home.css (the home page); a page never needs to link it
+   directly. Nothing else defines a colour or loads the fonts.
 
    Change a colour or the type stack here and the whole app
    follows.

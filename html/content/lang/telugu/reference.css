@@ -1,0 +1,40 @@
+/* ═════════════════════════════════════════════════════════
+   reference.css — what the Resources pages share on top of
+   game.css: a page that scrolls under a sticky header, the
+   hint line, the tools row with its "jump to" pills, and the
+   small tags.
+
+   Link it AFTER game.css (the header, the ⋮-menu checkbox and
+   the colours come from there and from base.css):
+     <link rel="stylesheet" href="../game.css">
+     <link rel="stylesheet" href="../reference.css">
+
+   Used by reference/01_rosetta.html and reference/02_signs-conjuncts.html.
+   Each page keeps only its own layout in a <style> block.
+═════════════════════════════════════════════════════════ */
+
+/* ── Scrolling page, sticky header ─────────────────────── */
+html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; these pages scroll */
+body { min-height: 100vh; min-height: 100dvh; }
+.g-header { position: sticky; top: 0; z-index: 5; }   /* the title and count stay in view */
+.g-header-top { margin-bottom: 0; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 16px 24px calc(48px + var(--safe-bottom)); display: grid; gap: 14px; }
+@media (max-width: 520px) { .wrap { padding-left: 14px; padding-right: 14px; } }
+
+/* ── Hint line ─────────────────────────────────────────── */
+.hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.55; max-width: 70ch; }
+.hint b { color: var(--text-dim); font-weight: 600; }
+
+/* ── Tools row: options on the left, "jump to" pills on the right ── */
+.tools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.jump { display: flex; gap: 6px; margin-left: auto; }
+.jump a {
+  font-size: 12px; font-weight: 600; color: var(--text-dim); text-decoration: none;
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
+}
+.jump a:hover { border-color: var(--accent); background: var(--accent-glow); }
+
+/* ── Tags ("rare", "extra", …) ─────────────────────────── */
+.tag { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; background: var(--surface-up); border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; }
+.tag.flag { color: var(--accent-light); border-color: var(--accent); }

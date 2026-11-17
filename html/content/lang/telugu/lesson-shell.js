@@ -7,13 +7,13 @@
 
    Page needs:
      <link rel="stylesheet" href="../shell.css">   (from a page inside a section folder)
-     script tags (src=…) for progress.js and lesson-shell.js
+     script tags (src=…) for units.js, progress.js and lesson-shell.js
      <div id="lesson"></div>
    then:
      LessonShell.mount({
-       id:      'grammar-nouns',      // = the tile id in index.html
-       section: 'Grammar',
-       title:   'Nouns: gender & number',
+       id:      'grammar-nouns',      // = the tile id in units.js
+       section: 'Grammar',            // optional: taken from units.js by id
+       title:   'Nouns: gender & number',   // optional: same
        telugu:  '…',                  // optional second-language title
        learn:   [ blocks… ],
        remarks: [ blocks… ],          // optional
@@ -35,6 +35,11 @@
      ctx.complete({accuracy, attempts})     mark the unit done (✓)
      ctx.isComplete()
      ctx.id
+
+   A unit that isn't written yet is one line:
+     LessonShell.placeholder('grammar-nouns');
+   which draws its "Coming soon" page from the tile in units.js
+   (title, description and the three `soon` lines).
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -67,8 +72,18 @@
   }
   const blocks = list => `<div class="blocks">${(list || []).map(block).join('')}</div>`;
 
+  // The unit's tile and section in units.js (null when units.js isn't loaded or the id isn't listed).
+  const Units = () => root.TeluguUnits || null;
+  const tileOf    = id => (Units() && Units().get(id)) || null;
+  const sectionOf = id => (Units() && Units().sectionOf(id)) || null;
+
   function mount(cfg, host) {
     host = host || document.getElementById('lesson') || document.body;
+    const tile = tileOf(cfg.id), sec = sectionOf(cfg.id);
+    cfg = Object.assign({}, cfg, {
+      section: cfg.section ?? (sec ? sec.title : ''),
+      title:   cfg.title   ?? (tile ? tile.title : cfg.id),
+    });
     const Progress = root.TeluguProgress || { miss() {}, complete() {}, isComplete() { return false; } };
 
     const stages = [
@@ -160,6 +175,40 @@
     return { go, ctx, stages: stages.map(s => s.id) };
   }
 
-  root.LessonShell = { mount, block, esc };
+  /* The "Coming soon" page of a unit that isn't written yet. Everything on it
+     comes from the unit's tile in units.js, so the home tile and this page
+     can't disagree. */
+  const SOON_ROWS = [['learn', "What you'll learn"], ['practise', "How you'll practise"], ['fits', 'Where it fits']];
+
+  function placeholder(id, host) {
+    host = host || document.getElementById('lesson') || document.body;
+    if (!Units()) throw new Error('lesson-shell: load units.js before calling placeholder()');
+    const tile = tileOf(id), sec = sectionOf(id);
+    if (!tile) throw new Error('lesson-shell: no tile "' + id + '" in units.js');
+    const soon = tile.soon && typeof tile.soon === 'object' ? tile.soon : {};
+    const rows = SOON_ROWS.filter(([k]) => soon[k]);
+
+    document.title = tile.title + ' · Telugu Suite';
+    host.innerHTML = `
+      <div class="shell soon-page">
+        <header class="shell-head">
+          <div class="eyebrow">${esc(sec ? sec.title : '')}</div>
+          <div class="title-row soon-head">
+            <div class="unit-icon" aria-hidden="true">${esc(tile.icon)}</div>
+            <h1>${esc(tile.title)}</h1>
+          </div>
+          <span class="pill soon">Coming soon</span>
+        </header>
+        <main class="shell-body soon-body">
+          <p class="lead">${esc(tile.desc)}</p>
+          ${rows.length ? `<div class="facts">${rows.map(([k, label]) => `
+            <div class="fact"><div class="fact-label">${label}</div><p>${esc(soon[k])}</p></div>`).join('')}
+          </div>` : ''}
+        </main>
+      </div>`;
+    return { id, tile };
+  }
+
+  root.LessonShell = { mount, placeholder, block, esc };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.LessonShell;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -2,8 +2,8 @@
    shell.css — shared look for lesson pages and Review.
    Colours, fonts and the reset come from base.css (shared
    with game.css, the stylesheet for the practice games).
-   Pages that use it: lesson-template.html, review.html and every lesson
-   built on lesson-shell.js.
+   Pages that use it: lesson-template.html, review.html, every lesson
+   built on lesson-shell.js and every "Coming soon" placeholder.
 ═════════════════════════════════════════════════════════ */
 @import url('base.css');   /* fonts, reset, colour tokens, page defaults — shared with game.css */
 
@@ -117,10 +117,30 @@ tr:last-child td { border-bottom: none; }
   padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 600;
 }
 
+/* ── "Coming soon" placeholder (LessonShell.placeholder) ── */
+.soon-page  { max-width: 600px; }                 /* a narrower column than a lesson: there is little to read */
+.soon-page .shell-head { padding-top: 36px; }
+.soon-head  { gap: 14px; margin-top: 10px; flex-wrap: nowrap; }
+.soon-head h1 { font-size: 26px; margin-top: 0; }
+.unit-icon {
+  width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0; background: var(--accent-glow);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Sans Telugu', 'Inter', sans-serif; font-size: 26px;
+}
+.pill.soon  { margin-top: 12px; padding: 3px 11px; font-size: 12px; border-color: var(--accent); color: var(--accent-light); }
+.soon-body  { padding-bottom: calc(36px + var(--safe-bottom)); }
+.lead       { font-size: 15px; line-height: 1.55; color: var(--text-dim); margin-bottom: 20px; }
+.facts      { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 6px 18px; }
+.fact       { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.fact:last-child { border-bottom: none; }
+.fact-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 5px; }
+.fact p     { font-size: 14.5px; line-height: 1.55; color: var(--text); }
+
 @media (max-width: 520px) {
   .shell-head { padding: 16px 16px 0; }
   .shell-body { padding: 16px; }
   .shell-foot { padding-left: 16px; padding-right: 16px; }
   .shell-head h1 { font-size: 21px; }
+  .soon-page .shell-head { padding-top: 22px; }
   .fc .prompt { font-size: 4rem; }
 }

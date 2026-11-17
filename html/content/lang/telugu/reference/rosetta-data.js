@@ -25,7 +25,7 @@
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
-  const TD = root.TeluguData || (typeof require === 'function' ? require('./telugu-data.js') : null);
+  const TD = root.TeluguData || (typeof require === 'function' ? require('../telugu-data.js') : null);
   if (!TD) throw new Error('rosetta-data: load telugu-data.js first');
 
   const R = 'r̥', RR = 'r̥̄', L = 'l̥', LL = 'l̥̄';   // ring below, as ISO 15919 writes it

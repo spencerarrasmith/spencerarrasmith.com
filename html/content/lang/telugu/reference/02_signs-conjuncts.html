@@ -5,26 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Signs &amp; Conjuncts</title>
 <link rel="stylesheet" href="../game.css">
+<link rel="stylesheet" href="../reference.css">
 <style>
-/* ── Signs & Conjuncts-specific (header, ⋮-menu checkbox and colours come from game.css / base.css) ── */
+/* ── Signs & Conjuncts-specific. The scrolling page, sticky header, hint, tools row,
+      jump pills and tags are in reference.css; the header and colours in game.css / base.css ── */
 
-html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; this page scrolls */
-body { min-height: 100vh; min-height: 100dvh; }
-.g-header { position: sticky; top: 0; z-index: 5; }
-.g-header-top { margin-bottom: 0; }
-.wrap { max-width: 1180px; margin: 0 auto; padding: 16px 24px calc(48px + var(--safe-bottom)); display: grid; gap: 16px; }
-@media (max-width: 520px) { .wrap { padding-left: 14px; padding-right: 14px; } }
-
-.hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.55; max-width: 74ch; }
-.hint b { color: var(--text-dim); font-weight: 600; }
+.wrap { gap: 16px; }
+.hint { max-width: 74ch; }
 .te { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; }
 .te.bare { display: inline-block; padding: 0 .5em 0 .6em; }          /* a lone sign in running text must not attach to the letter before it */
 .note .te { font-size: 1.3em; line-height: 1.2; }
-
-.tools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
-.jump { display: flex; gap: 6px; margin-left: auto; }
-.jump a { font-size: 12px; font-weight: 600; color: var(--text-dim); text-decoration: none; background: var(--surface-up); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; }
-.jump a:hover { border-color: var(--accent); background: var(--accent-glow); }
 
 section.part { display: grid; gap: 12px; scroll-margin-top: 64px; }
 section.part > h2 { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
@@ -72,8 +62,6 @@ ol.notes { list-style: none; display: grid; gap: 10px; counter-reset: n; }
 .cj .ex { font-family: 'Noto Sans Telugu', serif; font-size: 40px; line-height: 1.5; color: var(--text); }
 .cj .ex small { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--text-muted); margin-left: 8px; }
 .cj .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.tag { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; background: var(--surface-up); border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; }
-.tag.flag { color: var(--accent-light); border-color: var(--accent); }
 .tag.ipa { font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text-dim); }
 .cj sup { font-size: 10px; font-weight: 700; color: var(--accent-light); font-family: 'Inter', sans-serif; margin-left: 2px; }
 </style>
