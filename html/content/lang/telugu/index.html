@@ -74,6 +74,27 @@ function featuredHTML(t) {
     <span class="tile-badge${n ? ' has' : ''}">${n ? n + ' to revisit' : 'All clear'}</span></a>`;
 }
 
+/* ─────────────────────────────────────────────────────────
+   COLLAPSED SECTIONS
+   The arrow at the end of a section's heading folds the
+   section away, leaving only that line. Which sections are
+   folded is remembered in this browser, by section title.
+───────────────────────────────────────────────────────── */
+const FOLD_KEY = 'telugu.home.v1';
+const collapsed = new Set();
+try {
+  const saved = JSON.parse(localStorage.getItem(FOLD_KEY) || '{}');
+  if (saved && Array.isArray(saved.collapsed)) saved.collapsed.forEach(t => { if (typeof t === 'string') collapsed.add(t); });
+} catch (e) { /* storage blocked or unreadable: every section starts open */ }
+const saveCollapsed = () => { try { localStorage.setItem(FOLD_KEY, JSON.stringify({ collapsed: [...collapsed] })); } catch (e) { /* lasts for this page view only */ } };
+
+const ARROW = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 5.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function toggleHTML(s, i) {
+  const shut = collapsed.has(s.title), what = (shut ? 'Show ' : 'Hide ') + s.title;
+  return `<button type="button" class="section-toggle" aria-expanded="${!shut}" aria-controls="section-${i}" aria-label="${esc(what)}" title="${esc(what)}">${ARROW}</button>`;
+}
+
 const readyCount = (s, done) => {
   const ready = s.tiles.filter(t => !t.soon).length;
   const n     = s.tiles.filter(t => done.has(t.id)).length;
@@ -83,16 +104,32 @@ const readyCount = (s, done) => {
 function renderHome() {
   const done = new Set(Progress.doneIds());
   document.getElementById('featured').innerHTML = FEATURED.map(featuredHTML).join('');
-  document.getElementById('sections').innerHTML = SECTIONS.map(s => `
-    <section class="section">
+  document.getElementById('sections').innerHTML = SECTIONS.map((s, i) => `
+    <section class="section${collapsed.has(s.title) ? ' collapsed' : ''}" data-section="${esc(s.title)}">
       <div class="section-head">
         <h2 class="section-title">${esc(s.title)}</h2>
         <span class="section-count">${readyCount(s, done)}</span>
+        ${toggleHTML(s, i)}
       </div>
-      <div class="tiles">${s.tiles.map(t => tileHTML(t, done)).join('')}</div>
+      <div class="tiles" id="section-${i}"${collapsed.has(s.title) ? ' hidden' : ''}>${s.tiles.map(t => tileHTML(t, done)).join('')}</div>
     </section>`).join('');
 }
 renderHome();
+
+// The arrow folds its section away or brings it back. Only that section is touched, so the button keeps the focus.
+document.getElementById('sections').addEventListener('click', e => {
+  const btn = e.target.closest('.section-toggle');
+  if (!btn) return;
+  const section = btn.closest('.section'), title = section.dataset.section;
+  const shut = !collapsed.has(title);
+  if (shut) collapsed.add(title); else collapsed.delete(title);
+  saveCollapsed();
+  section.classList.toggle('collapsed', shut);
+  section.querySelector('.tiles').hidden = shut;
+  btn.setAttribute('aria-expanded', String(!shut));
+  btn.setAttribute('aria-label', (shut ? 'Show ' : 'Hide ') + title);
+  btn.title = (shut ? 'Show ' : 'Hide ') + title;
+});
 
 /* ─────────────────────────────────────────────────────────
    SETTINGS  (settings.js)
