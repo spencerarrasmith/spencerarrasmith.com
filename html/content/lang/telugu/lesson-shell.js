@@ -7,7 +7,7 @@
 
    Page needs:
      <link rel="stylesheet" href="../shell.css">   (from a page inside a section folder)
-     script tags (src=…) for units.js, progress.js and lesson-shell.js
+     script tags (src=…) for units.js, progress.js, and lesson-shell.js
      <div id="lesson"></div>
    then:
      LessonShell.mount({
@@ -48,7 +48,7 @@
    A unit that isn't written yet is one line:
      LessonShell.placeholder('grammar-nouns');
    which draws its "Coming soon" page from the tile in units.js
-   (title, description and the three `soon` lines).
+   (title, description, and the three `soon` lines).
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -113,7 +113,7 @@
       cfg.remarks && cfg.remarks.length ? { id: 'remarks',  label: 'Remarks' }  : null,
       typeof cfg.practice === 'function' ? { id: 'practice', label: 'Practice' } : null,
     ].filter(Boolean);
-    if (!stages.length) throw new Error('lesson-shell: nothing to show (give learn, remarks or practice)');
+    if (!stages.length) throw new Error('lesson-shell: nothing to show (give learn, remarks, or practice)');
 
     document.title = cfg.title + ' · Telugu Suite';
     host.innerHTML = `

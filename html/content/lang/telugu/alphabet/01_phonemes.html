@@ -70,17 +70,17 @@ if (!window.GameCore)   throw new Error('../game-core.js was not found');
 
 /* ─────────────────────────────────────────────────────────
    DATA
-   Letters, flags and keyboard groups all come from
+   Letters, flags, and keyboard groups all come from
    telugu-data.js. The book's set (51 cards) is the default;
    "Include extra letters" adds ఌ ౡ ఱ.
      rare    → "rare" badge on the card
      inBook  → false for the extras
 
-   The round itself (deck, counters, re-queueing a missed card,
+   The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the ✓ on the home tile) is game-core.js.
    This page draws the card and the keyboard and checks answers.
 ───────────────────────────────────────────────────────── */
-const GAME  = 'phonemes';                // tile id: finishing either direction ticks the tile
+const GAME  = 'phonemes';                // tile id: finishing either direction checks off the tile
 const CHARS = TeluguData.letters;
 const N     = TeluguData.notation;       // how sounds are written: IPA (/k/) or ISO (ka), chosen on the home page
 const { $, shuffle } = GameCore;
@@ -105,9 +105,9 @@ function btnForLetter(letter) {
    BUILD KEYBOARD  (layout comes from telugu-data.js)
 ───────────────────────────────────────────────────────── */
 // Both keyboards (sound and Telugu) follow the options menu:
-//   Show categories ticked   → grouped and labelled by place of articulation
-//   Show categories unticked → one plain block of keys, alphabet order
-//   Shuffle keyboard ticked  → that block in a random order (kbOrder), which
+//   Show categories checked   → grouped and labeled by place of articulation
+//   Show categories unchecked → one plain block of keys, alphabet order
+//   Shuffle keyboard checked  → that block in a random order (kbOrder), which
 //                              stays fixed for the round so keys can be found
 // Rebuilding (e.g. when an option changes) never restarts the round.
 let activeLetters = new Set();
@@ -194,7 +194,7 @@ const game = GameCore.create({
 });
 const SOUNDS = N.id === 'iso' ? 'ISO spellings' : 'IPA phonemes';
 
-// The title and the 🔀 button say which way round the game is, in the reader's notation
+// The title and the 🔀 button say which way around the game is, in the reader's notation
 function showDirection() {
   const btn = $('rev-btn');
   btn.setAttribute('aria-pressed', String(reversed));
@@ -212,7 +212,7 @@ function setReversed(rev) {
 $('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
 /* ── Options menu (⋮) ─────────────────────────────────── */
-// Open/close, "Show categories" and "Shuffle keyboard" are shared: game-menu.js.
+// Open/close, "Show categories", and "Shuffle keyboard" are shared: game-menu.js.
 GameMenu.init({
   rebuild: buildKB,
   reorder: on => { kbOrder = on ? shuffle(CHARS) : null; },

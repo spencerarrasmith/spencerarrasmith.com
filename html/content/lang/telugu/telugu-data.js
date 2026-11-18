@@ -14,7 +14,7 @@
              Letters/signs: core = inBook.
              Clusters:      core = inBook && !rare.
              Pages show items with core:false only when their
-             "Include extra letters/clusters" box is ticked.
+             "Include extra letters/clusters" box is checked.
 
    TWO WAYS TO WRITE A SOUND
      ipa   the sound, in IPA: క is k, కా is kaː. Also the KEY a
@@ -44,7 +44,7 @@
   // IPA combining marks, spelled out so they survive any editor
   const DENT   = '\u032A';   // ̪  dental
   const SYL    = '\u0329';   // ̩  syllabic
-  const NAS    = '\u0303';   // ̃  nasalised
+  const NAS    = '\u0303';   // ̃  nasalized
   const VIRAMA = '\u0C4D';   // ్  joins consonants / marks a pure consonant
   // ISO 15919 combining marks
   const RING   = '\u0325';   // ̥  ring below (r̥, l̥: the vocalic r and l)
@@ -264,7 +264,7 @@
 
   /* ── Helpers ─────────────────────────────────────────── */
 
-  // Default practice set, or everything when the page's "include extra" box is ticked.
+  // Default practice set, or everything when the page's "include extra" box is checked.
   const pool = (items, includeExtra) => includeExtra ? items : items.filter(i => i.core);
 
   // Keyboard groups for the letter keyboard, in alphabet order:
@@ -418,9 +418,9 @@
                                         that are pieces of a syllable)
          visible: Set | fn(letter)      letters to show (default: all);
                                         the rest are rendered hidden
-         grouped: true | false          true (default): one labelled group
+         grouped: true | false          true (default): one labeled group
                                         per place of articulation.
-                                        false: a single unlabelled block,
+                                        false: a single unlabeled block,
                                         like an ordinary keyboard, still
                                         in alphabet order
          order:   [letter, …]           only with grouped:false: the order

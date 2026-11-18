@@ -134,7 +134,7 @@ if (!window.GameCore)      throw new Error('../game-core.js was not found');
    Items carry rare / core flags from telugu-data.js: rare shows the
    "rare" pip; extras (ఱ ఌ ౡ …) wait for "Include extra letters".
 
-   The round itself (deck, counters, re-queueing a missed card,
+   The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the ✓ on the home tile) is game-core.js.
    This page draws the card and its choices, checks the pick,
    and looks after your CSV.
@@ -158,7 +158,7 @@ let marks  = new Map();  // text → 'ok' | 'err' once the card is answered
 /* ─────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────── */
-// One card per character of every group in the ticked sets. A group that
+// One card per character of every group in the checked sets. A group that
 // shrinks below two characters (extras hidden) has nothing to tell apart.
 function buildCards(sources, includeExtra) {
   const cards = [];
@@ -213,8 +213,8 @@ function onFile(file) {
     try { localStorage.setItem(STORE, text); } catch (e) {}
     syncSets();
     $('use-custom').checked  = true;
-    $('use-builtin').checked = false;            // your own set replaces the baseline until you tick it again
-    say(`Loaded ${custom.length} group${custom.length === 1 ? '' : 's'} from ${file.name}. Built-in groups are switched off; tick them to practice both.` +
+    $('use-builtin').checked = false;            // your own set replaces the baseline until you check it again
+    say(`Loaded ${custom.length} group${custom.length === 1 ? '' : 's'} from ${file.name}. Built-in groups are turned off; check them to practice both.` +
         (r.skipped.length ? ` Skipped ${r.skipped.length} I can't give a sound for: ${r.skipped.slice(0, 8).join(' ')}${r.skipped.length > 8 ? ' …' : ''}` : ''));
     game.start();
   };
@@ -235,7 +235,7 @@ function clearCsv() {
 ───────────────────────────────────────────────────────── */
 const orderFor = card => GameMenu.shuffled() ? shuffle(card.options) : card.options;
 
-// Follows the options menu: "Shuffle choices" ticked → a random order that
+// Follows the options menu: "Shuffle choices" checked → a random order that
 // stays fixed for the card, so keys can be found. Rebuilding (e.g. when an
 // option changes) never restarts the round.
 function buildKB() {
@@ -309,7 +309,7 @@ function onPick(it) {
 /* ─────────────────────────────────────────────────────────
    THE ROUND  (game-core.js)
 ───────────────────────────────────────────────────────── */
-// The cards of the ticked sets, with the options applied.
+// The cards of the checked sets, with the options applied.
 function deal() {
   const sources = [];
   if ($('use-builtin').checked) sources.push(BUILTIN);
@@ -325,7 +325,7 @@ function showEmpty() {
   $('rare-badge').style.display = 'none';
   $('char-card').className = 'char-card';
   $('feedback').textContent = '';
-  $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practice with these options. Tick a set, or “Include extra letters”, in the ⋮ menu.</p>';
+  $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practice with these options. Check a set, or “Include extra letters”, in the ⋮ menu.</p>';
 }
 
 const game = GameCore.create({
@@ -347,7 +347,7 @@ GameMenu.init({
   reorder: () => { if (game.current) order = orderFor(game.current); },
 });
 
-// A set can't be switched off if it's the only one on: the game needs cards.
+// A set can't be turned off if it's the only one on: the game needs cards.
 ['use-builtin', 'use-custom'].forEach(id => $(id).addEventListener('change', e => {
   if (!$('use-builtin').checked && !$('use-custom').checked) e.target.checked = true;
   game.start();

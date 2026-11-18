@@ -2,7 +2,7 @@
    rosetta-data.js — the content of the Rosetta Stone page:
    for every letter and vowel sign, a Telugu word that uses it and
    an English word that sounds like it.
-   The IPA, the ISO 15919 spelling, the letter list and the
+   The IPA, the ISO 15919 spelling, the letter list, and the
    categories come from telugu-data.js (single source of truth);
    this file only adds what that file doesn't have. Needs
    telugu-data.js loaded first.
@@ -20,8 +20,8 @@
      spelling uses ం instead of ఙ / ఞ.
 
    ISO 15919 follows the letters, not the sound: ం is ṁ even where it is said
-   as n, ṅ or m. The "eng" matches are approximate; English has no exact
-   equivalent for the aspirates, retroflexes or the dental stops.
+   as n, ṅ, or m. The "eng" matches are approximate; English has no exact
+   equivalent for the aspirates, retroflexes, or the dental stops.
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -53,7 +53,7 @@
     'ఒ': { word: ['ఒకటి', 'okaṭi', 'one'],           eng: ['obey',   'short, pure o, with no w-glide'] },
     'ఓ': { word: ['ఓడ', 'ōḍa', 'boat, ship'],        eng: ['go',     'long o, pure: drop the w-glide of English go'] },
     'ఔ': { word: ['ఔషధం', 'auṣadhaṁ', 'medicine'],   eng: ['cow',    'a diphthong, gliding into u'] },
-    'అం': { word: ['అంగడి', 'aṁgaḍi', 'shop'],        eng: ['sang',   'ం nasalises the vowel; before గ and క it sounds like the ng of sang'] },
+    'అం': { word: ['అంగడి', 'aṁgaḍi', 'store'],        eng: ['sang',   'ం nasalizes the vowel; before గ and క it sounds like the ng of sang'] },
     'అః': { word: ['దుఃఖం', 'duḥkhaṁ', 'sorrow'],      eng: ['ahh',    'a light puff of breath after the vowel'],
             note: 'ః appears in Sanskrit-origin words.' },
 
@@ -65,9 +65,9 @@
     'ఙ': { word: ['అఙ్గము', 'aṅgamu', 'limb, part'],  eng: ['sing',   'the ng sound'],
            note: 'Classical spelling: modern Telugu writes అంగము with ం, so ఙ is rare on its own.' },
     // Palatals
-    'చ': { word: ['చేప', 'cēpa', 'fish'],            eng: ['church', 'before a, o and u it is often said more like “ts”'] },
+    'చ': { word: ['చేప', 'cēpa', 'fish'],            eng: ['church', 'before a, o, and u it is often said more like “ts”'] },
     'ఛ': { word: ['ఛాయ', 'chāya', 'shade, shadow'],   eng: ['catch her', 'ch with a puff of air'] },
-    'జ': { word: ['జింక', 'jiṁka', 'deer'],          eng: ['jug',    'before a, o and u it is often said more like “dz”'] },
+    'జ': { word: ['జింక', 'jiṁka', 'deer'],          eng: ['jug',    'before a, o, and u it is often said more like “dz”'] },
     'ఝ': { word: ['ఝరి', 'jhari', 'stream, waterfall'], eng: ['hedgehog', 'j with a breathy release: “hedge hog” in one breath'] },
     'ఞ': { word: ['అఞ్జలి', 'añjali', 'offering with cupped hands'], eng: ['canyon', 'the ny sound'],
            note: 'Classical spelling: modern Telugu writes అంజలి with ం.' },

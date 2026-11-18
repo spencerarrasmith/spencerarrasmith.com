@@ -1,7 +1,7 @@
 /* ═════════════════════════════════════════════════════════
    signs-conjuncts-data.js — what the Signs & Conjuncts page adds
    to telugu-data.js: the order of the sign columns, which conjunct
-   forms are written below vs beside, and the notes on combinations
+   forms are written below versus beside, and the notes on combinations
    that are not drawn the usual way.
    Needs ../telugu-data.js loaded first.
 
@@ -9,7 +9,7 @@
      They describe the shapes in Noto Sans Telugu, the font this app
      loads. Each consonant + sign and each conjunct was shaped with the
      font and looked at in a browser, then grouped by how it is drawn.
-     Handwriting, printed books and other fonts differ in detail, so read
+     Handwriting, printed books, and other fonts differ in detail, so read
      these as "the letters to look at twice", not as spelling rules.
 
    A SIGN NOTE   { id, title, text, letters, signs, usual }
@@ -35,7 +35,7 @@
 
   const signNotes = [
     { id: 'o-flat', title: 'ొ ో ౌ on ఘ ఝ మ య',
-      text: 'These four letters draw the o-signs as one flat stroke across the top, with the tail running off to the right. On other letters (కో నో లో) the top is a looped mark. So మొ, మో and మౌ are close in shape: tell them apart by the small marks at the right-hand end.',
+      text: 'These four letters draw the o-signs as one flat stroke across the top, with the tail running off to the right. On other letters (కో నో లో) the top is a looped mark. So మొ, మో, and మౌ are close in shape: tell them apart by the small marks at the right-hand end.',
       letters: 'ఘఝమయ', signs: 'ొోౌ', usual: ['కొ', 'కో', 'కౌ'] },
     { id: 'u-own', title: 'ు ూ on జ ఞ ప ఫ వ ళ హ',
       text: 'These seven letters have their own hand-drawn forms for ు and ూ. The sign is worked into the letter instead of simply hanging below it as on కు and కూ.',
@@ -44,16 +44,16 @@
       text: 'య is the odd one out for ి and ీ. Its top is two hooks, so the sign cannot sit on a head stroke as it does elsewhere: యి comes out shorter than య itself, and యీ is wider than other ీ forms.',
       letters: 'య', signs: 'ిీ', usual: ['కి', 'కీ'] },
     { id: 'ha-aa', title: 'ా on హ',
-      text: 'హా is drawn more compactly than other ా forms: the tick tucks over the letter instead of adding width to it.',
+      text: 'హా is drawn more compactly than other ా forms: the stroke tucks over the letter instead of adding width to it.',
       letters: 'హ', signs: 'ా', usual: ['కా'] },
     { id: 'ai-two', title: 'ై is two parts',
-      text: 'ై is ె plus a second mark ౖ. Typing ె then ౖ gives the same shape as the single sign ై, so you may meet it written either way.',
+      text: 'ై is ె plus a second mark ౖ. Typing ె then ౖ gives the same shape as the single sign ై, so you may see it written either way.',
       letters: '', signs: '', usual: [] },
     { id: 'vocalic', title: 'ృ and ౄ',
-      text: 'ృ hangs below the letter at the lower right. ౄ is the long version, the same with an extra tick. Both turn up in Sanskrit loanwords (కృష్ణ), not in everyday Telugu words.',
+      text: 'ృ hangs below the letter at the lower right. ౄ is the long version, the same with an extra stroke. Both appear in Sanskrit loanwords (కృష్ణ), not in everyday Telugu words.',
       letters: '', signs: '', usual: [] },
     { id: 'nasal', title: 'ం and ః are not vowel signs',
-      text: 'ం (a small circle) nasalises the vowel and ః (two dots) adds a puff of breath after it. They are listed here because they attach to the letter in the same way.',
+      text: 'ం (a small circle) nasalizes the vowel and ః (two dots) adds a puff of breath after it. They are listed here because they attach to the letter in the same way.',
       letters: '', signs: '', usual: [] },
   ];
 

@@ -110,9 +110,9 @@ if (!window.SignsConjunctsData)  throw new Error('signs-conjuncts-data.js was no
 
 /* ─────────────────────────────────────────────────────────
    DATA
-   Letters, signs and their sounds come from telugu-data.js, written in
+   Letters, signs, and their sounds come from telugu-data.js, written in
    the reader's notation (IPA or ISO, chosen on the home page). The column
-   order, the conjunct families and the notes come from
+   order, the conjunct families, and the notes come from
    signs-conjuncts-data.js. Edit the notes there.
 ───────────────────────────────────────────────────────── */
 const TD = TeluguData, SD = SignsConjunctsData, N = TD.notation;
@@ -178,7 +178,7 @@ function conjNotesHTML() {
   }).join('');
 }
 
-/* "Include rare and extra letters": hide dashed rows, cards and the extra sign columns */
+/* "Include rare and extra letters": hide dashed rows, cards, and the extra sign columns */
 function applyRare() {
   const on = $('show-rare').checked;
   document.querySelectorAll('[data-rare="1"]').forEach(el => { el.hidden = !on; });

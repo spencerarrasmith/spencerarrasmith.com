@@ -112,7 +112,7 @@
   }
 
   // read → change → write, always against the freshest copy so that
-  // the home page, a game iframe and the Review page never overwrite each other.
+  // the home page, a game iframe, and the Review page never overwrite each other.
   function update(fn) {
     const s = load();
     const out = fn(s);
@@ -148,7 +148,7 @@
           streak: 0,
           last:   Date.now(),
         };
-        if (ask === 'telugu' || ask === 'sound') {             // a Telugu character: Review works out the sound
+        if (ask === 'telugu' || ask === 'sound') {             // a Telugu character: Review figures out the sound
           m.ask = ask;
           if (syllable) m.syllable = true;
         } else {                                               // anything else: the two texts, as given

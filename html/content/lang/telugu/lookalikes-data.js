@@ -19,10 +19,10 @@
            letter with a sign adds the sign (కా → kaː).
      iso   its ISO 15919 spelling (క → ka, కా → kā). The game shows
            whichever of the two the reader chose on the home page.
-     rare  from telugu-data.js: the letter, sign or cluster is flagged
+     rare  from telugu-data.js: the letter, sign, or cluster is flagged
            rare there (ఙ ఞ ఋ ౠ …), so the badge never needs hand-flagging.
      core  false for extras (ఱ ఌ ౡ ౢ ౣ) and uncommon clusters: the game
-           hides these unless "Include extra letters" is ticked.
+           hides these unless "Include extra letters" is checked.
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -91,11 +91,11 @@
   // The builder's CSV → groups. Cells that aren't a letter, letter + sign or
   // conjunct are skipped (and reported); a row that ends up with fewer than two
   // characters is dropped.
-  // One CSV cell, tidied: spaces, quotes, stray commas, markup characters and a
+  // One CSV cell, cleaned up: spaces, quotes, stray commas, markup characters, and a
   // BOM removed, and the letters in one normal form (NFC) so the same character
   // always compares equal.
   const clean = s => { const t = String(s).replace(/[\s,"'<>&﻿]/g, ''); return t.normalize ? t.normalize('NFC') : t; };
-  // A CSV as rows of tidy cells; empty cells and blank rows are dropped.
+  // A CSV as rows of clean cells; empty cells and blank rows are dropped.
   // Shared with the Lookalike Builder's import, so both read a file the same way.
   const rows = text => String(text).split(/\r?\n/)
     .map(line => line.split(',').map(clean).filter(Boolean))

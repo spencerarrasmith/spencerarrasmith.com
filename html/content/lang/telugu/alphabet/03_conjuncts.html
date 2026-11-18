@@ -9,7 +9,7 @@
     /* ── Conjunct-specific (everything shared lives in game.css) ── */
 
     /* Conjunct glyphs stack vertically and run wide */
-    .tel-char { font-size: 4.4rem; margin-top: 4px; }    /* these glyphs sit low in the line box; centres them like the other games */
+    .tel-char { font-size: 4.4rem; margin-top: 4px; }    /* these glyphs sit low in the line box; centers them like the other games */
 
     /* Instruction line shown until the round is answered */
     .feedback.hint {
@@ -94,14 +94,14 @@ if (!window.GameCore)   throw new Error('../game-core.js was not found');
      rare    → "rare" badge (clusters marked * in the list)
      core    → false for rare clusters and any cluster using
                an extra letter: hidden until "Include
-               uncommon clusters" is ticked
+               uncommon clusters" is checked
 
-   The round itself (deck, counters, re-queueing a missed card,
+   The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the ✓ on the home tile) is game-core.js.
-   This page draws the card, the keyboard and the slots, and
+   This page draws the card, the keyboard, and the slots, and
    checks the picks.
 ───────────────────────────────────────────────────────── */
-const GAME       = 'conjuncts';             // tile id: finishing either direction ticks the tile
+const GAME       = 'conjuncts';             // tile id: finishing either direction checks off the tile
 const CONSONANTS = TeluguData.consonants;
 const CLUSTERS   = TeluguData.clusters;
 const N          = TeluguData.notation;     // how sounds are written: IPA (/kʂa/) or ISO (kṣa), chosen on the home page
@@ -145,9 +145,9 @@ function btnFor(ipa) {
 ───────────────────────────────────────────────────────── */
 // Sound keys (each consonant alone: k), or (reversed) the Telugu letter keyboard shared with Phonemes
 // (telugu-data.js), restricted to the consonants. Both follow the options menu:
-//   Show categories ticked   → grouped and labelled by place of articulation
-//   Show categories unticked → one plain block of keys, alphabet order
-//   Shuffle keyboard ticked  → that block in a random order (kbOrder), which
+//   Show categories checked   → grouped and labeled by place of articulation
+//   Show categories unchecked → one plain block of keys, alphabet order
+//   Shuffle keyboard checked  → that block in a random order (kbOrder), which
 //                              stays fixed for the round so keys can be found
 // Rebuilding (e.g. when an option changes) never restarts the round.
 function buildKB() {
@@ -326,7 +326,7 @@ const game = GameCore.create({
     : `All ${g.total} conjuncts correctly matched to their consonants.`,
 });
 
-// The title and the 🔀 button say which way round the game is, in the reader's notation
+// The title and the 🔀 button say which way around the game is, in the reader's notation
 function showDirection() {
   const btn = $('rev-btn');
   btn.setAttribute('aria-pressed', String(reversed));
@@ -342,7 +342,7 @@ function setReversed(rev) {
 }
 $('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
-// ⋮ menu: open/close, "Show categories" and "Shuffle keyboard" live in game-menu.js
+// ⋮ menu: open/close, "Show categories", and "Shuffle keyboard" live in game-menu.js
 GameMenu.init({
   rebuild: buildKB,
   reorder: on => { kbOrder = on ? shuffle(keys) : null; },

@@ -10,7 +10,7 @@
    to one game — its tile size, its extra keyboards — stays in
    a small <style> block in that page.
    The behavior that goes with it: game-menu.js (the ⋮ menu) and
-   game-core.js (the round, counters and complete screen).
+   game-core.js (the round, counters, and complete screen).
    The Resources pages add reference.css on top of this file.
 
    Contents
@@ -280,7 +280,7 @@
   font-weight: 700;
   color: var(--text);
   line-height: 1;
-  margin-top: 26px;            /* Telugu ink sits high in its line box; this centres it and clears the label */
+  margin-top: 26px;            /* Telugu ink sits high in its line box; this centers it and clears the label */
   user-select: none;
 }
 

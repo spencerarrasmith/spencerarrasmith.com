@@ -95,7 +95,7 @@
     'ɭ': ['Retroflex', 'Lateral approximant', V],
   };
 
-  // The 24 consonants General American tells apart, then (third entry) the common variants of p, t, k and l.
+  // The 24 consonants General American tells apart, then (third entry) the common variants of p, t, k, and l.
   const ENGLISH_CONSONANTS = [
     ['m', '|m|an'], ['n', '|n|ot'], ['ŋ', 'si|ng|'],
     ['p', 's|p|in'], ['pʰ', '|p|in', 'p'], ['b', '|b|in'],
@@ -154,7 +154,7 @@
 
   /* ── Notes ────────────────────────────────────────────── */
   const NOTES = [
-    { id: 'aspiration', title: 'English p, t and k come in two kinds',
+    { id: 'aspiration', title: 'English p, t, and k come in two kinds',
       text: 'At the start of a word (pin, tin, kin) they come with a puff of air: [pʰ] and [kʰ] are the sounds of ఫ and ఖ. After s (spin, stop, skin) the puff is gone, and p and k are the sounds of ప and క. English hears each pair as one sound; Telugu writes them with different letters.' },
     { id: 'variants', title: 'Slashes and square brackets',
       text: 'Slashes mark a sound English tells apart from its others, like /t/. Square brackets mark a variant English speakers make without hearing a difference: the tt of butter is a single quick tap [ɾ], the tt of button (and the middle of uh-oh) a catch in the throat [ʔ], and the ll of full a dark l [ɫ], with the back of the tongue raised. Telugu ల is the light l of let. ర is described as a trill by some sources and as a single tap by others, so the tt of butter may be the nearest English sound to it.' },
@@ -169,7 +169,7 @@
     { id: 'h', title: 'హ and h share a box',
       text: 'Both are made in the throat. English h is voiceless; Telugu హ is voiced, a breathy version of the same sound.' },
     { id: 'length', title: 'Telugu vowel pairs differ only in length',
-      text: 'ఇ ఈ, ఉ ఊ, ఎ ఏ, ఒ ఓ and అ ఆ are each one tongue position held short or long, so each pair shares a dot. English pairs like sit / feet and put / moon differ in tongue position, so they have separate dots.' },
+      text: 'ఇ ఈ, ఉ ఊ, ఎ ఏ, ఒ ఓ, and అ ఆ are each one tongue position held short or long, so each pair shares a dot. English pairs like sit / feet and put / moon differ in tongue position, so they have separate dots.' },
     { id: 'eo', title: 'English has no steady e or o',
       text: 'ఎ ఏ and ఒ ఓ stay in one place. The nearest English vowels, in say and go, start there and glide away (they are listed with the diphthongs).' },
   ];

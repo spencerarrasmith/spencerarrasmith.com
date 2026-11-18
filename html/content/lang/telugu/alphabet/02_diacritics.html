@@ -9,7 +9,7 @@
     /* ── Diacritics-specific (everything shared lives in game.css) ── */
 
     /* Syllable glyphs are wider than single letters */
-    .tel-char { font-size: 4.6rem; margin-top: 22px; }   /* centres these glyphs like the other games */
+    .tel-char { font-size: 4.6rem; margin-top: 22px; }   /* centers these glyphs like the other games */
 
     .slot { min-width: 120px; }
 
@@ -125,14 +125,14 @@ if (!window.GameCore)   throw new Error('../game-core.js was not found');
    DATA
    A card is one consonant + one vowel sign. To clear it the
    player picks BOTH the consonant phoneme and the vowel sound.
-   Letters, signs and flags come from telugu-data.js:
+   Letters, signs, and flags come from telugu-data.js:
      rare    → "rare" badge
      inBook  → false for the extras (ఱ ౢ ౣ), hidden until
-               "Include extra letters" is ticked
+               "Include extra letters" is checked
 
-   The round itself (deck, counters, re-queueing a missed card,
+   The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the ✓ on the home tile) is game-core.js.
-   This page draws the card, the two keyboards and the slots,
+   This page draws the card, the two keyboards, and the slots,
    and checks the pair of picks.
 ───────────────────────────────────────────────────────── */
 const GAME       = 'diacritics';
@@ -230,7 +230,7 @@ function buildPanel(title, kind, items, key, grouped) {
     return col;
   }
 
-  // Grouped: one labelled block per category. Ungrouped: a single plain block.
+  // Grouped: one labeled block per category. Ungrouped: a single plain block.
   (grouped ? groupBy(items, key) : [[null, items]]).forEach(([label, list]) => {
     const g = document.createElement('div');
     g.className = 'kb-group';
@@ -261,9 +261,9 @@ function buildPanel(title, kind, items, key, grouped) {
 }
 
 // Both panels follow the options menu:
-//   Show categories ticked   → grouped and labelled
-//   Show categories unticked → one plain block per panel, alphabet order
-//   Shuffle keyboard ticked  → that block in a random order (kbOrder), which
+//   Show categories checked   → grouped and labeled
+//   Show categories unchecked → one plain block per panel, alphabet order
+//   Shuffle keyboard checked  → that block in a random order (kbOrder), which
 //                              stays fixed for the round so keys can be found
 // Rebuilding (e.g. when an option changes) never restarts the round.
 function buildKB() {
@@ -403,7 +403,7 @@ const game = GameCore.create({
     : `All ${g.total} syllables correctly matched to their ${N.id === 'iso' ? 'ISO spellings' : 'IPA sounds'}.`,
 });
 
-// The title and the 🔀 button say which way round the game is, in the reader's notation
+// The title and the 🔀 button say which way around the game is, in the reader's notation
 function showDirection() {
   const btn = $('rev-btn');
   btn.setAttribute('aria-pressed', String(reversed));
@@ -419,7 +419,7 @@ function setReversed(rev) {
 }
 $('rev-btn').addEventListener('click', () => setReversed(!reversed));
 
-// ⋮ menu: open/close, "Show categories" and "Shuffle keyboard" live in game-menu.js
+// ⋮ menu: open/close, "Show categories", and "Shuffle keyboard" live in game-menu.js
 GameMenu.init({
   rebuild: buildKB,
   reorder: on => { kbOrder = on ? newOrder() : null; },

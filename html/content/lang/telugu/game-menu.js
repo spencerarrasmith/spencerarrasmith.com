@@ -13,13 +13,13 @@
        rebuild: buildKB,                        // redraw the keyboard(s)
        reorder: on => { kbOrder = on ? … : null } // shuffle just toggled
      });
-     GameMenu.shuffled()   // is "Shuffle keyboard" ticked?
-     GameMenu.grouped()    // is "Show categories" ticked?
+     GameMenu.shuffled()   // is "Shuffle keyboard" checked?
+     GameMenu.grouped()    // is "Show categories" checked?
 
    Rules it enforces
-     · Shuffle ticked   → "Show categories" is forced off and held
+     · Shuffle checked   → "Show categories" is forced off and held
        there (a shuffled keyboard has no groups).
-     · Shuffle unticked → the box is freed but stays unticked.
+     · Shuffle unchecked → the box is freed but stays unchecked.
 ═════════════════════════════════════════════════════════ */
 (function () {
   const $ = id => document.getElementById(id);
@@ -43,7 +43,7 @@
     if (wrap && btn && menu) {
       const setOpen = open => { menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); };
       btn.addEventListener('click', () => setOpen(menu.hidden));
-      // Stays open while ticking boxes; closes on a tap anywhere else, or Escape.
+      // Stays open while checking boxes; closes on a tap anywhere else, or Escape.
       document.addEventListener('pointerdown', e => { if (!menu.hidden && !wrap.contains(e.target)) setOpen(false); });
       document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); }
@@ -60,7 +60,7 @@
       rebuild();
     });
 
-    syncCategories();                 // browsers can restore ticked boxes on reload
+    syncCategories();                 // browsers can restore checked boxes on reload
   }
 
   window.GameMenu = {

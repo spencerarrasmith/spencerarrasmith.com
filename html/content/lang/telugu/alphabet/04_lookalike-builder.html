@@ -8,7 +8,7 @@
 <!-- the two extra Telugu faces offered by the font picker (Noto Sans Telugu comes from base.css) -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Telugu:wght@400;600&family=Tiro+Telugu&display=swap">
 <style>
-/* ── Lookalike Builder-specific (the header, ⋮-menu checkboxes and colors come from game.css / base.css) ── */
+/* ── Lookalike Builder-specific (the header, ⋮-menu checkboxes, and colors come from game.css / base.css) ── */
 
 html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; this page scrolls */
 :root { --telugu: 'Noto Sans Telugu', 'Noto Sans', sans-serif; --hdr: 52px; }
@@ -341,7 +341,7 @@ var FONTS={
 
 /* ---------- pure helpers ---------- */
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-var clean=LD.clean;          /* the same tidying the Lookalikes game applies to an uploaded CSV */
+var clean=LD.clean;          /* the same cleanup the Lookalikes game applies to an uploaded CSV */
 
 /* The sound of a character as the reader has chosen to see it: /kaː/ or kā. Any letter,
    letter with a sign or stack of consonants is read by TeluguData.read, the same reader
@@ -496,7 +496,7 @@ function renderKeyboard(){
 function renderPrompt(){
   var P=current(), g=$('glyph');
   if(!P){
-    g.className='glyph empty'; g.textContent='Tick at least one set under Show me.';
+    g.className='glyph empty'; g.textContent='Check at least one set under Show me.';
     $('pos').textContent=''; $('pill').textContent=''; $('pill').className='pill'; $('promptName').textContent='';
     $('chips').innerHTML=''; $('prev').disabled=$('next').disabled=true; return;
   }
