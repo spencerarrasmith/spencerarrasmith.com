@@ -9,6 +9,7 @@
 <body>
 <div id="lesson"></div>
 
+<script src="settings.js"></script>
 <script src="units.js"></script>
 <script src="telugu-data.js"></script>
 <script src="progress.js"></script>
@@ -19,8 +20,9 @@
 
    1. Save the copy over the unit's placeholder in its section folder
       (e.g. grammar/02_nouns.html) so the home tile opens it, and put ../
-      in front of the five links above (shell.css, units.js, telugu-data.js,
-      progress.js, lesson-shell.js), since the page now sits one folder down.
+      in front of the six links above (shell.css, settings.js, units.js,
+      telugu-data.js, progress.js, lesson-shell.js), since the page now sits
+      one folder down.
    2. Set `id` to the unit's tile id from units.js. Using the template's own
       id below would mark "lesson-template" as done in your progress.
       Then delete `section` and `title`: with a real tile id they come
@@ -31,6 +33,8 @@
    Everything on this page is demo content, written only to show
    each feature: it is not a real lesson.
 ═════════════════════════════════════════════════════════ */
+const N = TeluguData.notation;     // how sounds are written: IPA (/k/) or ISO (ka), chosen on the home page
+
 LessonShell.mount({
   id:      'lesson-template',
   section: 'Template',
@@ -43,11 +47,12 @@ LessonShell.mount({
     { list: ['Bullets for short facts', 'Tables for paradigms', 'Examples for Telugu with English'] },
     { table: {
         head: ['Letter', 'Sound', 'Group'],
-        rows: TeluguData.consonants.slice(0, 4).map(c => [`<span class="te">${c.ch}</span>`, '/' + c.ipa + '/', c.cat]),
+        rows: TeluguData.consonants.slice(0, 4).map(c => [`<span class="te">${c.ch}</span>`, N.wrap(N.letter(c)), c.cat]),
     } },
     { examples: [
-        { te: 'క', en: 'the first consonant', ipa: 'k' },
-        { te: 'కా', en: 'the same consonant with the long vowel sign', ipa: 'kaː' },
+        { te: 'క', en: 'the first consonant' },                                  // a single character: its sound is filled in
+        { te: 'కా', en: 'the same consonant with the long vowel sign' },
+        { te: 'కాకి', en: 'crow', ipa: 'kaːki', iso: 'kāki' },                    // a word: give both spellings
     ] },
   ],
 
@@ -84,7 +89,7 @@ LessonShell.mount({
       $('d-prompt').textContent = deck[0].ch;
       $('d-bar').style.width = (cleared / letters.length * 100) + '%';
       $('d-opts').innerHTML = shuffle(letters).map(l =>
-        `<button class="btn" data-ipa="${l.ipa}">/${l.ipa}/</button>`).join('');
+        `<button class="btn" data-ipa="${l.ipa}">${N.wrap(N.letter(l))}</button>`).join('');
     }
 
     $('d-opts').addEventListener('click', e => {
@@ -92,8 +97,8 @@ LessonShell.mount({
       const cur = deck[0]; attempts++;
       if (b.dataset.ipa === cur.ipa) { deck.shift(); cleared++; $('d-fb').textContent = '✓'; }
       else {
-        $('d-fb').textContent = '✗  /' + cur.ipa + '/';
-        ctx.miss(cur.ch, cur.ch, '/' + cur.ipa + '/', cur.cat);   // → shows up in Review
+        $('d-fb').textContent = '✗  ' + N.wrap(N.letter(cur));
+        ctx.miss({ key: cur.ch, ask: 'telugu', note: cur.cat });   // → shows up in Review, in the reader's notation
         deck.push(deck.shift());
       }
       render();

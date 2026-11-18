@@ -72,6 +72,7 @@
 
 </div>
 
+<script src="../settings.js"></script>
 <script src="../telugu-data.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
@@ -103,7 +104,8 @@ if (!window.GameCore)   throw new Error('../game-core.js was not found');
 const GAME       = 'conjuncts';             // tile id: finishing either direction ticks the tile
 const CONSONANTS = TeluguData.consonants;
 const CLUSTERS   = TeluguData.clusters;
-const { $, shuffle, esc } = GameCore;
+const N          = TeluguData.notation;     // how sounds are written: IPA (/kʂa/) or ISO (kṣa), chosen on the home page
+const { $, shuffle } = GameCore;
 
 const SESSION_SIZE = 40;    // cards per session, sampled from the pool
 const ORDINALS     = ['1st', '2nd', '3rd', '4th'];
@@ -113,9 +115,9 @@ const IPA_SIZE     = ['', '5rem', '5rem', '4.2rem', '3.6rem', '3.1rem', '2.7rem'
 /* ─────────────────────────────────────────────────────────
    STATE
 ───────────────────────────────────────────────────────── */
-let reversed = false;   // false: card shows the conjunct, keys show IPA
+let reversed = false;   // false: card shows the conjunct, keys show sounds
                         // true:  card shows the sound, keys show Telugu letters
-let sel = [];        // picked ipa per slot (null = empty), whichever face the key wears
+let sel = [];        // picked ipa per slot (null = empty): a key's identity, whatever is printed on it
 let slotEls = [];
 let keys    = [];    // the consonants on the keyboard, in alphabet order
 let kbOrder = null;  // null, or a shuffled copy of keys (fixed for the round)
@@ -141,7 +143,7 @@ function btnFor(ipa) {
 /* ─────────────────────────────────────────────────────────
    BUILD KEYBOARD  (consonants only)
 ───────────────────────────────────────────────────────── */
-// IPA keys, or (reversed) the Telugu letter keyboard shared with Phonemes
+// Sound keys (each consonant alone: k), or (reversed) the Telugu letter keyboard shared with Phonemes
 // (telugu-data.js), restricted to the consonants. Both follow the options menu:
 //   Show categories ticked   → grouped and labelled by place of articulation
 //   Show categories unticked → one plain block of keys, alphabet order
@@ -173,7 +175,7 @@ function buildKB() {
     list.forEach(it => {
       const btn = document.createElement('button');
       btn.className    = 'kb-btn';
-      btn.textContent  = it.ipa;
+      btn.textContent  = N.part(it);
       btn.dataset.ipa  = it.ipa;
       btn.addEventListener('click', () => onPick(it.ipa));
       row.appendChild(btn);
@@ -214,21 +216,23 @@ function updateSlots() {
     const has = sel[i] !== null;
     el.classList.toggle('filled', has);
     const val = el.querySelector('.slot-val');
-    val.textContent = !has ? '–' : reversed ? CONSONANTS.find(c => c.ipa === sel[i]).ch : sel[i];
+    const picked = has && CONSONANTS.find(c => c.ipa === sel[i]);
+    val.textContent = !has ? '–' : reversed ? picked.ch : N.part(picked);
     val.classList.toggle('te', reversed && has);
   });
 }
 
-// "usually said /ɡɲa/" for the few clusters spoken differently from their letters
+// "usually said /ɡɲa/" for the few clusters spoken differently from their letters.
+// This is about the sound, so it stays in IPA whichever notation the card uses.
 const spokenNote = c => c.spoken ? `  ·  usually said /${c.spoken}/` : '';
 
 function renderCard(c) {
   const tel = $('tel-char');
   if (reversed) {
-    // the sound as written, /like this/; longer strings (ʂʈra, tʃtʃʰa) step down a size
-    const n = [...c.sound].length;
+    // the conjunct as written, /kʂa/ or kṣa; longer strings (ʂʈra, tʃtʃʰa) step down a size
+    const sound = N.cluster(c), n = [...sound].length;
     tel.className      = 'tel-char ipa-face';
-    tel.innerHTML      = `<span class="sl">/</span>${esc(c.sound)}<span class="sl">/</span>`;
+    tel.innerHTML      = N.html(sound);
     tel.style.fontSize = IPA_SIZE[Math.min(n, IPA_SIZE.length - 1)];
   } else {
     tel.className      = 'tel-char';
@@ -248,7 +252,7 @@ function renderCard(c) {
   // Until the card is answered, the line under it carries the instruction
   const fb = $('feedback');
   fb.textContent = !c.spoken ? HINT
-    : reversed ? `This is the sound as written · spoken Telugu usually says /${c.spoken}/`
+    : reversed ? `This is the ${N.id === 'iso' ? 'spelling' : 'sound'} as written · spoken Telugu usually says /${c.spoken}/`
                : `Pick the letters as written · spoken Telugu usually says /${c.spoken}/`;
   fb.className   = 'feedback hint';
 }
@@ -293,13 +297,13 @@ function evaluate() {
     btnFor(answer[firstMiss]).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  const sound = `/${cur.sound}/` + spokenNote(cur);
+  const sound = N.wrap(N.cluster(cur)) + spokenNote(cur);
   game.judge(allOk, {
     feedback: `${allOk ? '✓' : '✗'}  ${reversed ? cur.glyph + spokenNote(cur) : sound}`,
     te:       reversed,
     miss:     reversed
-      ? { game: GAME + '-reverse', key: cur.glyph, prompt: sound, answer: cur.glyph, note: cur.classes }
-      : { game: GAME,              key: cur.glyph, prompt: cur.glyph, answer: sound, note: cur.classes },
+      ? { game: GAME + '-reverse', key: cur.glyph, ask: 'sound',  syllable: true, note: cur.classes }
+      : { game: GAME,              key: cur.glyph, ask: 'telugu', syllable: true, note: cur.classes },
   });
 }
 
@@ -322,13 +326,18 @@ const game = GameCore.create({
     : `All ${g.total} conjuncts correctly matched to their consonants.`,
 });
 
+// The title and the 🔀 button say which way round the game is, in the reader's notation
+function showDirection() {
+  const btn = $('rev-btn');
+  btn.setAttribute('aria-pressed', String(reversed));
+  btn.setAttribute('aria-label', reversed ? `Reverse direction: Conjuncts to ${N.name}` : `Reverse direction: ${N.name} to Conjuncts`);
+  $('g-title').textContent = reversed ? `${N.name} → Conjuncts` : `Conjuncts → ${N.name}`;
+}
+
 // 🔀 flips direction and starts a fresh round in the new direction
 function setReversed(rev) {
   reversed = rev;
-  const btn = $('rev-btn');
-  btn.setAttribute('aria-pressed', String(rev));
-  btn.setAttribute('aria-label', rev ? 'Reverse direction: Conjuncts to IPA' : 'Reverse direction: IPA to Conjuncts');
-  $('g-title').textContent = rev ? 'IPA → Conjuncts' : 'Conjuncts → IPA';
+  showDirection();
   game.start();
 }
 $('rev-btn').addEventListener('click', () => setReversed(!reversed));
@@ -339,6 +348,7 @@ GameMenu.init({
   reorder: on => { kbOrder = on ? shuffle(keys) : null; },
 });
 $('include-uncommon').addEventListener('change', game.start);
+showDirection();
 game.start();
 </script>
 </body>

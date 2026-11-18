@@ -5,6 +5,8 @@
 
    Read by
      index.html        draws the home page and routes #/<id>
+                       (load settings.js before this file there and in
+                       review.html: Review names follow the notation)
      review.html       names each game in the Review list
      lesson-shell.js   the "Coming soon" pages, and a lesson's
                        section and title when it doesn't give them
@@ -33,6 +35,8 @@
              by the id a page records its misses under. Only needed
              where the tile's own id and title won't do: a second
              direction (phonemes-reverse) or a longer name.
+             {sound} in a name becomes IPA or ISO, whichever the reader
+             chose on the home page (settings.js).
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -74,24 +78,24 @@
       title: "Alphabet",
       tiles: [
         { id: "phonemes", icon: "క", title: "Phonemes",
-          desc: "Match each Telugu letter to its IPA phoneme.",
+          desc: "Match each Telugu letter to its sound.",
           src: "alphabet/01_phonemes.html",
-          review: { "phonemes-reverse": "Phonemes (IPA → Telugu)" } },
+          review: { "phonemes-reverse": "Phonemes ({sound} → Telugu)" } },
         { id: "diacritics", icon: "కా", title: "Diacritics",
           desc: "Pick the consonant and the vowel sound of each syllable.",
           src: "alphabet/02_diacritics.html",
-          review: { "diacritics-reverse": "Diacritics (IPA → Diacritics)" } },
+          review: { "diacritics-reverse": "Diacritics ({sound} → Diacritics)" } },
         { id: "conjuncts", icon: "క్ష", title: "Conjuncts",
           desc: "Pick every consonant in a combined letter.",
           src: "alphabet/03_conjuncts.html",
-          review: { "conjuncts-reverse": "Conjuncts (IPA → Conjuncts)" } },
+          review: { "conjuncts-reverse": "Conjuncts ({sound} → Conjuncts)" } },
         { id: "lookalike-builder", icon: "🛠️", title: "Lookalike Builder",
           desc: "Mark which characters look alike and export a CSV.",
           src: "alphabet/04_lookalike-builder.html" },
         { id: "lookalikes", icon: "ఒబ", title: "Lookalikes",
           desc: "Hear the sound, pick the right lookalike.",
           src: "alphabet/05_lookalikes.html",
-          review: { lookalikes: "Lookalikes (IPA → Telugu)" } },
+          review: { lookalikes: "Lookalikes ({sound} → Telugu)" } },
         { id: "spelling", icon: "🔍", title: "Spelling pitfalls",
           desc: "Common mistakes when writing Telugu words.",
           src: "alphabet/06_spelling.html",
@@ -350,6 +354,9 @@
     labels.set(game, name);
   }));
 
+  // "IPA" or "ISO": how the reader has sounds written (IPA when settings.js isn't loaded)
+  const soundName = () => (root.TeluguSettings ? root.TeluguSettings.label('notation') : 'IPA');
+
   const pretty = id => String(id).replace(/[-_]+/g, ' ').replace(/^./, c => c.toUpperCase());
 
   const api = Object.freeze({
@@ -358,7 +365,7 @@
     sectionOf: id => sectionById.get(id) || null,
     // Name of a game in the Review list: its `review` name, else its tile's
     // title, else the id tidied up (a game that has no tile yet).
-    label:     game => labels.get(game) || (byId.has(game) ? byId.get(game).title : pretty(game)),
+    label:     game => (labels.get(game) || (byId.has(game) ? byId.get(game).title : pretty(game))).replace('{sound}', soundName()),
   });
 
   root.TeluguUnits = api;

@@ -31,17 +31,33 @@
   <main class="shell-body" id="rv-body"></main>
 </div>
 
+<script src="settings.js"></script>
 <script src="units.js"></script>
+<script src="telugu-data.js"></script>
 <script src="progress.js"></script>
 <script>
 const Progress = window.TeluguProgress;
 if (!Progress) throw new Error('progress.js was not found');
 if (!window.TeluguUnits) throw new Error('units.js was not found');
+if (!window.TeluguData)  throw new Error('telugu-data.js was not found');
 
 const body = document.getElementById('rv-body');
 const esc  = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const label = TeluguUnits.label;        // a game's name: from its tile in units.js
+const N = TeluguData.notation;          // IPA or ISO, as chosen on the home page
+
+/* What a miss shows: { prompt, answer }.
+   A miss about a Telugu character stores the character and which way round it
+   was asked (progress.js), so its sound is written here, now, in the reader's
+   current notation. Any other miss stores its two texts and shows them as is. */
+function faces(m) {
+  if (m.ask !== 'telugu' && m.ask !== 'sound') return { prompt: m.prompt ?? m.key, answer: m.answer ?? '' };
+  const r = TeluguData.read(m.key, { syllable: !!m.syllable, any: true });
+  if (!r) return { prompt: m.key, answer: 'This character is no longer in the app.' };
+  const sound = N.wrap(N.of(r)) + (r.spoken ? `  ·  usually said /${r.spoken}/` : '');
+  return m.ask === 'sound' ? { prompt: sound, answer: m.key } : { prompt: m.key, answer: sound };
+}
 
 let view = 'overview';          // overview | card | summary
 let session = null;             // { queue, total, cleared, again, revealed, game }
@@ -96,16 +112,16 @@ function start(game) {
 
 function card() {
   view = 'card';
-  const s = session, m = s.queue[0];
+  const s = session, m = s.queue[0], f = faces(m);
   const done = s.total - s.queue.length;
-  const long = [...m.prompt].length >= 3;
+  const long = [...f.prompt].length >= 3;
   body.innerHTML = `
     <div class="rv-meta"><span>${esc(s.game ? label(s.game) : 'All games')}</span><span>${done} of ${s.total}</span></div>
     <div class="bar"><i style="width:${done / s.total * 100}%"></i></div>
     <div class="fc" style="margin-top:14px">
       ${m.note ? `<div class="cat">${esc(m.note)}</div>` : ''}
-      <div class="prompt${long ? ' long' : ''}" id="rv-prompt">${esc(m.prompt)}</div>
-      <div id="rv-answer" aria-live="polite">${s.revealed ? `<div class="answer">${esc(m.answer)}</div>` : '<div class="answer-note">Say it, then check</div>'}</div>
+      <div class="prompt${long ? ' long' : ''}" id="rv-prompt">${esc(f.prompt)}</div>
+      <div id="rv-answer" aria-live="polite">${s.revealed ? `<div class="answer">${esc(f.answer)}</div>` : '<div class="answer-note">Say it, then check</div>'}</div>
     </div>
     <div class="fc-actions">
       ${s.revealed

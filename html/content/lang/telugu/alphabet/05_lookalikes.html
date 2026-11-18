@@ -111,6 +111,7 @@
 
 </div>
 
+<script src="../settings.js"></script>
 <script src="../telugu-data.js"></script>
 <script src="../lookalikes-data.js"></script>
 <script src="../progress.js"></script>
@@ -139,7 +140,8 @@ if (!window.GameCore)      throw new Error('../game-core.js was not found');
    and looks after your CSV.
 ───────────────────────────────────────────────────────── */
 const GAME     = 'lookalikes';
-const { $, shuffle, esc } = GameCore;
+const N = TeluguData.notation;           // how the sound on the card is written: IPA (/k/) or ISO (ka), chosen on the home page
+const { $, shuffle } = GameCore;
 const BUILTIN  = LookalikeData.groups;
 const STORE    = 'telugu-lookalikes-csv';     // the raw text of the uploaded file
 
@@ -244,7 +246,7 @@ function buildKB() {
   g.className = 'kb-group';
   const l = document.createElement('div');
   l.className   = 'kb-label';
-  l.textContent = 'Which one makes this sound?';
+  l.textContent = N.id === 'iso' ? 'Which one is spelled this way?' : 'Which one makes this sound?';
   g.appendChild(l);
   const row = document.createElement('div');
   row.className = 'kb-row';
@@ -265,9 +267,10 @@ function buildKB() {
    RENDER
 ───────────────────────────────────────────────────────── */
 function renderCard(c) {
-  const tel = $('tel-char'), n = [...c.item.ipa].length;
+  const sound = N.of(c.item), n = [...sound].length;
+  const tel = $('tel-char');
   tel.className      = 'tel-char ipa-face';
-  tel.innerHTML      = `<span class="sl">/</span>${esc(c.item.ipa)}<span class="sl">/</span>`;
+  tel.innerHTML      = N.html(sound);
   tel.style.fontSize = IPA_SIZE[Math.min(n, IPA_SIZE.length - 1)];
 
   $('cat-badge').textContent    = `${c.options.length} lookalikes`;
@@ -286,16 +289,19 @@ function renderCard(c) {
 function onPick(it) {
   if (game.locked) return;
   const cur = game.current;
-  const ok  = it.ipa === cur.item.ipa;
+  // Right = written the way the card is. In IPA క and క్ are both /k/, so either counts;
+  // in ISO they are ka and k, so only the one on the card does.
+  const same = o => N.of(o) === N.of(cur.item);
+  const ok   = same(it);
 
-  cur.options.forEach(o => { if (o.ipa === cur.item.ipa) marks.set(o.text, 'ok'); });
+  cur.options.forEach(o => { if (same(o)) marks.set(o.text, 'ok'); });
   if (!ok) marks.set(it.text, 'err');
   buildKB();
 
   game.judge(ok, {
     feedback: `${ok ? '✓' : '✗'}  ${cur.item.text}`,
     te:       true,
-    miss:     { key: cur.item.text, prompt: `/${cur.item.ipa}/`, answer: cur.item.text,
+    miss:     { key: cur.item.text, ask: 'sound',
                 note: 'Among ' + cur.options.map(o => o.text).join(' ') },
   });
 }

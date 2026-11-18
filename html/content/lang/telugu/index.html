@@ -16,6 +16,7 @@
         <h1 class="hero-title">Telugu Suite</h1>
         <p class="hero-sub">Learn Telugu script and sounds, step by step.</p>
       </div>
+      <div class="prefs" id="prefs"></div>
     </header>
     <div class="featured" id="featured"></div>
     <div id="sections"></div>
@@ -30,6 +31,7 @@
   <iframe id="app-frame" title="Sub-app"></iframe>
 </div>
 
+<script src="settings.js"></script>
 <script src="units.js"></script>
 <script src="progress.js"></script>
 <script>
@@ -49,6 +51,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g,
 
 // Progress is optional: without progress.js the home page simply shows no ✓ or counts.
 const Progress = window.TeluguProgress || { doneIds: () => [], missCount: () => 0, onChange() {} };
+const Settings = window.TeluguSettings || null;
 
 function tileHTML(t, done) {
   const mark = t.soon ? '<span class="tile-badge">Soon</span>'
@@ -91,6 +94,33 @@ function renderHome() {
     </section>`).join('');
 }
 renderHome();
+
+/* ─────────────────────────────────────────────────────────
+   SETTINGS  (settings.js)
+   How sounds are written, everywhere in the app: IPA or ISO.
+   This is the only place it is chosen. Every page reads it as
+   it loads, and a page is loaded afresh each time it is opened
+   from here, so the next page opened shows the new choice.
+───────────────────────────────────────────────────────── */
+function renderPrefs() {
+  const box = document.getElementById('prefs');
+  if (!Settings) { box.hidden = true; return; }
+  const now  = Settings.get('notation');
+  const opts = Settings.options('notation');
+  box.innerHTML = `
+    <div class="pref" role="radiogroup" aria-label="How sounds are written">
+      <span class="pref-label">Sounds as</span>
+      <span class="seg">${opts.map(o => `<button type="button" class="seg-opt${o.value === now ? ' on' : ''}" role="radio"
+        aria-checked="${o.value === now}" data-value="${esc(o.value)}" title="${esc(o.hint)}">${esc(o.label)}</button>`).join('')}</span>
+      <span class="pref-eg" id="pref-eg"><span class="te">క</span> is written <b>${esc(opts.find(o => o.value === now).example)}</b></span>
+    </div>`;
+}
+document.getElementById('prefs').addEventListener('click', e => {
+  const b = e.target.closest('.seg-opt');
+  if (b && Settings.set('notation', b.dataset.value)) renderPrefs();
+});
+if (Settings) Settings.onChange(renderPrefs);        // another tab changed it
+renderPrefs();
 
 /* ─────────────────────────────────────────────────────────
    ROUTING  (#/<tile-id>  → app,  anything else → home)

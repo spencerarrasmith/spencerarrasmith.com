@@ -14,9 +14,11 @@
                      clean(cell) and rows(text) are the reading steps on
                      their own; the builder's import uses them too.
 
-   WHAT AN ITEM IS   { text, ipa, rare, core }
-     ipa   the sound the game shows. A letter keeps its Phonemes sound
-           (క → k); a letter with a sign adds the sign (కా → kaː).
+   WHAT AN ITEM IS   { text, ipa, iso, rare, core }
+     ipa   its sound. A letter keeps its Phonemes sound (క → k); a
+           letter with a sign adds the sign (కా → kaː).
+     iso   its ISO 15919 spelling (క → ka, కా → kā). The game shows
+           whichever of the two the reader chose on the home page.
      rare  from telugu-data.js: the letter, sign or cluster is flagged
            rare there (ఙ ఞ ఋ ౠ …), so the badge never needs hand-flagging.
      core  false for extras (ఱ ఌ ౡ ౢ ౣ) and uncommon clusters: the game
@@ -43,8 +45,6 @@
   ];
 
   const letterBy  = new Map(TD.letters.map(l => [l.ch, l]));
-  const clusterBy = new Map(TD.clusters.map(c => [c.glyph, c]));
-  const signBy    = new Map(TD.signs.filter(s => s.sign !== '').map(s => [s.sign, s]));
   const isMark    = ch => /[ఀ-ఄా-్ౕౖౢౣ]/.test(ch);
   const isLetter  = ch => { const l = letterBy.get(ch); return !!l && l.kind === 'consonant'; };
 
@@ -61,29 +61,13 @@
     return out;
   }
 
-  // One character → { text, ipa, rare, core }, or null if we can't give it a sound
-  // (digits, stray marks, two vowel signs on one letter …).
+  // One character → { text, ipa, iso, rare, core }, or null if we can't give it a
+  // sound (digits, stray marks, two vowel signs on one letter, a stack that isn't in
+  // the cluster list …). The reading itself is TeluguData.read, shared with Review
+  // and the Lookalike Builder; `ipa` and `iso` are the sound in each notation.
   function item(text) {
-    const chars = [...text];
-    for (let k = chars.length; k >= 1; k--) {                 // longest known letter / cluster first
-      const base = chars.slice(0, k).join('');
-      const letter = letterBy.get(base), cluster = letter ? null : clusterBy.get(base);
-      if (!letter && !cluster) continue;
-      const rest = chars.slice(k);
-      if (rest.length > 1) return null;
-      const sign = rest.length ? signBy.get(rest[0]) : null;
-      if (rest.length && !sign) return null;
-      if (sign && letter && letter.kind === 'vowel') return null;     // a vowel can't take a sign
-      const bare = letter ? letter.ipa : cluster.sound;               // క → k   ·   క్ష letter → kʂ   ·   cluster → kʂa
-      const stem = (!letter && sign) ? bare.replace(/a$/, '') : bare;
-      return {
-        text,
-        ipa:  stem + (sign ? sign.sound : ''),
-        rare: !!(letter || cluster).rare || !!(sign && sign.rare),
-        core: !!(letter || cluster).core && (!sign || sign.core),
-      };
-    }
-    return null;
+    const r = TD.read(text);
+    return r ? { text: r.text, ipa: r.ipa, iso: r.iso, rare: r.rare, core: r.core } : null;
   }
 
   // Unique items, in the order given. `skipped` collects what couldn't be read.

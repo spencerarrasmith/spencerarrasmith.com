@@ -59,6 +59,7 @@
 
 </div>
 
+<script src="../settings.js"></script>
 <script src="../telugu-data.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
@@ -81,12 +82,13 @@ if (!window.GameCore)   throw new Error('../game-core.js was not found');
 ───────────────────────────────────────────────────────── */
 const GAME  = 'phonemes';                // tile id: finishing either direction ticks the tile
 const CHARS = TeluguData.letters;
-const { $, shuffle, esc } = GameCore;
+const N     = TeluguData.notation;       // how sounds are written: IPA (/k/) or ISO (ka), chosen on the home page
+const { $, shuffle } = GameCore;
 
 /* ─────────────────────────────────────────────────────────
    STATE
-   reversed = false → card shows the Telugu letter, keys show IPA
-   reversed = true  → card shows the IPA phoneme, keys show Telugu
+   reversed = false → card shows the Telugu letter, keys show its sound
+   reversed = true  → card shows the sound, keys show Telugu
    The keyboard itself (layout, order, groups) is built by
    TeluguData.buildKeyboard, so it lives with the alphabet data.
 ───────────────────────────────────────────────────────── */
@@ -102,7 +104,7 @@ function btnForLetter(letter) {
 /* ─────────────────────────────────────────────────────────
    BUILD KEYBOARD  (layout comes from telugu-data.js)
 ───────────────────────────────────────────────────────── */
-// Both keyboards (IPA and Telugu) follow the options menu:
+// Both keyboards (sound and Telugu) follow the options menu:
 //   Show categories ticked   → grouped and labelled by place of articulation
 //   Show categories unticked → one plain block of keys, alphabet order
 //   Shuffle keyboard ticked  → that block in a random order (kbOrder), which
@@ -112,7 +114,7 @@ let activeLetters = new Set();
 let kbOrder = null;                      // null = alphabet order
 function buildKB() {
   TeluguData.buildKeyboard($('kb-area'), {
-    face:    reversed ? 'telugu' : 'ipa',
+    face:    reversed ? 'telugu' : 'sound',
     visible: activeLetters,
     grouped: GameMenu.grouped(),
     order:   kbOrder,
@@ -126,10 +128,10 @@ function buildKB() {
 function renderCard(c) {
   const tel = $('tel-char');
   if (reversed) {
-    // the phoneme, written /like this/; longer strings (tʃʰ, dʒʱ) step down a size
-    const n = [...c.ipa].length;
+    // the sound, /k/ or ka; longer strings (tʃʰ, dʒʱ, kha) step down a size
+    const sound = N.letter(c), n = [...sound].length;
     tel.className      = 'tel-char ipa-face';
-    tel.innerHTML      = `<span class="sl">/</span>${esc(c.ipa)}<span class="sl">/</span>`;
+    tel.innerHTML      = N.html(sound);
     tel.style.fontSize = n >= 4 ? '3.4rem' : n === 3 ? '4.2rem' : '';
   } else {
     tel.className      = 'tel-char';
@@ -160,11 +162,11 @@ function onAnswer(letter, btn) {
   }
 
   game.judge(ok, {
-    feedback: ok ? '✓  Correct!' : reversed ? `✗  ${cur.ch}` : `✗  /${cur.ipa}/`,
+    feedback: ok ? '✓  Correct!' : reversed ? `✗  ${cur.ch}` : `✗  ${N.wrap(N.letter(cur))}`,
     te:       !ok && reversed,
     miss:     reversed
-      ? { game: GAME + '-reverse', key: cur.ch, prompt: `/${cur.ipa}/`, answer: cur.ch, note: cur.cat }
-      : { game: GAME,              key: cur.ch, prompt: cur.ch, answer: `/${cur.ipa}/`, note: cur.cat },
+      ? { game: GAME + '-reverse', key: cur.ch, ask: 'sound',  note: cur.cat }
+      : { game: GAME,              key: cur.ch, ask: 'telugu', note: cur.cat },
     after() {
       btn.classList.remove('ok', 'err');
       if (correctBtn) correctBtn.classList.remove('ok');
@@ -187,17 +189,23 @@ const game = GameCore.create({
   },
   render:   renderCard,
   doneText: g => reversed
-    ? `All ${g.total} IPA phonemes correctly matched to their Telugu akshara.`
-    : `All ${g.total} Telugu akshara correctly matched to their IPA phonemes.`,
+    ? `All ${g.total} ${SOUNDS} correctly matched to their Telugu akshara.`
+    : `All ${g.total} Telugu akshara correctly matched to their ${SOUNDS}.`,
 });
+const SOUNDS = N.id === 'iso' ? 'ISO spellings' : 'IPA phonemes';
+
+// The title and the 🔀 button say which way round the game is, in the reader's notation
+function showDirection() {
+  const btn = $('rev-btn');
+  btn.setAttribute('aria-pressed', String(reversed));
+  btn.setAttribute('aria-label', reversed ? `Reverse direction: Telugu to ${N.name}` : `Reverse direction: ${N.name} to Telugu`);
+  $('g-title').textContent = reversed ? `${N.name} → Telugu` : `Telugu → ${N.name}`;
+}
 
 // 🔀 flips direction and starts a fresh round in the new direction
 function setReversed(rev) {
   reversed = rev;
-  const btn = $('rev-btn');
-  btn.setAttribute('aria-pressed', String(rev));
-  btn.setAttribute('aria-label', rev ? 'Reverse direction: Telugu to IPA' : 'Reverse direction: IPA to Telugu');
-  $('g-title').textContent = rev ? 'IPA → Telugu' : 'Telugu → IPA';
+  showDirection();
   game.start();
 }
 
@@ -212,6 +220,7 @@ GameMenu.init({
 
 $('include-extra').addEventListener('change', game.start);
 
+showDirection();
 game.start();
 </script>
 </body>

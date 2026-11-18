@@ -16,7 +16,9 @@
      complete(unitId, {accuracy, attempts})  mark a unit done
      isComplete(unitId)  → boolean
      doneIds()           → [unitId, …]
-     miss({game, key, prompt, answer, note}) record a wrong answer
+     miss({game, key, ask, syllable, note})  record a wrong answer
+                         about a Telugu character (see A MISS)
+     miss({game, key, prompt, answer, note}) …or about anything else
      review(game, key, gotIt)  Review result; two "got it" in a
                                row clears the item. → {cleared}
      misses()            → items, most-missed first
@@ -26,6 +28,26 @@
      onChange(fn)        fn() runs when anything changes (also
                          when another tab / frame changed it)
      persistent          → false if storage is unavailable
+
+   A MISS  is stored as WHAT was asked, not as the text that was
+   on screen, so Review can show it in whichever notation (IPA or
+   ISO) the reader has chosen since:
+     key       the Telugu character: క, కా, క్ష …
+     ask       'telugu'  the card showed the character, the answer
+                         is its sound
+               'sound'   the card showed the sound, the answer is
+                         the character
+     syllable  true when the character was shown as a syllable, with
+               its own a (Diacritics: క is /ka/; Conjuncts: క్ష is
+               /kʂa/), not as the letter (/k/, /kʂ/)
+     note      a hint shown with the card (its category)
+   Review turns key into a sound with TeluguData.read().
+   A lesson whose items are not single characters stores the two
+   texts instead: prompt and answer, shown as they are.
+
+   STORED FORMAT  v2. v1 kept every miss as prompt/answer text
+   ("/k/"); those from the four script games are converted the
+   first time they are read. Lesson misses are left as they are.
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -36,13 +58,41 @@
   let memory = null;                // fallback when localStorage is unavailable
   let persistent = true;
 
-  const blank = () => ({ v: 1, done: {}, misses: {} });
+  const VERSION = 2;
+  const blank = () => ({ v: VERSION, done: {}, misses: {} });
+
+  // v1 → v2: what each script game was asking, by the id it filed misses under.
+  // [ask, syllable]
+  const V1_GAMES = {
+    'phonemes':           ['telugu'],
+    'phonemes-reverse':   ['sound'],
+    'diacritics':         ['telugu', true],
+    'diacritics-reverse': ['sound',  true],
+    'conjuncts':          ['telugu', true],
+    'conjuncts-reverse':  ['sound',  true],
+    'lookalikes':         ['sound'],
+  };
+  function upgrade(s) {
+    Object.values(s.misses).forEach(m => {
+      const how = V1_GAMES[m.game];
+      if (!how || m.ask) return;
+      m.ask = how[0];
+      if (how[1]) m.syllable = true;
+      delete m.prompt;
+      delete m.answer;
+    });
+    s.v = VERSION;
+  }
 
   function load() {
     try {
       const raw = root.localStorage.getItem(KEY);
       const s = raw ? JSON.parse(raw) : blank();
       if (!s || typeof s !== 'object' || !s.done || !s.misses) return blank();
+      if (s.v !== VERSION) {
+        upgrade(s);
+        root.localStorage.setItem(KEY, JSON.stringify(s));     // once; nothing visible changed, so no event
+      }
       return s;
     } catch (e) {
       persistent = false;
@@ -87,17 +137,25 @@
     isComplete(unitId) { return !!load().done[unitId]; },
     doneIds()          { return Object.keys(load().done); },
 
-    miss({ game, key, prompt, answer, note = '' }) {
+    miss({ game, key, ask, syllable, prompt, answer, note = '' }) {
       if (!game || key === undefined || key === '') return;
       update(s => {
         const id   = idOf(game, key);
         const prev = s.misses[id];
-        s.misses[id] = {
-          game, key: String(key), prompt: String(prompt), answer: String(answer), note,
+        const m = {
+          game, key: String(key), note,
           count:  (prev ? prev.count : 0) + 1,
           streak: 0,
           last:   Date.now(),
         };
+        if (ask === 'telugu' || ask === 'sound') {             // a Telugu character: Review works out the sound
+          m.ask = ask;
+          if (syllable) m.syllable = true;
+        } else {                                               // anything else: the two texts, as given
+          m.prompt = String(prompt);
+          m.answer = String(answer);
+        }
+        s.misses[id] = m;
       });
     },
 

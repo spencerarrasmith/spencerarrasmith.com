@@ -88,6 +88,7 @@ section.group h2 span { color: var(--text-muted); font-weight: 500; letter-spaci
 
 </div>
 
+<script src="../settings.js"></script>
 <script src="../telugu-data.js"></script>
 <script src="rosetta-data.js"></script>
 <script>
@@ -96,9 +97,11 @@ if (!window.RosettaData) throw new Error('rosetta-data.js was not found next to 
 
 /* ─────────────────────────────────────────────────────────
    DATA
-   The characters, their IPA, categories and rare/extra flags
-   come from telugu-data.js; ISO 15919, the example words and the
-   English matches come from rosetta-data.js. Edit them there.
+   The characters, their IPA and ISO 15919 spellings, categories
+   and rare/extra flags come from telugu-data.js; the example words
+   and the English matches come from rosetta-data.js. Edit them there.
+   This page always shows both spellings, whatever the reader chose
+   on the home page.
 ───────────────────────────────────────────────────────── */
 const TD = TeluguData, RD = RosettaData;
 const SIGN_BASE = 'క';          // signs are shown on క, the way textbooks print them (కా కి కీ …)
@@ -116,7 +119,7 @@ function buildEntries() {
     out.push({
       kind: 'letter', section: l.cat === 'Vowel' ? 'vowels' : 'consonants',
       heading: l.cat === 'Vowel' ? 'Vowels' : l.cat, key: l.ch,
-      glyph: l.ch, caption: '', ipa: l.ipa, iso: r.iso, place: l.cat,
+      glyph: l.ch, caption: '', ipa: l.ipa, iso: l.iso, place: l.cat,
       rare: l.rare, extra: !l.inBook, word: r.word, eng: r.eng, note: r.note || '',
     });
   });
@@ -126,7 +129,7 @@ function buildEntries() {
       kind: 'sign', section: 'signs', heading: s.grp, key: s.sign || '(none)',
       glyph: SIGN_BASE + s.sign,
       caption: s.sign === '' ? 'no sign' : s.sign === '్' ? 'virama' : 'sign',
-      ipa: s.sound === '' ? '∅' : s.sound, iso: r.iso || '—', place: s.grp,
+      ipa: s.sound === '' ? '∅' : s.sound, iso: s.iso || '—', place: s.grp,
       rare: s.rare, extra: !s.inBook, word: r.word, eng: r.eng, note: r.note || '',
     });
   });

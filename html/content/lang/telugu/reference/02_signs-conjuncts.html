@@ -101,6 +101,7 @@ ol.notes { list-style: none; display: grid; gap: 10px; counter-reset: n; }
 
 </div>
 
+<script src="../settings.js"></script>
 <script src="../telugu-data.js"></script>
 <script src="signs-conjuncts-data.js"></script>
 <script>
@@ -109,11 +110,12 @@ if (!window.SignsConjunctsData)  throw new Error('signs-conjuncts-data.js was no
 
 /* ─────────────────────────────────────────────────────────
    DATA
-   Letters, signs and their IPA come from telugu-data.js. The column
+   Letters, signs and their sounds come from telugu-data.js, written in
+   the reader's notation (IPA or ISO, chosen on the home page). The column
    order, the conjunct families and the notes come from
    signs-conjuncts-data.js. Edit the notes there.
 ───────────────────────────────────────────────────────── */
-const TD = TeluguData, SD = SignsConjunctsData;
+const TD = TeluguData, SD = SignsConjunctsData, N = TD.notation;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -130,13 +132,13 @@ function chartHTML() {
   const signs = SD.SIGN_ORDER.map(s => SIGN[s]);
   const head = `<thead><tr><th class="row" scope="col"></th>` +
     `<th scope="col"><span class="mark te">క</span><small>no sign</small></th>` +
-    signs.map(g => `<th scope="col" class="s${isRare(g) ? ' rare' : ''}" data-rare="${isRare(g) ? 1 : 0}"><span class="mark">${esc(g.sign)}</span><small>/${esc(g.sound)}/</small></th>`).join('') + `</tr></thead>`;
+    signs.map(g => `<th scope="col" class="s${isRare(g) ? ' rare' : ''}" data-rare="${isRare(g) ? 1 : 0}"><span class="mark">${esc(g.sign)}</span><small>${esc(N.wrap(N.sign(g)))}</small></th>`).join('') + `</tr></thead>`;
   const body = ROWS.map((l, i) => {
     const cells = signs.map(g => {
       const c = l.ch + g.sign, n = noteNo[c];
       return `<td class="c${n ? ' n' : ''}${isRare(g) ? ' s' : ''}" data-rare="${isRare(g) ? 1 : 0}"${n ? ` title="Note ${n.join(', ')}"` : ''}>${esc(c)}${n ? `<sup>${n.join(',')}</sup>` : ''}</td>`;
     }).join('');
-    return `<tr class="${isRare(l) ? 'rare ' : ''}${l.cat === 'Conjunct' ? 'divide' : ''}" data-rare="${isRare(l) ? 1 : 0}"><th class="row" scope="row">${esc(l.ch)}<small>/${esc(l.ipa)}/</small></th><td class="c">${esc(l.ch)}</td>${cells}</tr>`;
+    return `<tr class="${isRare(l) ? 'rare ' : ''}${l.cat === 'Conjunct' ? 'divide' : ''}" data-rare="${isRare(l) ? 1 : 0}"><th class="row" scope="row">${esc(l.ch)}<small>${esc(N.wrap(N.letter(l)))}</small></th><td class="c">${esc(l.ch)}</td>${cells}</tr>`;
   }).join('');
   return head + '<tbody>' + body + '</tbody>';
 }
@@ -164,7 +166,7 @@ function conjCardsHTML() {
     return `<div class="cj${isRare(l) ? ' rare' : ''}" data-rare="${isRare(l) ? 1 : 0}" data-ch="${esc(l.ch)}">
       <span class="full">${esc(l.ch)}</span><span class="arrow" aria-hidden="true">→</span>
       <span class="ex">${esc(ex)}${alt ? `<small>then</small> ${esc(alt)}` : ''}${sup.length ? `<sup>${sup.join(',')}</sup>` : ''}</span>
-      <div class="meta"><span class="tag ipa">/${esc(l.ipa)}/</span><span class="tag">${below ? 'below' : 'beside'}</span>${isRare(l) ? '<span class="tag flag">rare</span>' : ''}</div>
+      <div class="meta"><span class="tag ipa">${esc(N.wrap(N.letter(l)))}</span><span class="tag">${below ? 'below' : 'beside'}</span>${isRare(l) ? '<span class="tag flag">rare</span>' : ''}</div>
     </div>`;
   }).join('');
 }

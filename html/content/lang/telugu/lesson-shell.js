@@ -27,11 +27,20 @@
      { list: ['item', …] }
      { note: 'Highlighted aside' }
      { table: { head: [...], rows: [[...], …] } }
-     { examples: [{ te: 'Telugu', en: 'English', ipa: 'optional' }] }
+     { examples: [{ te: 'Telugu', en: 'English', ipa: 'optional', iso: 'optional' }] }
+         The sound is shown in the reader's notation (IPA or ISO, chosen on
+         the home page). Give `ipa` and `iso` for a word or phrase; for a
+         single character (క, కా, క్ష) leave both out and it is worked out
+         from telugu-data.js, when that file is loaded.
      { html: '<raw html>' }
 
    PRACTICE gets the panel element and ctx:
      ctx.miss(key, prompt, answer, note?)   send a wrong answer to Review
+     ctx.miss({ key, ask, note })           the same for a Telugu character:
+                                            key is the character, ask is 'telugu'
+                                            (it was shown) or 'sound' (its sound
+                                            was shown). Review then writes the
+                                            sound in the reader's notation.
      ctx.complete({accuracy, attempts})     mark the unit done (✓)
      ctx.isComplete()
      ctx.id
@@ -65,12 +74,25 @@
         <div class="example">
           <span class="te-big">${e.te ?? ''}</span>
           <span class="en">${e.en ?? ''}</span>
-          ${e.ipa ? `<span class="ipa">/${e.ipa}/</span>` : ''}
+          ${soundOf(e) ? `<span class="ipa">${soundOf(e)}</span>` : ''}
         </div>`).join('')}</div>`;
     }
     throw new Error('lesson-shell: unknown block ' + JSON.stringify(b).slice(0, 60));
   }
   const blocks = list => `<div class="blocks">${(list || []).map(block).join('')}</div>`;
+
+  // An example's sound in the reader's notation: /kaː/ or kā.
+  // What the lesson gives for that notation wins; a single character without it
+  // is read from telugu-data.js; failing both, the IPA is better than nothing.
+  function soundOf(e) {
+    const TD = root.TeluguData;
+    if (!TD) return e.ipa ? '/' + e.ipa + '/' : '';
+    const N = TD.notation;
+    const given = N.id === 'iso' ? e.iso : e.ipa;
+    if (given) return N.wrap(given);
+    const r = e.te ? TD.read(e.te) : null;
+    return r ? N.wrap(N.of(r)) : e.ipa ? '/' + e.ipa + '/' : '';
+  }
 
   // The unit's tile and section in units.js (null when units.js isn't loaded or the id isn't listed).
   const Units = () => root.TeluguUnits || null;
@@ -126,7 +148,9 @@
     const ctx = {
       id: cfg.id,
       miss: (key, prompt, answer, note) =>
-        Progress.miss({ game: cfg.id, key, prompt, answer, note }),
+        Progress.miss(key && typeof key === 'object'
+          ? Object.assign({}, key, { game: cfg.id })
+          : { game: cfg.id, key, prompt, answer, note }),
       complete(info) {
         const was = Progress.isComplete(cfg.id);
         Progress.complete(cfg.id, info || {});

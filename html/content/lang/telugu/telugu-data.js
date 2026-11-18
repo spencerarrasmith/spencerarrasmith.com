@@ -16,11 +16,27 @@
              Pages show items with core:false only when their
              "Include extra letters/clusters" box is ticked.
 
-   KEYBOARD  buildKeyboard() draws the letter keyboard (IPA or Telugu
-   face) in alphabet order, so pages share one layout.
+   TWO WAYS TO WRITE A SOUND
+     ipa   the sound, in IPA: క is k, కా is kaː. Also the KEY a
+           letter or sign is known by inside the games (answers
+           are compared by it), whatever is shown on screen.
+     iso   the ISO 15919 spelling: క is ka, కా is kā.
+   Which one a page SHOWS is the reader's choice on the home page
+   (settings.js). Pages never print .ipa or .iso themselves: they
+   ask TeluguData.notation, e.g. notation.wrap(notation.letter(l))
+   gives "/k/" or "ka". See NOTATION below.
 
-   Row syntax for letters:  [glyph, ipa, flags?]  flags is a
-   string containing 'rare' and/or 'extra'.
+   READING   read(text) gives both spellings of any Telugu character
+   (a letter, a letter with a sign, a conjunct), so anything that
+   stores a character can show its sound later, in either notation.
+
+   KEYBOARD  buildKeyboard() draws the letter keyboard (sound or
+   Telugu face) in alphabet order, so pages share one layout.
+
+   Row syntax for letters:  [glyph, ipa, iso, flags?]
+     iso    for a consonant, the consonant alone (k): the letter's
+            own spelling adds the inherent a (ka)
+     flags  a string containing 'rare' and/or 'extra'.
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -30,6 +46,9 @@
   const SYL    = '\u0329';   // ̩  syllabic
   const NAS    = '\u0303';   // ̃  nasalised
   const VIRAMA = '\u0C4D';   // ్  joins consonants / marks a pure consonant
+  // ISO 15919 combining marks
+  const RING   = '\u0325';   // ̥  ring below (r̥, l̥: the vocalic r and l)
+  const MACRON = '\u0304';   // ̄  long (r̥̄, l̥̄)
 
   const hasFlag = (f, name) => (f || '').split(/\s+/).includes(name);
   const finish  = (o, f) => {
@@ -40,122 +59,133 @@
   };
 
   /* ── Letters ─────────────────────────────────────────── */
+  // iso      the letter as ISO 15919 spells it on its own: a, ā … ka, kha … kṣa
+  // isoStem  a consonant without its inherent a (k), for building syllables
+  //          and clusters; the same as iso for a vowel
   const L = (kind, cat, rows) =>
-    rows.map(([ch, ipa, f]) => finish({ ch, ipa, cat, kind }, f));
+    rows.map(([ch, ipa, stem, f]) =>
+      finish({ ch, ipa, iso: kind === 'vowel' ? stem : stem + 'a', isoStem: stem, cat, kind }, f));
 
   const letters = [
   // Vowels (అచ్చులు)
   ...L('vowel', 'Vowel', [
-    ['అ', 'a'],
-    ['ఆ', 'aː'],
-    ['ఇ', 'i'],
-    ['ఈ', 'iː'],
-    ['ఉ', 'u'],
-    ['ఊ', 'uː'],
-    ['ఋ', 'r' + SYL, 'rare'],
-    ['ౠ', 'r' + SYL + 'ː', 'rare'],
-    ['ఌ', 'l' + SYL, 'rare extra'],
-    ['ౡ', 'l' + SYL + 'ː', 'rare extra'],
-    ['ఎ', 'e'],
-    ['ఏ', 'eː'],
-    ['ఐ', 'ai'],
-    ['ఒ', 'o'],
-    ['ఓ', 'oː'],
-    ['ఔ', 'au'],
-    ['అం', 'a' + NAS],
-    ['అః', 'aʰ'],
+    ['అ', 'a', 'a'],
+    ['ఆ', 'aː', 'ā'],
+    ['ఇ', 'i', 'i'],
+    ['ఈ', 'iː', 'ī'],
+    ['ఉ', 'u', 'u'],
+    ['ఊ', 'uː', 'ū'],
+    ['ఋ', 'r' + SYL, 'r' + RING, 'rare'],
+    ['ౠ', 'r' + SYL + 'ː', 'r' + RING + MACRON, 'rare'],
+    ['ఌ', 'l' + SYL, 'l' + RING, 'rare extra'],
+    ['ౡ', 'l' + SYL + 'ː', 'l' + RING + MACRON, 'rare extra'],
+    ['ఎ', 'e', 'e'],
+    ['ఏ', 'eː', 'ē'],
+    ['ఐ', 'ai', 'ai'],
+    ['ఒ', 'o', 'o'],
+    ['ఓ', 'oː', 'ō'],
+    ['ఔ', 'au', 'au'],
+    ['అం', 'a' + NAS, 'aṁ'],
+    ['అః', 'aʰ', 'aḥ'],
   ]),
   // Velars (కంఠ్య)
   ...L('consonant', 'Velar', [
-    ['క', 'k'],
-    ['ఖ', 'kʰ'],
-    ['గ', 'ɡ'],
-    ['ఘ', 'ɡʱ'],
-    ['ఙ', 'ŋ', 'rare'],
+    ['క', 'k', 'k'],
+    ['ఖ', 'kʰ', 'kh'],
+    ['గ', 'ɡ', 'g'],
+    ['ఘ', 'ɡʱ', 'gh'],
+    ['ఙ', 'ŋ', 'ṅ', 'rare'],
   ]),
   // Palatals (తాలవ్య)
   ...L('consonant', 'Palatal', [
-    ['చ', 'tʃ'],
-    ['ఛ', 'tʃʰ'],
-    ['జ', 'dʒ'],
-    ['ఝ', 'dʒʱ'],
-    ['ఞ', 'ɲ', 'rare'],
+    ['చ', 'tʃ', 'c'],
+    ['ఛ', 'tʃʰ', 'ch'],
+    ['జ', 'dʒ', 'j'],
+    ['ఝ', 'dʒʱ', 'jh'],
+    ['ఞ', 'ɲ', 'ñ', 'rare'],
   ]),
   // Retroflexes (మూర్ధన్య)
   ...L('consonant', 'Retroflex', [
-    ['ట', 'ʈ'],
-    ['ఠ', 'ʈʰ'],
-    ['డ', 'ɖ'],
-    ['ఢ', 'ɖʱ'],
-    ['ణ', 'ɳ'],
-    ['ళ', 'ɭ'],
-    ['ఱ', 'ɽ', 'rare extra'],
+    ['ట', 'ʈ', 'ṭ'],
+    ['ఠ', 'ʈʰ', 'ṭh'],
+    ['డ', 'ɖ', 'ḍ'],
+    ['ఢ', 'ɖʱ', 'ḍh'],
+    ['ణ', 'ɳ', 'ṇ'],
+    ['ళ', 'ɭ', 'ḷ'],
+    ['ఱ', 'ɽ', 'ṟ', 'rare extra'],
   ]),
   // Dentals (దంత్య)
   ...L('consonant', 'Dental', [
-    ['త', 't' + DENT],
-    ['థ', 't' + DENT + 'ʰ'],
-    ['ద', 'd' + DENT],
-    ['ధ', 'd' + DENT + 'ʱ'],
-    ['న', 'n'],
+    ['త', 't' + DENT, 't'],
+    ['థ', 't' + DENT + 'ʰ', 'th'],
+    ['ద', 'd' + DENT, 'd'],
+    ['ధ', 'd' + DENT + 'ʱ', 'dh'],
+    ['న', 'n', 'n'],
   ]),
   // Labials (ఓష్ఠ్య)
   ...L('consonant', 'Labial', [
-    ['ప', 'p'],
-    ['ఫ', 'pʰ'],
-    ['బ', 'b'],
-    ['భ', 'bʱ'],
-    ['మ', 'm'],
+    ['ప', 'p', 'p'],
+    ['ఫ', 'pʰ', 'ph'],
+    ['బ', 'b', 'b'],
+    ['భ', 'bʱ', 'bh'],
+    ['మ', 'm', 'm'],
   ]),
   // Approximants (అంతస్థలు)
   ...L('consonant', 'Approx.', [
-    ['య', 'j'],
-    ['ర', 'r'],
-    ['ల', 'l'],
-    ['వ', 'ʋ'],
+    ['య', 'j', 'y'],
+    ['ర', 'r', 'r'],
+    ['ల', 'l', 'l'],
+    ['వ', 'ʋ', 'v'],
   ]),
   // Fricatives / glottal (ఉష్మలు)
   ...L('consonant', 'Fricative', [
-    ['శ', 'ʃ'],
-    ['ష', 'ʂ'],
-    ['స', 's'],
-    ['హ', 'ɦ'],
+    ['శ', 'ʃ', 'ś'],
+    ['ష', 'ʂ', 'ṣ'],
+    ['స', 's', 's'],
+    ['హ', 'ɦ', 'h'],
   ]),
   // The book's 35th consonant: a conjunct (క + ష) counted as a letter
   ...L('conjunct', 'Conjunct', [
-    ['\u0C15\u0C4D\u0C37', 'kʂ'],
+    ['\u0C15\u0C4D\u0C37', 'kʂ', 'kṣ'],
   ]),
   ];
 
   /* ── Vowel signs (diacritics) ────────────────────────────
-     [sign, ipa key, group, flags?, sound?]
+     [sign, ipa key, iso, group, flags?, sound?]
        sign ''    no diacritic (the inherent "a")
        sign ్     virama: a pure consonant, no vowel (key ∅)
-       sound      what the sign adds to a syllable; defaults to
-                  the ipa key ('' for the pure consonant)        */
+       iso        the sign's own ISO 15919 spelling (ā, ṁ)
+       sound      what the sign adds to a syllable, in IPA; defaults
+                  to the ipa key ('' for the pure consonant)
+     Each sign also gets isoSound, what it adds to a syllable in ISO.
+     That is its iso, except for ం and ః: they are written after the
+     consonant's own a, so కం is k + aṁ.                              */
   const SIGN_ROWS = [
-    ['', 'a', 'Short'],
-    ['\u0C3F', 'i', 'Short'],
-    ['\u0C41', 'u', 'Short'],
-    ['\u0C46', 'e', 'Short'],
-    ['\u0C4A', 'o', 'Short'],
-    ['\u0C3E', 'aː', 'Long'],
-    ['\u0C40', 'iː', 'Long'],
-    ['\u0C42', 'uː', 'Long'],
-    ['\u0C47', 'eː', 'Long'],
-    ['\u0C4B', 'oː', 'Long'],
-    ['\u0C48', 'ai', 'Diphthong'],
-    ['\u0C4C', 'au', 'Diphthong'],
-    ['\u0C43', 'r' + SYL, 'Vocalic', 'rare'],
-    ['\u0C44', 'r' + SYL + 'ː', 'Vocalic', 'rare'],
-    ['\u0C62', 'l' + SYL, 'Vocalic', 'rare extra'],
-    ['\u0C63', 'l' + SYL + 'ː', 'Vocalic', 'rare extra'],
-    ['\u0C02', 'a' + NAS, 'Nasal · aspirate'],
-    ['\u0C03', 'aʰ', 'Nasal · aspirate'],
-    ['\u0C4D', '∅', 'Pure consonant', '', ''],
+    ['', 'a', 'a', 'Short'],
+    ['\u0C3F', 'i', 'i', 'Short'],
+    ['\u0C41', 'u', 'u', 'Short'],
+    ['\u0C46', 'e', 'e', 'Short'],
+    ['\u0C4A', 'o', 'o', 'Short'],
+    ['\u0C3E', 'aː', 'ā', 'Long'],
+    ['\u0C40', 'iː', 'ī', 'Long'],
+    ['\u0C42', 'uː', 'ū', 'Long'],
+    ['\u0C47', 'eː', 'ē', 'Long'],
+    ['\u0C4B', 'oː', 'ō', 'Long'],
+    ['\u0C48', 'ai', 'ai', 'Diphthong'],
+    ['\u0C4C', 'au', 'au', 'Diphthong'],
+    ['\u0C43', 'r' + SYL, 'r' + RING, 'Vocalic', 'rare'],
+    ['\u0C44', 'r' + SYL + 'ː', 'r' + RING + MACRON, 'Vocalic', 'rare'],
+    ['\u0C62', 'l' + SYL, 'l' + RING, 'Vocalic', 'rare extra'],
+    ['\u0C63', 'l' + SYL + 'ː', 'l' + RING + MACRON, 'Vocalic', 'rare extra'],
+    ['\u0C02', 'a' + NAS, 'ṁ', 'Nasal · aspirate'],
+    ['\u0C03', 'aʰ', 'ḥ', 'Nasal · aspirate'],
+    ['\u0C4D', '∅', '', 'Pure consonant', '', ''],
   ];
-  const signs = SIGN_ROWS.map(([sign, ipa, grp, f, sound]) =>
-    finish({ sign, ipa, grp, sound: sound === undefined ? ipa : sound }, f));
+  const AFTER_A = '\u0C02\u0C03';       // ం ః
+  const signs = SIGN_ROWS.map(([sign, ipa, iso, grp, f, sound]) =>
+    finish({ sign, ipa, iso, grp,
+             sound:    sound === undefined ? ipa : sound,
+             isoSound: sign && AFTER_A.includes(sign) ? 'a' + iso : iso }, f));
 
   /* ── Digits ──────────────────────────────────────────────
      ౦ – ౯. No game drills them yet; the Lookalike Builder offers
@@ -225,8 +255,9 @@
       parts, cat, rare, inBook,
       classes: parts.map(classOf).join(' + '),
       glyph:  parts.map(p => p.ch).join(VIRAMA),
-      sound:  parts.map(p => p.ipa).join('') + 'a',   // as written
-      spoken: spoken || null,                          // as usually said, if different
+      sound:  parts.map(p => p.ipa).join('') + 'a',   // as written, in IPA
+      iso:    parts.map(p => p.isoStem).join('') + 'a',   // as written, in ISO 15919
+      spoken: spoken || null,                          // as usually said (IPA), if different
       core:   inBook && !rare,
     };
   }));
@@ -248,12 +279,143 @@
     g.letters.push(l);
   });
 
+  /* ── NOTATION ────────────────────────────────────────────
+     How a sound is written on screen: IPA or ISO 15919. `notation`
+     is the one the reader chose on the home page (settings.js; IPA
+     when nothing is chosen, or when settings.js isn't loaded).
+     notationFor('ipa' | 'iso') gives either one explicitly.
+
+       notation.id     'ipa' | 'iso'
+       notation.name   'IPA' | 'ISO'      for titles: "Telugu → IPA"
+
+     The bare text of a sound (no slashes):
+       letter(l)        a letter on its own               k      ka
+       part(l)          a consonant as one piece of a     k      k
+                        syllable or cluster
+       sign(g)          what a sign adds to a syllable    aː     ā     ('' for ్)
+       syllable(l, g)   consonant + sign                  kaː    kā
+       cluster(c)       a conjunct, as written            kʂa    kṣa
+       of(x)            anything carrying both spellings: a read() result
+                        or a lookalike item
+
+     Ready to show:
+       wrap(text)       IPA goes between slashes, ISO is left plain:
+                        "/kaː/"  ·  "kā"
+       html(text)       the same for a card face, escaped, with the
+                        slashes in their own dimmer spans                 */
+  const escHtml = s => String(s).replace(/[&<>"']/g,
+    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function notationFor(id) {
+    const iso = id === 'iso';
+    return Object.freeze({
+      id:       iso ? 'iso' : 'ipa',
+      name:     iso ? 'ISO' : 'IPA',
+      letter:   l => iso ? l.iso : l.ipa,
+      part:     l => iso ? l.isoStem : l.ipa,
+      sign:     g => iso ? g.isoSound : g.sound,
+      syllable: (l, g) => iso ? l.isoStem + g.isoSound : l.ipa + g.sound,
+      cluster:  c => iso ? c.iso : c.sound,
+      of:       x => iso ? x.iso : x.ipa,
+      wrap:     t => iso ? t : '/' + t + '/',
+      html:     t => iso ? escHtml(t)
+                         : '<span class="sl">/</span>' + escHtml(t) + '<span class="sl">/</span>',
+    });
+  }
+  const chosen   = root.TeluguSettings && root.TeluguSettings.get('notation');
+  const notation = notationFor(chosen === 'iso' ? 'iso' : 'ipa');
+
+  /* ── READING A CHARACTER ─────────────────────────────────
+     read(text, opts?) → { text, ipa, iso, rare, core, listed, spoken }
+                         or null if it can't be given a sound (digits,
+                         stray marks, a vowel with a sign, two signs …).
+
+     text   one Telugu character: a letter (క, అం, క్ష), a letter with a
+            sign (కా, క్), a conjunct (క్య) or a conjunct with a sign.
+     opts.syllable   read a bare consonant as the syllable it is written
+                     as: క → ka. Without it క is the letter, k (as the
+                     Phonemes game shows it). ISO is ka either way.
+     opts.any        also read a stack that isn't in the cluster list
+                     (three consonants, …), built from its consonants.
+
+     listed  false for such an unlisted stack
+     spoken  how a listed cluster is usually said (IPA), when that
+             differs from its letters                                */
+  const letterBy  = new Map(letters.map(l => [l.ch, l]));
+  const clusterBy = new Map(clusters.map(c => [c.glyph, c]));
+  const signBy    = new Map(signs.filter(g => g.sign !== '').map(g => [g.sign, g]));
+
+  function read(text, opts = {}) {
+    const chars = [...String(text)];
+    for (let k = chars.length; k >= 1; k--) {                 // longest known letter / cluster first
+      const base = chars.slice(0, k).join('');
+      const letter = letterBy.get(base), cluster = letter ? null : clusterBy.get(base);
+      if (!letter && !cluster) continue;
+      const rest = chars.slice(k);
+      if (rest.length > 1) break;
+      const sign = rest.length ? signBy.get(rest[0]) : null;
+      if (rest.length && !sign) break;
+      if (sign && letter && letter.kind === 'vowel') return null;     // a vowel can't take a sign
+      const it = letter || cluster;
+      let ipa, iso;
+      if (letter && !sign) {                                          // క → k · ka   (syllable: ka · ka)
+        ipa = letter.ipa + (opts.syllable && letter.kind !== 'vowel' ? 'a' : '');
+        iso = letter.iso;
+      } else if (letter) {                                            // కా → kaː · kā
+        ipa = letter.ipa + sign.sound;
+        iso = letter.isoStem + sign.isoSound;
+      } else if (!sign) {                                             // క్య → kja · kya
+        ipa = cluster.sound;
+        iso = cluster.iso;
+      } else {                                                        // క్యా → kjaː · kyā
+        ipa = cluster.sound.replace(/a$/, '') + sign.sound;
+        iso = cluster.iso.replace(/a$/, '') + sign.isoSound;
+      }
+      return {
+        text: String(text), ipa, iso,
+        rare: !!it.rare || !!(sign && sign.rare),
+        core: !!it.core && (!sign || sign.core),
+        listed: true,
+        spoken: cluster && !sign ? cluster.spoken : null,
+      };
+    }
+    if (!opts.any) return null;
+
+    // An unlisted stack: consonants joined by ్, then at most one sign or a final ్
+    const parts = [];
+    let sign = null, virama = false;
+    for (const ch of chars) {
+      const l = letterBy.get(ch);
+      if (l && l.kind === 'consonant' && !sign && (virama || !parts.length)) { parts.push(l); virama = false; }
+      else if (ch === VIRAMA && parts.length && !sign && !virama) virama = true;
+      else if (signBy.has(ch) && parts.length && !sign && !virama) sign = signBy.get(ch);
+      else return null;
+    }
+    if (!parts.length) return null;
+    return {
+      text: String(text),
+      ipa:  parts.map(p => p.ipa).join('')     + (sign ? sign.sound    : virama ? '' : 'a'),
+      iso:  parts.map(p => p.isoStem).join('') + (sign ? sign.isoSound : virama ? '' : 'a'),
+      rare: parts.some(p => p.rare) || !!(sign && sign.rare),
+      core: parts.every(p => p.core) && (!sign || sign.core),
+      listed: false,
+      spoken: null,
+    };
+  }
+
   /* ── Letter keyboard ─────────────────────────────────────
      One keyboard, two faces, built from letterGroups so every
      page lays the alphabet out the same way:
 
        buildKeyboard(container, {
-         face:    'ipa' | 'telugu',     what is printed on the keys
+         face:    'sound' | 'telugu',   what is printed on the keys.
+                                        'sound' is the letter in the
+                                        reader's notation (k · ka);
+                                        'ipa' still works and means
+                                        the same
+         text:    fn(letter)            optional: print this instead
+                                        (e.g. notation.part for keys
+                                        that are pieces of a syllable)
          visible: Set | fn(letter)      letters to show (default: all);
                                         the rest are rendered hidden
          grouped: true | false          true (default): one labelled group
@@ -280,7 +442,8 @@
               Styling is left to the page.
      Returns  the buttons, in alphabet order.                      */
   function buildKeyboard(container, opts = {}) {
-    const { face = 'ipa', visible, onPick, grouped = true, order, skipHidden = false } = opts;
+    const { face = 'sound', text, visible, onPick, grouped = true, order, skipHidden = false } = opts;
+    const label = text || (face === 'telugu' ? l => l.ch : notation.letter);
     const doc    = container.ownerDocument;
     const isShown = visible instanceof Set ? l => visible.has(l)
                   : typeof visible === 'function' ? visible
@@ -305,7 +468,7 @@
         const btn = doc.createElement('button');
         btn.type        = 'button';
         btn.className   = 'kb-btn' + (face === 'telugu' ? ' te' : '');
-        btn.textContent = face === 'telugu' ? l.ch : l.ipa;
+        btn.textContent = label(l);
         btn.dataset.ipa = l.ipa;
         btn.dataset.ch  = l.ch;
         if (!isShown(l)) btn.style.display = 'none';
@@ -330,12 +493,21 @@
     dup(letters, l => l.ipa, 'letter ipa');
     dup(signs,   s => s.ipa, 'sign ipa');
     dup(clusters, c => c.glyph, 'cluster');
+    // ISO has to tell everything apart too, or a sound shown in ISO would have two answers
+    dup(letters, l => l.iso, 'letter iso');
+    dup(signs,   g => g.isoSound, 'sign iso');
+    dup(clusters, c => c.sound, 'cluster sound');
+    dup(clusters, c => c.iso,   'cluster iso');
+    // (క్ష is both a cluster and a letter: the same character, so the same spelling is right)
+    const single = new Map(letters.map(l => [l.iso, l.ch]));
+    clusters.forEach(c => { if (single.has(c.iso) && single.get(c.iso) !== c.glyph) throw new Error('telugu-data: cluster ' + c.glyph + ' is spelled like the letter ' + single.get(c.iso) + ' in ISO: ' + c.iso); });
   })();
 
   const data = Object.freeze({
-    VIRAMA, DENT, SYL, NAS,
+    VIRAMA, DENT, SYL, NAS, RING, MACRON,
     letters, vowels, consonants, conjunctLetters,
     signs, digits, clusterSets: CLUSTER_SETS, clusters,
+    notation, notationFor, read,
     letterGroups, pool, buildKeyboard,
   });
 
