@@ -10,50 +10,60 @@
 <style>
 /* ── Lookalike Builder-specific (the header, ⋮-menu checkboxes, and colors come from game.css / base.css) ── */
 
-html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; this page scrolls */
-:root { --telugu: 'Noto Sans Telugu', 'Noto Sans', sans-serif; --hdr: 52px; }
+/* base.css fixes the height for the games; this page scrolls. The window does the scrolling, not
+   <body>: the header and the bar below it can only stay in view against the thing that scrolls. */
+html { height: auto; overflow: auto; }
+body { height: auto; overflow: visible; }
+:root { --telugu: 'Noto Sans Telugu', 'Noto Sans', sans-serif; --hdr: 47px; }
 body { min-height: 100vh; min-height: 100dvh; }
 .te { font-family: var(--telugu); }
 
-.g-header { position: sticky; top: 0; }               /* progress stays in view while you work */
-.wrap { max-width: 1180px; margin: 0 auto; padding: 16px 24px calc(48px + var(--safe-bottom)); display: grid; gap: 14px; }
+.g-header { position: sticky; top: 0; z-index: 6; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 14px 24px calc(48px + var(--safe-bottom)); display: grid; gap: 12px; }
 @media (max-width: 520px) { .wrap { padding-left: 14px; padding-right: 14px; } }
 
 h2 { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; }
 h3 { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
-.hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.5; max-width: 65ch; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.5; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
 
-/* run settings */
-.settings { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center; padding: 6px 12px; }
-.settings h3 { margin-right: 6px; }
-.settings .sep { width: 1px; align-self: stretch; margin: 6px 6px; background: var(--border); }
+/* intro line with the two options beside it */
+.top { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.top .hint { flex: 1 1 280px; }
 select, input[type=text] {
   font: inherit; font-size: 13.5px; color: var(--text-dim);
-  background: var(--surface-up); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
 }
 select:hover, input[type=text]:hover { border-color: var(--accent); }
-.settings label[for=font] { display: inline-flex; gap: 8px; align-items: center; font-size: 13.5px; color: var(--text-dim); }
 
-/* the character being judged, in the app's amber-halo tile */
-.work { display: grid; grid-template-columns: minmax(270px, 340px) minmax(0, 1fr); gap: 14px; align-items: start; }
-.prompt { position: sticky; top: calc(var(--hdr) + 14px); display: grid; gap: 12px; }
-.prompt-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.pill { border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); background: var(--surface-up); }
-.pill.done { border-color: var(--accent); color: var(--accent-light); }
-.glyph {
-  font-family: var(--telugu); font-weight: 700; font-size: clamp(88px, 13vw, 132px); line-height: 1.55; text-align: center; color: var(--text);
-  background: radial-gradient(ellipse at 50% 45%, #1e1830 0%, #111221 70%);
-  border: 1.5px solid var(--border); border-radius: 20px; min-height: 1.55em; overflow-wrap: anywhere;
-  box-shadow: 0 8px 32px rgba(0,0,0,.55), inset 0 0 48px rgba(201, 152, 26, 0.05);
+/* the bar that stays in view: what the keyboard does, the character, and what it looks like */
+.pick {
+  position: sticky; top: var(--hdr); z-index: 5;
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px 18px; align-items: center;
+  padding: 10px 14px; box-shadow: 0 8px 18px rgba(0,0,0,.45);
 }
-.glyph.empty { font-family: 'Inter', system-ui, sans-serif; font-weight: 400; font-size: 14px; color: var(--text-muted); padding: 40px 16px; line-height: 1.4; min-height: 0; }
-.prompt-name { text-align: center; font-size: 13px; color: var(--text-muted); }
-.prompt-name b { font-family: 'Noto Sans', 'Inter', sans-serif; color: var(--text); font-weight: 500; font-size: 17px; }
-.tray { display: grid; gap: 8px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 42px; align-items: center; }
+.mode { display: inline-flex; gap: 2px; padding: 3px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+.mode-opt {
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--text-dim); cursor: pointer; white-space: nowrap;
+  background: none; border: 1px solid transparent; border-radius: 7px; padding: 7px 12px;
+}
+.mode-opt:hover:not(:disabled) { color: var(--text); }
+.mode-opt[aria-checked="true"] { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-light); }
+.mode-opt:disabled { opacity: .4; cursor: default; }
+.subject { display: flex; align-items: center; gap: 12px; }
+.glyph {
+  font-family: var(--telugu); font-weight: 700; font-size: 46px; line-height: 1.55; min-width: 1.75em; padding: 0 10px; text-align: center; color: var(--text);
+  background: radial-gradient(ellipse at 50% 45%, #1e1830 0%, #111221 70%);
+  border: 1.5px solid var(--border); border-radius: 14px;
+}
+.glyph.empty { color: var(--text-muted); font-weight: 400; }
+.prompt-name { font-size: 12px; color: var(--text-muted); line-height: 1.35; }
+.prompt-name b { display: block; font-family: 'Noto Sans', 'Inter', sans-serif; color: var(--text); font-weight: 500; font-size: 17px; }
+.tray { display: flex; align-items: center; gap: 10px; min-width: 0; padding-left: 18px; border-left: 1px solid var(--border); align-self: stretch; }
+.tray h3 { flex-shrink: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-height: 88px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .chip {
-  font-family: var(--telugu); font-size: 22px; line-height: 1.5; padding: 0 10px; cursor: pointer;
+  font-family: var(--telugu); font-size: 20px; line-height: 1.5; padding: 0 9px; cursor: pointer;
   display: inline-flex; gap: 6px; align-items: center;
   background: var(--accent); color: #0b0c18; border: 1px solid var(--accent-light); border-radius: 8px;
 }
@@ -61,12 +71,11 @@ select:hover, input[type=text]:hover { border-color: var(--accent); }
 .chip.ghost { background: var(--surface-up); color: var(--text); border-color: var(--border); }
 .chip.ghost:hover { border-color: var(--accent); }
 .chip.ghost.anchor { border-color: var(--accent); color: var(--accent-light); }   /* whose group this is */
-.nav { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; }
 
 /* buttons (the primary one is the app's gold button) */
 .btn {
-  font: inherit; font-size: 13.5px; font-weight: 600; color: var(--text-dim); cursor: pointer;
-  background: var(--surface-up); border: 1px solid var(--border); border-radius: 9px; padding: 9px 14px;
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--text-dim); cursor: pointer;
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px;
   transition: background .12s, border-color .12s, filter .14s;
 }
 .btn:hover { border-color: var(--accent); background: var(--accent-glow); }
@@ -76,79 +85,73 @@ select:hover, input[type=text]:hover { border-color: var(--accent); }
 .btn.danger:hover { border-color: var(--error); background: var(--error-dim); }
 .btn[aria-pressed="true"] { border-color: var(--accent-light); color: var(--accent-light); border-style: dashed; }
 .btn:disabled { opacity: .4; cursor: default; }
-button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
 
-/* keyboard */
-.kb { display: grid; gap: 14px; }
-.kbhead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.readout { font-size: 12.5px; color: var(--text-muted); }
-.readout b { font-family: var(--telugu); font-weight: 400; font-size: 18px; color: var(--accent-light); margin-left: 6px; }
-.kbrow { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: start; }
-.kbrow h3 { padding-top: 14px; }
-.keys { display: grid; gap: 5px; }
-.keys.signs { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
-.keys.v { grid-template-columns: repeat(8, minmax(0, 1fr)); }
-.keys.c { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* keyboard: one set of keys; the switch in the bar says whether a tap chooses the character or a lookalike */
+.kb { display: grid; gap: 10px; }
+.kb.looks { border-color: var(--accent); }
+.kbhead { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.kbhead h2 .te { font-size: 17px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--accent-light); margin-left: 4px; }
+.readout { margin-left: auto; font-family: var(--telugu); font-size: 17px; color: var(--accent-light); }
+.kbrow { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 10px; align-items: start; }
+.kbrow h3 { padding-top: 11px; }
+.keys { display: grid; gap: 4px; }
+.keys.signs { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); }
+.keys.v { grid-template-columns: repeat(16, minmax(0, 1fr)); }
+.keys.c { grid-template-columns: repeat(10, minmax(0, 1fr)); }           /* two rows of the varnamala side by side */
+.keys.c .key:nth-child(10n+6) { margin-left: 8px; }
 .keys.d { grid-template-columns: repeat(10, minmax(0, 1fr)); }
 .key {
-  font-family: var(--telugu); font-size: 22px; line-height: 1.55; min-height: 50px; padding: 2px; cursor: pointer; overflow-wrap: anywhere;
-  background: var(--surface-up); color: var(--text-dim); border: 1px solid var(--border); border-radius: 8px;
+  font-family: var(--telugu); font-size: 19px; line-height: 1.5; min-height: 38px; padding: 1px 2px; cursor: pointer; overflow-wrap: anywhere;
+  background: var(--surface-up); color: var(--text-dim); border: 1px solid var(--border); border-radius: 7px;
   transition: background .1s, border-color .1s, color .1s, transform .08s;
 }
 .key:hover:not(:disabled) { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-light); }
 .key:active:not(:disabled) { transform: scale(.94); }
 .key.rare { border-style: dashed; }
-.key[aria-pressed="true"] { background: var(--accent); color: #0b0c18; border-color: var(--accent-light); border-style: solid; }
-.key:disabled { opacity: .32; cursor: default; }
+.key.has { box-shadow: inset 0 -3px 0 var(--accent); }                   /* already has lookalikes */
+.key[aria-pressed="true"] { background: var(--accent); color: #0b0c18; border-color: var(--accent-light); border-style: solid; box-shadow: none; }
+.key:disabled { opacity: .28; cursor: default; }
 .key.self:disabled { opacity: 1; background: var(--bg); color: var(--accent-light); border-color: var(--accent); }
-.key small { display: block; font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 10px; line-height: 1.1; color: var(--text-muted); padding-bottom: 4px; }
+.key small { display: block; font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 9.5px; line-height: 1.1; color: var(--text-muted); padding-bottom: 3px; }
 .key[aria-pressed="true"] small { color: #0b0c18; }
-.keys.arming .key { border-color: var(--accent); border-style: dashed; }
-.stack { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 4px; }
-.other { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; }
-.other label { font-size: 12.5px; color: var(--text-muted); }
-.other input { flex: 1 1 140px; min-width: 0; font-family: var(--telugu); font-size: 18px; }
+.keys.arming .key:not(:disabled) { border-color: var(--accent); border-style: dashed; }
+.stack { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 3px; }
+.other { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--border); padding-top: 10px; }
+.other input { flex: 0 1 200px; min-width: 0; font-family: var(--telugu); font-size: 17px; }
 
 /* groups + CSV */
-.results { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
-.results .card { display: grid; gap: 12px; }
+.results { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.results .card { display: grid; gap: 10px; }
 .results h2 span { color: var(--text-muted); }
-.group-list { display: grid; gap: 8px; }
-.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+.group-list { display: grid; gap: 6px; }
+.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
 .group .n { font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: 11px; min-width: 1.6em; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .row label { font-size: 12.5px; color: var(--text-muted); }
 textarea {
-  width: 100%; min-height: 150px; resize: vertical; padding: 10px;
+  width: 100%; min-height: 130px; resize: vertical; padding: 10px;
   font-family: var(--telugu); font-size: 17px; line-height: 1.7; color: var(--text-dim);
   background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
 }
 #status { min-height: 1.4em; color: var(--accent-light); font-size: 12.5px; }
 
-/* every character in the run */
-.queue summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; }
-.queue .legend { margin: 10px 0 8px; }
-.tiles { display: flex; flex-wrap: wrap; gap: 4px; max-height: 230px; overflow-y: auto; padding: 2px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-.tile { font-family: var(--telugu); font-size: 17px; line-height: 1.6; min-width: 38px; padding: 0 4px; cursor: pointer; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; }
-.tile:hover { border-color: var(--accent); }
-.tile.done { color: var(--text); background: var(--surface-up); }
-.tile.has { border-color: var(--accent); color: var(--accent-light); }
-.tile.cur { outline: 2px solid var(--accent-light); outline-offset: 1px; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--text-muted); font-size: 12px; }
-.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); margin-right: 6px; vertical-align: -1px; }
-.legend .l-done::before { background: var(--surface-up); }
-.legend .l-has::before { border-color: var(--accent); }
-
 @media (max-width: 860px) {
-  .work, .results { grid-template-columns: minmax(0, 1fr); }
-  .prompt { top: var(--hdr); z-index: 5; gap: 8px; padding: 12px; box-shadow: 0 8px 18px rgba(0,0,0,.45); }
-  .glyph { font-size: 76px; }
-  .prompt .hint { display: none; }
-  .kbrow { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .results { grid-template-columns: minmax(0, 1fr); }
+  .pick { grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; padding: 8px 10px; }
+  .mode { grid-column: 1 / -1; }
+  .mode-opt { flex: 1; }
+  .glyph { font-size: 36px; }
+  .prompt-name { display: none; }                      /* the key's tooltip and the Groups list still give the sound */
+  .tray { padding-left: 12px; }
+  .tray h3 { display: none; }
+  .chips { max-height: 80px; }
+  .kbrow { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .kbrow h3 { padding-top: 0; }
-  .keys.d { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .key { font-size: 19px; min-height: 46px; }
-  .settings .sep { display: none; }
+  .keys.v { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .keys.c { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .keys.c .key:nth-child(10n+6) { margin-left: 0; }
+  .key { font-size: 18px; }
 }
 </style>
 </head>
@@ -157,94 +160,77 @@ textarea {
 <header class="g-header">
   <div class="g-header-top">
     <span class="g-title">Lookalike Builder</span>
-    <div class="g-right"><div class="g-stats"><span id="progressText"></span></div></div>
+    <div class="g-right"><div class="g-stats"><span id="stat"></span></div></div>
   </div>
-  <div class="g-prog-track"><div class="g-prog-fill" id="progressBar"></div></div>
 </header>
 
 <div class="wrap">
 
-  <p class="hint">One character at a time: tap every character that looks like it to you, then export the groups as a CSV. Upload that file in Lookalikes (its ⋮ menu) to practice your own groups.</p>
-
-  <section class="card settings" aria-label="Run settings">
-    <h3>Show me</h3>
-    <label class="menu-opt" for="setVowels"><input type="checkbox" id="setVowels" data-set="vowels"> <span>Vowels</span></label>
-    <label class="menu-opt" for="setConsonants"><input type="checkbox" id="setConsonants" data-set="consonants"> <span>Consonants</span></label>
-    <label class="menu-opt" for="setMarks"><input type="checkbox" id="setMarks" data-set="marks"> <span>Consonants with vowel signs</span></label>
-    <label class="menu-opt" for="setDigits"><input type="checkbox" id="setDigits" data-set="digits"> <span>Digits</span></label>
-    <span class="sep"></span>
+  <div class="top">
+    <p class="hint">Choose a character, then tap everything that looks like it. The CSV below loads into Lookalikes.</p>
     <label class="menu-opt" for="uncommon"><input type="checkbox" id="uncommon"> <span>Include extra letters</span></label>
-    <span class="sep"></span>
-    <label for="font">Telugu font
-      <select id="font">
-        <option value="sans">Noto Sans Telugu</option>
-        <option value="serif">Noto Serif Telugu</option>
-        <option value="tiro">Tiro Telugu</option>
-        <option value="device">This device's font</option>
-      </select>
-    </label>
-  </section>
+    <select id="font" aria-label="Telugu font">
+      <option value="sans">Noto Sans Telugu</option>
+      <option value="serif">Noto Serif Telugu</option>
+      <option value="tiro">Tiro Telugu</option>
+      <option value="device">This device's font</option>
+    </select>
+  </div>
 
-  <main class="work">
-    <section class="card prompt" aria-label="Character to judge">
-      <div class="prompt-meta"><span id="pos"></span><span id="pill" class="pill"></span></div>
+  <section class="card pick" id="pick" aria-label="Character and its lookalikes">
+    <div class="mode" id="mode" role="radiogroup" aria-label="A tap on the keyboard chooses">
+      <button type="button" class="mode-opt" role="radio" data-mode="character" data-k="mode:character">Character</button>
+      <button type="button" class="mode-opt" role="radio" data-mode="looks" data-k="mode:looks">Looks like</button>
+    </div>
+    <div class="subject">
       <div id="glyph" class="glyph te" aria-live="polite"></div>
       <div class="prompt-name" id="promptName"></div>
-      <div class="tray">
-        <h3>Looks like</h3>
-        <div id="chips" class="chips"></div>
-        <p class="hint">Characters already linked to this one are filled in for you.</p>
-      </div>
-      <div class="nav">
-        <button type="button" class="btn" id="prev">&larr; Previous</button>
-        <button type="button" class="btn primary" id="next">Done, next &rarr;</button>
-      </div>
-      <p class="hint">Picks save as you tap. Done marks this character reviewed, even with nothing picked. The arrow keys also move between characters.</p>
-    </section>
+    </div>
+    <div class="tray">
+      <h3>Looks like</h3>
+      <div id="chips" class="chips"></div>
+    </div>
+  </section>
 
-    <section class="card kb" id="kb" aria-label="Telugu keyboard">
-      <div class="kbhead">
-        <h2>Keyboard</h2>
-        <span class="readout">Consonant keys show <b id="readout"></b></span>
-        <button type="button" class="btn" id="kbReset">Back to plain letters</button>
+  <section class="card kb" id="kb" aria-label="Telugu keyboard">
+    <div class="kbhead">
+      <h2 id="kbTitle"></h2>
+      <span class="readout" id="readout"></span>
+      <button type="button" class="btn" id="kbReset">Plain letters</button>
+    </div>
+    <div class="kbrow">
+      <h3>Vowel sign</h3>
+      <div id="signs" class="keys signs"></div>
+    </div>
+    <div class="kbrow">
+      <h3>Conjunct</h3>
+      <div class="stack">
+        <button type="button" class="btn" id="stack" aria-pressed="false">Top consonant</button>
+        <span id="prefixChips" class="row"></span>
       </div>
-      <div class="kbrow">
-        <h3>Vowel sign</h3>
-        <div id="signs" class="keys signs"></div>
-      </div>
-      <div class="kbrow">
-        <h3>Conjunct</h3>
-        <div class="stack">
-          <button type="button" class="btn" id="stack" aria-pressed="false">Choose top consonant</button>
-          <span id="prefixChips" class="row"></span>
-          <span class="hint" id="stackHint"></span>
-        </div>
-      </div>
-      <div class="kbrow">
-        <h3>Vowels</h3>
-        <div id="kVowels" class="keys v"></div>
-      </div>
-      <div class="kbrow">
-        <h3>Consonants</h3>
-        <div id="kCons" class="keys c"></div>
-      </div>
-      <div class="kbrow">
-        <h3>Digits</h3>
-        <div id="kDigits" class="keys d"></div>
-      </div>
-      <form class="other" id="otherForm">
-        <label for="other">Anything else</label>
-        <input type="text" id="other" autocomplete="off" placeholder="type or paste a character">
-        <button type="submit" class="btn">Add as lookalike</button>
-        <button type="button" class="btn" id="otherPrompt">Judge this one now</button>
-      </form>
-    </section>
-  </main>
+    </div>
+    <div class="kbrow">
+      <h3>Vowels</h3>
+      <div id="kVowels" class="keys v"></div>
+    </div>
+    <div class="kbrow">
+      <h3>Consonants</h3>
+      <div id="kCons" class="keys c"></div>
+    </div>
+    <div class="kbrow">
+      <h3>Digits</h3>
+      <div id="kDigits" class="keys d"></div>
+    </div>
+    <form class="other" id="otherForm">
+      <input type="text" id="other" autocomplete="off" placeholder="or type a character" aria-label="Type a character">
+      <button type="submit" class="btn">Use</button>
+      <span class="hint" id="otherNote" role="status"></span>
+    </form>
+  </section>
 
   <div class="results">
     <section class="card" aria-label="Lookalike groups">
       <h2>Groups <span id="groupCount"></span></h2>
-      <p class="hint">Each character gets its own group: itself (outlined) plus the characters you picked for it. Picks work both ways, but groups are never merged. Tap a character to go back to it.</p>
       <div id="groups" class="group-list"></div>
     </section>
 
@@ -256,9 +242,8 @@ textarea {
           <option value="groups">One group per character</option>
           <option value="pairs">One picked pair per row</option>
         </select>
-        <span class="hint">UTF-8, no header row.</span>
       </div>
-      <textarea id="csv" readonly aria-label="CSV preview" placeholder="Your CSV appears here once you pick a lookalike."></textarea>
+      <textarea id="csv" readonly aria-label="CSV preview" placeholder="Your CSV appears here."></textarea>
       <div class="row">
         <button type="button" class="btn primary" id="download">Download CSV</button>
         <button type="button" class="btn" id="copy">Copy CSV</button>
@@ -267,15 +252,9 @@ textarea {
         <button type="button" class="btn danger" id="clear">Clear all picks</button>
       </div>
       <p id="status" role="status"></p>
-      <p class="hint">Picks are kept in this browser only. Download or copy the CSV to keep them. Importing a CSV adds its links to what is here.</p>
+      <p class="hint">Picks are kept in this browser only. Download the CSV to keep them.</p>
     </section>
   </div>
-
-  <details class="card queue" open>
-    <summary>Every character in this run</summary>
-    <p class="legend"><span class="l-new">not reviewed</span><span class="l-done">reviewed</span><span class="l-has">has lookalikes</span></p>
-    <div id="tiles" class="tiles"></div>
-  </details>
 
 </div>
 
@@ -292,7 +271,7 @@ textarea {
    A row is [character, sound, rare, extra]:
      sound   in the reader's notation (IPA or ISO, chosen on the home page)
      rare    drawn with a dashed edge (the games' "rare" badge)
-     extra   outside the book's set: only in a run with "Include extra letters"
+     extra   outside the book's set: offered only with "Include extra letters"
    Vowels are the single letters (అం and అః are అ with a sign, and signs have their
    own row). Signs run in the order of the vowels they stand for, then the pollu. */
 var TD=window.TeluguData, LD=window.LookalikeData;
@@ -332,6 +311,11 @@ var VOW_R=toMap(VOWELS), CONS_R=toMap(CONS), SIGN_R=toMap(SIGNS), DIG_R=toMap(DI
 var ORDER=new Map();
 VOWELS.concat(CONS,[[VIRAMA]],SIGNS,DIGITS).forEach(function(x){if(!ORDER.has(x[0])) ORDER.set(x[0],ORDER.size);});
 
+/* Conjuncts are limited to the ones telugu-data.js lists. Those are the ones the Lookalikes
+   game can read, so every character this page offers can be practiced there. */
+var LISTED=new Map();
+TD.clusters.forEach(function(c){LISTED.set(c.glyph,c);});
+
 var FONTS={
   sans:'"Noto Sans Telugu","Kohinoor Telugu","Nirmala UI","Gautami",sans-serif',
   serif:'"Noto Serif Telugu","Telugu MN","Gautami",serif',
@@ -370,12 +354,10 @@ function cmp(a,b){
 
 /* ---------- state ---------- */
 var KEY='telugu-lookalikes-v1';
-var S={sets:{vowels:true,consonants:true,marks:false,digits:false},uncommon:false,font:'sans',format:'groups',pos:0};
+var S={uncommon:false,font:'sans',format:'groups',mode:'character'};
 var adj=new Map();          /* character -> Set of characters picked as lookalikes (symmetric) */
-var reviewed=new Set();
-var queue=[];
-var custom=null;            /* a character being judged that is outside the run */
-var kb={sign:'',prefix:[],arming:false};
+var P=null;                 /* the character being judged */
+var kb={sign:'',prefix:[],arming:false};   /* what the consonant keys show: top consonant(s) + the key + a vowel sign */
 var clearArmed=0;
 
 function link(a,b){
@@ -416,134 +398,142 @@ function csvText(){
   var rows=S.format==='pairs'?edges():groupRows();
   return rows.map(function(r){return r.join(',');}).join('\n');
 }
+/* A row links its first character to each of the others. Characters Lookalikes cannot read
+   (a conjunct telugu-data.js does not list, say) are left out, and reported. */
 function importCsv(text){
-  var added=0;
+  var added=0, skipped=[];
   LD.rows(text).forEach(function(cells){
-    for(var i=1;i<cells.length;i++){ if(link(cells[0],cells[i])) added++; }
+    var good=cells.filter(function(c){
+      if(readable(c)) return true;
+      if(skipped.indexOf(c)<0) skipped.push(c);
+      return false;
+    });
+    if(good[0]!==cells[0]) return;                     /* the row's own character is unreadable: nothing to link to */
+    for(var i=1;i<good.length;i++){ if(link(good[0],good[i])) added++; }
   });
-  return added;
+  return {added:added,skipped:skipped};
 }
 
+/* What an earlier version of this page stored (its place in a fixed run, which characters
+   were "reviewed") is simply not read; the picks themselves carry over. */
 function load(){
   try{
     var raw=localStorage.getItem(KEY); if(!raw) return;
     var o=JSON.parse(raw);
-    (o.links||[]).forEach(function(p){ if(Array.isArray(p)) link(clean(p[0]),clean(p[1])); });
-    (o.reviewed||[]).forEach(function(c){ reviewed.add(c); });
-    if(o.sets) Object.keys(S.sets).forEach(function(k){ if(typeof o.sets[k]==='boolean') S.sets[k]=o.sets[k]; });
+    (o.links||[]).forEach(function(p){ if(Array.isArray(p)&&typeof p[0]==='string'&&typeof p[1]==='string') link(clean(p[0]),clean(p[1])); });
     S.uncommon=!!o.uncommon;
     if(FONTS[o.font]) S.font=o.font;
     if(o.format==='pairs') S.format='pairs';
-    if(typeof o.pos==='number') S.pos=o.pos;
+    if(typeof o.cur==='string'&&clean(o.cur)){ P=clean(o.cur); S.mode='looks'; adopt(P); }
   }catch(e){}
 }
 function persist(){
   try{
-    localStorage.setItem(KEY,JSON.stringify({links:edges(),reviewed:Array.from(reviewed),sets:S.sets,uncommon:S.uncommon,font:S.font,format:S.format,pos:S.pos}));
+    localStorage.setItem(KEY,JSON.stringify({links:edges(),uncommon:S.uncommon,font:S.font,format:S.format,cur:P}));
   }catch(e){}
 }
 
-function buildQueue(){
-  var keep=function(x){return S.uncommon||!x[3];}, q=[];     /* extras wait for "Include extra letters" */
-  if(S.sets.vowels) VOWELS.filter(keep).forEach(function(x){q.push(x[0]);});
-  if(S.sets.consonants) CONS.filter(keep).forEach(function(x){q.push(x[0]);});
-  if(S.sets.marks) CONS.filter(keep).forEach(function(c){SIGNS.filter(keep).forEach(function(s){q.push(c[0]+s[0]);});});
-  if(S.sets.digits) DIGITS.forEach(function(x){q.push(x[0]);});
-  queue=q;
-  S.pos=Math.max(0,Math.min(S.pos,q.length-1));
-}
-function current(){return custom!==null?custom:(queue.length?queue[S.pos]:null);}
+/* ---------- what the keyboard offers ---------- */
+function offered(x){return S.uncommon||!x[3];}                     /* a letter or sign row: extras wait for the option */
+function clusterOk(c){return !!c&&(S.uncommon||c.core);}           /* a listed conjunct: the uncommon ones wait too */
 function form(c){return kb.prefix.map(function(p){return p+VIRAMA;}).join('')+c+kb.sign;}
+/* The consonant key c, under the top consonant(s) chosen: is that stack a listed conjunct? */
+function stackOk(c){return !kb.prefix.length||clusterOk(LISTED.get(kb.prefix.concat([c]).join(VIRAMA)));}
+/* Can c go on top (after any already chosen)? Only if some listed conjunct starts that way. */
+function topOk(c){
+  var head=kb.prefix.concat([c]).join(VIRAMA)+VIRAMA;
+  return TD.clusters.some(function(x){return clusterOk(x)&&x.glyph.indexOf(head)===0;});
+}
 function resetKb(){kb.sign='';kb.prefix=[];kb.arming=false;}
+/* Set the keyboard to the shape of a character (its top consonants and vowel sign), so its
+   likely lookalikes are one tap away. Anything that is not such a stack gets plain letters. */
+function adopt(ch){
+  resetKb();
+  var chars=Array.from(ch), sign='';
+  if(chars.length>1&&SIGN_R.has(chars[chars.length-1])&&offered([0,0,0,SGN[chars[chars.length-1]].core?0:1])) sign=chars.pop();
+  var parts=chars.join('').split(VIRAMA);
+  if(chars.length&&parts.every(function(x){return CONS_R.has(x);})){
+    var top=parts.slice(0,-1);
+    if(!top.length||clusterOk(LISTED.get(parts.join(VIRAMA)))){ kb.prefix=top; kb.sign=sign; }
+  }
+}
+/* Typed text is accepted when Lookalikes can read it (a digit is shown as its number). */
+function readable(t){return DIG_R.has(t)||!!LD.item(t);}
 
 /* ---------- rendering ---------- */
 function $(id){return document.getElementById(id);}
 function say(msg){$('status').textContent=msg;}
 
+/* A character key. Choosing the character: the current one is pressed, and a bar marks those
+   that already have lookalikes. Choosing lookalikes: the linked ones are pressed, and the
+   character itself is shown but cannot be tapped. */
 function keyHTML(ch,o){
-  var P=current(), self=ch===P, pressed=!!P&&!self&&linked(P,ch);
-  var off=!P||o.off||self;
-  return '<button type="button" class="key'+(o.rare?' rare':'')+(self?' self':'')+'" data-k="ch:'+esc(ch)+'" data-ch="'+esc(ch)+'"'+
-    (o.base?' data-base="'+esc(o.base)+'"':'')+' aria-pressed="'+pressed+'" title="'+esc(phon(ch))+(self?' (the character shown)':'')+'"'+(off?' disabled':'')+'>'+esc(ch)+'</button>';
+  var looks=S.mode==='looks', self=ch===P;
+  var pressed=looks?(!!P&&!self&&linked(P,ch)):self;
+  var off=o.off||(looks&&self);
+  return '<button type="button" class="key'+(o.rare?' rare':'')+(self?' self':'')+(!looks&&adj.has(ch)?' has':'')+'" data-k="ch:'+esc(ch)+'" data-ch="'+esc(ch)+'"'+
+    (o.base?' data-base="'+esc(o.base)+'"':'')+' aria-pressed="'+pressed+'" title="'+esc(phon(ch))+(self&&looks?' (the character shown)':'')+'"'+(off?' disabled':'')+'>'+esc(ch)+'</button>';
 }
 function renderKeyboard(){
-  var combining=!!(kb.sign||kb.prefix.length);
-  $('signs').innerHTML=SIGNS.filter(function(s){return S.uncommon||!s[3];}).map(function(s){
+  var combining=!!(kb.sign||kb.prefix.length), looks=S.mode==='looks';
+  $('kb').className='card kb'+(looks?' looks':'');
+  $('kbTitle').innerHTML=looks?'Looks like <span class="te">'+esc(P)+'</span>':'Character';
+  $('signs').innerHTML=SIGNS.filter(offered).map(function(s){
     return '<button type="button" class="key'+(s[2]?' rare':'')+'" data-k="sign:'+s[0]+'" data-sign="'+s[0]+'" aria-pressed="'+(kb.sign===s[0])+'" title="'+(s[1]?'vowel sign '+esc(s[1]):'no vowel (pollu)')+'">'+RING+s[0]+'<small>'+(s[1]||'none')+'</small></button>';
   }).join('');
-  $('kVowels').innerHTML=VOWELS.map(function(v){return keyHTML(v[0],{rare:v[2],off:combining||kb.arming});}).join('');
+  $('kVowels').innerHTML=VOWELS.map(function(v){return keyHTML(v[0],{rare:v[2],off:combining||kb.arming||!offered(v)});}).join('');
   $('kDigits').innerHTML=DIGITS.map(function(v){return keyHTML(v[0],{off:combining||kb.arming});}).join('');
   var cons=$('kCons');
   cons.className='keys c'+(kb.arming?' arming':'');
   cons.innerHTML=CONS.map(function(c){
-    if(kb.arming) return '<button type="button" class="key'+(c[2]?' rare':'')+'" data-k="base:'+c[0]+'" data-base="'+c[0]+'" aria-pressed="false" title="'+esc(c[1])+'">'+c[0]+'</button>';
-    return keyHTML(form(c[0]),{rare:c[2],base:c[0]});
+    if(kb.arming) return '<button type="button" class="key'+(c[2]?' rare':'')+'" data-k="base:'+c[0]+'" data-base="'+c[0]+'" aria-pressed="false" title="'+esc(c[1])+'"'+(offered(c)&&topOk(c[0])?'':' disabled')+'>'+c[0]+'</button>';
+    return keyHTML(form(c[0]),{rare:c[2],base:c[0],off:!offered(c)||!stackOk(c[0])});
   }).join('');
 
   var parts=kb.prefix.map(function(p){return p+VIRAMA;}).concat([BOX]);
   if(kb.sign) parts.push(RING+kb.sign);
-  $('readout').textContent=combining?parts.join(' + '):'plain letters';
+  $('readout').textContent=combining?parts.join(' + '):'';
   $('kbReset').disabled=!combining&&!kb.arming;
   var stack=$('stack');
   stack.setAttribute('aria-pressed',String(kb.arming));
-  stack.textContent=kb.arming?'Now tap a consonant…':(kb.prefix.length?'Add another on top':'Choose top consonant');
-  stack.disabled=!kb.arming&&kb.prefix.length>=2;
+  stack.textContent=kb.arming?'Tap a consonant…':(kb.prefix.length?'Add another':'Top consonant');
+  stack.disabled=!kb.arming&&(kb.prefix.length>=2||!CONS.some(function(c){return offered(c)&&topOk(c[0]);}));
   $('prefixChips').innerHTML=kb.prefix.map(function(p,i){
     return '<button type="button" class="chip ghost" data-k="unprefix:'+i+'" data-unprefix="'+i+'" title="Remove '+esc(phon(p))+'">'+p+VIRAMA+' <small>×</small></button>';
   }).join('');
-  $('stackHint').textContent=kb.prefix.length?'':'Every consonant key then shows its form stacked under the one you choose.';
 }
-function renderPrompt(){
-  var P=current(), g=$('glyph');
-  if(!P){
-    g.className='glyph empty'; g.textContent='Check at least one set under Show me.';
-    $('pos').textContent=''; $('pill').textContent=''; $('pill').className='pill'; $('promptName').textContent='';
-    $('chips').innerHTML=''; $('prev').disabled=$('next').disabled=true; return;
-  }
-  g.className='glyph te'; g.textContent=P;
-  var n=neighbors(P);
-  $('pos').textContent=custom!==null?'Outside this run':(S.pos+1)+' of '+queue.length;
-  var pill=$('pill'), done=reviewed.has(P);
-  pill.className='pill'+(done?' done':'');
-  pill.textContent=done?(n.length?'reviewed':'reviewed, none'):'not reviewed';
-  $('promptName').innerHTML='<b>'+esc(phon(P))+'</b> &middot; '+esc(kindOf(P));
-  $('chips').innerHTML=n.length?n.map(function(c){
+function renderPick(){
+  var g=$('glyph'), n=P?neighbors(P):[];
+  Array.prototype.forEach.call(document.querySelectorAll('.mode-opt'),function(b){
+    b.setAttribute('aria-checked',String(b.dataset.mode===S.mode));
+    b.disabled=b.dataset.mode==='looks'&&!P;
+  });
+  g.className='glyph te'+(P?'':' empty'); g.textContent=P||'?';
+  $('promptName').innerHTML=P?'<b>'+esc(phon(P))+'</b>'+esc(kindOf(P)):'';
+  $('chips').innerHTML=!P?'<span class="hint">Choose a character on the keyboard.</span>':n.length?n.map(function(c){
     return '<button type="button" class="chip" data-k="rm:'+esc(c)+'" data-remove="'+esc(c)+'" title="Remove '+esc(phon(c))+'">'+esc(c)+' <small>×</small></button>';
   }).join(''):'<span class="hint">Nothing picked yet.</span>';
-  $('prev').disabled=custom===null&&S.pos===0;
-  $('next').disabled=false;
-  $('next').innerHTML=(custom===null&&S.pos>=queue.length-1)?'Done':'Done, next &rarr;';
 }
 function renderResults(){
   var groups=groupRows();
+  $('stat').textContent=groups.length+(groups.length===1?' group':' groups');
   $('groupCount').textContent=groups.length?'('+groups.length+')':'';
   $('groups').innerHTML=groups.length?groups.map(function(grp,i){
     return '<div class="group"><span class="n">'+(i+1)+'</span>'+grp.map(function(c,j){
       return '<button type="button" class="chip ghost'+(j===0?' anchor':'')+'" data-k="go:'+esc(c)+'" data-goto="'+esc(c)+'" title="'+esc(phon(c))+'">'+esc(c)+'</button>';
     }).join('')+'</div>';
-  }).join(''):'<p class="hint">No groups yet. Pick a lookalike on the keyboard, for example <span class="te">బ</span> for <span class="te">ఒ</span>.</p>';
+  }).join(''):'<p class="hint">No groups yet.</p>';
   $('csv').value=csvText();
   $('format').value=S.format;
 }
-function renderRun(){
-  var P=current(), done=0;
-  $('tiles').innerHTML=queue.map(function(c,i){
-    var r=reviewed.has(c); if(r) done++;
-    return '<button type="button" class="tile'+(r?' done':'')+(adj.has(c)?' has':'')+((custom===null&&i===S.pos)?' cur':'')+'" data-k="tile:'+c+'" data-goto="'+c+'" title="'+esc(phon(c))+'">'+c+'</button>';
-  }).join('');
-  var groups=groupRows().length;
-  $('progressText').textContent=done+' of '+queue.length+' reviewed · '+groups+(groups===1?' group':' groups');
-  $('progressBar').style.width=(queue.length?100*done/queue.length:0)+'%';
-}
 function renderSettings(){
-  Array.prototype.forEach.call(document.querySelectorAll('[data-set]'),function(el){el.checked=S.sets[el.dataset.set];});
   $('uncommon').checked=S.uncommon;
   $('font').value=S.font;
   document.documentElement.style.setProperty('--telugu',FONTS[S.font]);
 }
 function render(){
   var active=document.activeElement, k=active&&active.dataset?active.dataset.k:null;
-  renderSettings(); renderPrompt(); renderKeyboard(); renderResults(); renderRun();
+  renderSettings(); renderPick(); renderKeyboard(); renderResults();
   if(k){
     var again=Array.prototype.filter.call(document.querySelectorAll('[data-k]'),function(el){return el.dataset.k===k;})[0];
     if(again&&!again.disabled) again.focus();
@@ -552,70 +542,53 @@ function render(){
 
 /* ---------- actions ---------- */
 function toggle(ch){
-  var P=current(); if(!P||!ch||ch===P) return;
+  if(!P||!ch||ch===P) return;
   if(linked(P,ch)) unlink(P,ch); else link(P,ch);
   persist(); render();
 }
-function goTo(ch){
-  var i=queue.indexOf(ch);
-  if(i>=0){S.pos=i;custom=null;} else custom=ch;
-  resetKb(); persist(); render();
+/* Choosing a character turns the keyboard over to its lookalikes, which is the next thing to
+   do. The vowel sign and top consonant stay as they are: lookalikes mostly share them. */
+function choose(ch){
+  P=ch; S.mode='looks';
+  persist(); render();
 }
-function next(){
-  var P=current(); if(!P) return;
-  reviewed.add(P);
-  var atEnd=custom===null&&S.pos>=queue.length-1;
-  if(custom!==null) custom=null; else if(!atEnd) S.pos++;
-  resetKb(); persist(); render();
-  if(atEnd) say('That was the last character in this run. Your CSV is ready below.');
+function tap(ch){
+  if(S.mode==='looks'&&P) toggle(ch); else choose(ch);
 }
-function prev(){
-  if(custom!==null) custom=null; else if(S.pos>0) S.pos--;
-  resetKb(); persist(); render();
+function goTo(ch){ adopt(ch); choose(ch); }
+function setMode(m){
+  if(m===S.mode||(m==='looks'&&!P)) return;
+  S.mode=m; kb.arming=false; render();
 }
 
+$('mode').addEventListener('click',function(e){var b=e.target.closest('[data-mode]'); if(b&&!b.disabled) setMode(b.dataset.mode);});
 $('kb').addEventListener('click',function(e){
   var b=e.target.closest('button'); if(!b||b.disabled) return;
   if(b.dataset.sign!==undefined){ kb.sign=kb.sign===b.dataset.sign?'':b.dataset.sign; kb.arming=false; render(); }
   else if(b.dataset.unprefix!==undefined){ kb.prefix.splice(Number(b.dataset.unprefix),1); render(); }
   else if(kb.arming&&b.dataset.base){ kb.prefix.push(b.dataset.base); kb.arming=false; render(); }
-  else if(b.dataset.ch){ toggle(b.dataset.ch); }
+  else if(b.dataset.ch){ tap(b.dataset.ch); }
   else if(b.id==='stack'){ kb.arming=!kb.arming; render(); }
   else if(b.id==='kbReset'){ resetKb(); render(); }
-  else if(b.id==='otherPrompt'){ var t=clean($('other').value); if(t){ $('other').value=''; goTo(t); } }
 });
 $('otherForm').addEventListener('submit',function(e){
   e.preventDefault();
   var t=clean($('other').value); if(!t) return;
-  $('other').value='';
-  var P=current(); if(P&&t!==P&&!linked(P,t)) toggle(t);
+  if(!readable(t)){ $('otherNote').textContent='Lookalikes cannot read '+t+'.'; return; }
+  $('other').value=''; $('otherNote').textContent='';
+  if(S.mode==='looks'&&P){ if(t!==P&&!linked(P,t)) toggle(t); }
+  else goTo(t);
 });
 $('chips').addEventListener('click',function(e){var b=e.target.closest('[data-remove]'); if(b) toggle(b.dataset.remove);});
 $('groups').addEventListener('click',function(e){var b=e.target.closest('[data-goto]'); if(b) goTo(b.dataset.goto);});
-$('tiles').addEventListener('click',function(e){var b=e.target.closest('[data-goto]'); if(b) goTo(b.dataset.goto);});
-$('next').addEventListener('click',next);
-$('prev').addEventListener('click',prev);
-document.addEventListener('keydown',function(e){
-  if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
-  if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
-  if(e.key==='ArrowRight'){e.preventDefault();next();}
-  else if(e.key==='ArrowLeft'){e.preventDefault();if(!$('prev').disabled) prev();}
-});
 
-Array.prototype.forEach.call(document.querySelectorAll('[data-set]'),function(el){
-  el.addEventListener('change',function(){
-    var P=custom===null?current():null;
-    S.sets[el.dataset.set]=el.checked;
-    buildQueue();
-    if(P&&queue.indexOf(P)>=0) S.pos=queue.indexOf(P);
-    persist(); render();
-  });
-});
 $('uncommon').addEventListener('change',function(e){
-  var P=custom===null?current():null;
-  S.uncommon=e.target.checked; buildQueue();
-  if(P&&queue.indexOf(P)>=0) S.pos=queue.indexOf(P);
-  if(kb.sign&&!S.uncommon&&SIGNS.some(function(s){return s[0]===kb.sign&&s[3];})) kb.sign='';
+  S.uncommon=e.target.checked;
+  /* turning extras off: drop a sign or a stack that is no longer offered */
+  if(!S.uncommon){
+    if(kb.sign&&SIGNS.some(function(s){return s[0]===kb.sign&&s[3];})) kb.sign='';
+    if(kb.prefix.length&&!CONS.some(function(c){return offered(c)&&stackOk(c[0]);})&&!CONS.some(function(c){return offered(c)&&topOk(c[0]);})) kb.prefix=[];
+  }
   persist(); render();
 });
 $('font').addEventListener('change',function(e){S.font=e.target.value;persist();render();});
@@ -641,9 +614,10 @@ $('importFile').addEventListener('change',function(e){
   var file=e.target.files&&e.target.files[0]; if(!file) return;
   var reader=new FileReader();
   reader.onload=function(){
-    var added=importCsv(reader.result);
+    var got=importCsv(reader.result), added=got.added;
+    var left=got.skipped.length?' Skipped '+got.skipped.length+' that Lookalikes cannot read: '+got.skipped.slice(0,8).join(' ')+(got.skipped.length>8?' …':'')+'.':'';
     persist(); render();
-    say(added?'Imported '+added+(added===1?' link':' links')+' from '+file.name+'.':'No new links found in '+file.name+'. Each row needs two or more characters separated by commas.');
+    say((added?'Imported '+added+(added===1?' link':' links')+' from '+file.name+'.':'No new links found in '+file.name+'. Each row needs two or more characters separated by commas.')+left);
   };
   reader.onerror=function(){say('That file could not be read. Choose a .csv saved as UTF-8.');};
   reader.readAsText(file);
@@ -652,7 +626,7 @@ $('importFile').addEventListener('change',function(e){
 $('clear').addEventListener('click',function(){
   var btn=$('clear');
   if(Date.now()-clearArmed<5000){
-    adj.clear(); reviewed.clear(); custom=null; S.pos=0; clearArmed=0;
+    adj.clear(); clearArmed=0;
     btn.textContent='Clear all picks'; persist(); render(); say('All picks cleared.');
   }else{
     clearArmed=Date.now(); btn.textContent='Click again to clear everything';
@@ -661,7 +635,7 @@ $('clear').addEventListener('click',function(){
 });
 
 /* ---------- start ---------- */
-load(); buildQueue(); render();
+load(); render();
 })();
 </script>
 </body>

@@ -14,7 +14,10 @@
 ═════════════════════════════════════════════════════════ */
 
 /* ── Scrolling page, sticky header ─────────────────────── */
-html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; these pages scroll */
+/* base.css fixes the height for the games; these pages scroll. The window does the scrolling,
+   not <body>: a sticky header only stays in view against the thing that actually scrolls. */
+html { height: auto; overflow: auto; }
+body { height: auto; overflow: visible; }
 body { min-height: 100vh; min-height: 100dvh; }
 .g-header { position: sticky; top: 0; z-index: 5; }   /* the title and count stay in view */
 .g-header-top { margin-bottom: 0; }
