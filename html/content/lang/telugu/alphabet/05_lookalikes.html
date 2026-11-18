@@ -50,7 +50,7 @@
     .menu-status { padding: 0 10px 6px; max-width: 280px; font-size: 11px; line-height: 1.4; color: var(--text-muted); }
     .menu-status.err { color: var(--error); }
 
-    /* Nothing to practise */
+    /* Nothing to practice */
     .empty-note { max-width: 320px; text-align: center; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
   </style>
 </head>
@@ -214,7 +214,7 @@ function onFile(file) {
     syncSets();
     $('use-custom').checked  = true;
     $('use-builtin').checked = false;            // your own set replaces the baseline until you tick it again
-    say(`Loaded ${custom.length} group${custom.length === 1 ? '' : 's'} from ${file.name}. Built-in groups are switched off; tick them to practise both.` +
+    say(`Loaded ${custom.length} group${custom.length === 1 ? '' : 's'} from ${file.name}. Built-in groups are switched off; tick them to practice both.` +
         (r.skipped.length ? ` Skipped ${r.skipped.length} I can't give a sound for: ${r.skipped.slice(0, 8).join(' ')}${r.skipped.length > 8 ? ' …' : ''}` : ''));
     game.start();
   };
@@ -325,7 +325,7 @@ function showEmpty() {
   $('rare-badge').style.display = 'none';
   $('char-card').className = 'char-card';
   $('feedback').textContent = '';
-  $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practise with these options. Tick a set, or “Include extra letters”, in the ⋮ menu.</p>';
+  $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practice with these options. Tick a set, or “Include extra letters”, in the ⋮ menu.</p>';
 }
 
 const game = GameCore.create({

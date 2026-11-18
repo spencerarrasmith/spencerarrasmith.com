@@ -1,12 +1,12 @@
 /* ═════════════════════════════════════════════════════════
    base.css — the foundation every page shares.
-   Fonts, reset, the midnight + gold colour tokens and the
+   Fonts, reset, the midnight + gold color tokens and the
    page defaults. Imported by game.css (game pages),
    shell.css (lesson pages, placeholders + Review) and
    home.css (the home page); a page never needs to link it
-   directly. Nothing else defines a colour or loads the fonts.
+   directly. Nothing else defines a color or loads the fonts.
 
-   Change a colour or the type stack here and the whole app
+   Change a color or the type stack here and the whole app
    follows.
 ═════════════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');

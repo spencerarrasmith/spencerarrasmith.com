@@ -202,7 +202,7 @@
   /* The "Coming soon" page of a unit that isn't written yet. Everything on it
      comes from the unit's tile in units.js, so the home tile and this page
      can't disagree. */
-  const SOON_ROWS = [['learn', "What you'll learn"], ['practise', "How you'll practise"], ['fits', 'Where it fits']];
+  const SOON_ROWS = [['learn', "What you'll learn"], ['practice', "How you'll practice"], ['fits', 'Where it fits']];
 
   function placeholder(id, host) {
     host = host || document.getElementById('lesson') || document.body;

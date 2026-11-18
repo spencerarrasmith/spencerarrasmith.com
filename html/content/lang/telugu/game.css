@@ -4,12 +4,12 @@
 
    Link it from a game page with one line:
        <link rel="stylesheet" href="../game.css">          (from a page inside a section folder)
-   It pulls in base.css (fonts, colours, reset) itself.
+   It pulls in base.css (fonts, colors, reset) itself.
 
    Holds only what games have in common. Anything that belongs
    to one game — its tile size, its extra keyboards — stays in
    a small <style> block in that page.
-   The behaviour that goes with it: game-menu.js (the ⋮ menu) and
+   The behavior that goes with it: game-menu.js (the ⋮ menu) and
    game-core.js (the round, counters and complete screen).
    The Resources pages add reference.css on top of this file.
 
@@ -120,7 +120,7 @@
 .rev-btn[aria-pressed="true"], .menu-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-glow); }
 .menu-btn svg { width: 16px; height: 16px; fill: currentColor; }
 
-/* The popover. Markup is in each page; behaviour is game-menu.js. */
+/* The popover. Markup is in each page; behavior is game-menu.js. */
 .menu-wrap { position: relative; }
 
 .menu {

@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════
-   game-menu.js — behaviour of the ⋮ options menu that the
+   game-menu.js — behavior of the ⋮ options menu that the
    practice games share (phonemes, diacritics, conjuncts, …).
    Exposes window.GameMenu. Pairs with game.css.
 

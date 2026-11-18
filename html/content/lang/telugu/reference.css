@@ -5,7 +5,7 @@
    small tags.
 
    Link it AFTER game.css (the header, the ⋮-menu checkbox and
-   the colours come from there and from base.css):
+   the colors come from there and from base.css):
      <link rel="stylesheet" href="../game.css">
      <link rel="stylesheet" href="../reference.css">
 

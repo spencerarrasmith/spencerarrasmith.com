@@ -8,7 +8,7 @@
 <!-- the two extra Telugu faces offered by the font picker (Noto Sans Telugu comes from base.css) -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Telugu:wght@400;600&family=Tiro+Telugu&display=swap">
 <style>
-/* ── Lookalike Builder-specific (the header, ⋮-menu checkboxes and colours come from game.css / base.css) ── */
+/* ── Lookalike Builder-specific (the header, ⋮-menu checkboxes and colors come from game.css / base.css) ── */
 
 html, body { height: auto; overflow: auto; }          /* base.css fixes the height for the games; this page scrolls */
 :root { --telugu: 'Noto Sans Telugu', 'Noto Sans', sans-serif; --hdr: 52px; }
@@ -164,7 +164,7 @@ textarea {
 
 <div class="wrap">
 
-  <p class="hint">One character at a time: tap every character that looks like it to you, then export the groups as a CSV. Upload that file in Lookalikes (its ⋮ menu) to practise your own groups.</p>
+  <p class="hint">One character at a time: tap every character that looks like it to you, then export the groups as a CSV. Upload that file in Lookalikes (its ⋮ menu) to practice your own groups.</p>
 
   <section class="card settings" aria-label="Run settings">
     <h3>Show me</h3>
@@ -392,7 +392,7 @@ function unlink(a,b){
   });
 }
 function linked(a,b){return adj.has(a)&&adj.get(a).has(b);}
-function neighbours(a){return adj.has(a)?Array.from(adj.get(a)).sort(cmp):[];}
+function neighbors(a){return adj.has(a)?Array.from(adj.get(a)).sort(cmp):[];}
 function edges(){
   var out=[];
   adj.forEach(function(set,a){set.forEach(function(b){ if(cmp(a,b)<0) out.push([a,b]); });});
@@ -405,7 +405,7 @@ function edges(){
 function groupRows(){
   var seen=new Set(),out=[];
   Array.from(adj.keys()).sort(cmp).forEach(function(a){
-    var row=[a].concat(neighbours(a));
+    var row=[a].concat(neighbors(a));
     var key=row.slice().sort(cmp).join('|');
     if(seen.has(key)) return;
     seen.add(key); out.push(row);
@@ -501,7 +501,7 @@ function renderPrompt(){
     $('chips').innerHTML=''; $('prev').disabled=$('next').disabled=true; return;
   }
   g.className='glyph te'; g.textContent=P;
-  var n=neighbours(P);
+  var n=neighbors(P);
   $('pos').textContent=custom!==null?'Outside this run':(S.pos+1)+' of '+queue.length;
   var pill=$('pill'), done=reviewed.has(P);
   pill.className='pill'+(done?' done':'');
