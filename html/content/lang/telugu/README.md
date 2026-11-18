@@ -6,7 +6,7 @@ Open `index.html` in a browser. Everything is static: no build step, no server n
 
 | Folder | Holds | Home-page section |
 |---|---|---|
-| `reference/` | Rosetta Stone, Signs & Conjuncts, Sound Charts, idioms, dictionary, verbs | Resources |
+| `reference/` | External Links, Rosetta Stone, Signs & Conjuncts, Sound Charts, idioms, dictionary, verbs | Reference |
 | `alphabet/` | Phonemes, Diacritics, Conjuncts, Lookalike Builder, Lookalikes, … | Alphabet |
 | `grammar/` | Sentence, nouns, cases, … | Grammar |
 | `vocabulary/` | Greetings, numbers, home, … | Vocabulary |
@@ -23,7 +23,7 @@ At the top level: `index.html` (the tile launcher), `review.html` (replay of mis
 | `game-core.js`, `game-menu.js` | The round every game plays (deck, counters, complete screen) and the ⋮ menu. |
 | `lesson-shell.js` | The frame for lesson pages and the "Coming soon" placeholders. |
 | `base.css` | Fonts, reset and color tokens. Defined here only. |
-| `home.css`, `game.css`, `shell.css`, `reference.css` | One stylesheet per kind of page: home, games, lessons/placeholders/Review, and the Resources pages (on top of `game.css`). |
+| `home.css`, `game.css`, `shell.css`, `reference.css` | One stylesheet per kind of page: home (and the External Links page, which is laid out as tiles), games, lessons/placeholders/Review, and the Reference pages (on top of `game.css`). |
 
 ## Conventions
 
@@ -34,4 +34,4 @@ At the top level: `index.html` (the tile launcher), `review.html` (replay of mis
 - To build a lesson: copy `lesson-template.html` over the placeholder in its folder (and put `../` in front of its six links), then delete the `soon` block from its tile in `units.js`.
 - To build a game: start from `alphabet/01_phonemes.html`. `GameCore.create({ id, pool, render, … })` runs the round; the page draws its card and keyboard and calls `game.judge(right, …)`. All four games are built this way.
 - A page never prints `.ipa` or `.iso` itself, or adds slashes. It asks `TeluguData.notation`: `notation.wrap(notation.letter(l))` gives `/k/` or `ka`, whichever the reader chose. Answers are still compared by `ipa`, which is each letter's key whatever is on screen. Rosetta Stone is the exception: it always shows both.
-- A page only gets a `<style>` block for layout that is its own. colors and fonts are never set in a page.
+- A page only gets a `<style>` block for layout that is its own. Colors and fonts are never set in a page.

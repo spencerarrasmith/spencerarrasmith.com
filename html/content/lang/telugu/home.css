@@ -1,21 +1,25 @@
 /* ═════════════════════════════════════════════════════════
    home.css — the home page (index.html): the tile launcher
-   and the bar around a page opened from it.
+   and the bar around a page opened from it. Also linked by
+   reference/00_external.html, which lays its links out as
+   the same sections and tiles.
    Fonts, reset and the midnight + gold color tokens come
    from base.css, as they do for game.css and shell.css.
 
    Sections:
-     1. Home view (hero,      4. Review strip + badges
-        settings)
-     2. Sections + tile grid  5. App view (bar + iframe)
-     3. Tile                  6. Phone layout
+     1. Home view (hero,      5. Link tiles (thumbnails)
+        settings)             6. App view (bar + iframe)
+     2. Sections + tile grid  7. Phone layout
+     3. Tile
+     4. Review strip + badges
 ═════════════════════════════════════════════════════════ */
 @import url('base.css');
 
 a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
 
 /* ── Home view ─────────────────────────────── */
-#home {
+/* .tile-page: a page of tiles opened inside the app (the external links) scrolls the same way */
+#home, .tile-page {
   height: 100vh;   /* fallback */
   height: 100dvh;
   overflow-y: auto;
@@ -178,6 +182,47 @@ a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.t
   color: var(--text-dim);
 }
 
+/* ── Link tiles ────────────────────────────── */
+/* A tile that leads to another site (reference/00_external.html). The band across its top is the
+   thumbnail: an image loaded from that site. The band is light because logos and diagrams are drawn
+   for a light page. Until the image arrives, or if it cannot, the site's first letter shows there. */
+.page-note { padding: 26px 0 22px; font-size: 14px; line-height: 1.5; color: var(--text-dim); }
+
+.tile.link { padding: 0; gap: 0; overflow: hidden; }
+
+.tile-thumb {
+  position: relative;
+  flex-shrink: 0;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3efe3;
+  border-bottom: 1px solid var(--border);
+  font-size: 34px;
+  font-weight: 700;
+  color: #8b6512;
+}
+
+/* scale-down: a large image is fitted into the band; a small one (a site icon) keeps its own size */
+.tile-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  object-fit: scale-down;
+  background: inherit;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.tile-thumb img.ok { opacity: 1; }
+.tile-thumb img.icon { width: 48px; height: 48px; margin: auto; padding: 0; object-fit: contain; border-radius: 8px; }   /* a small site icon, shown at one size */
+
+.tile.link .tile-body  { padding: 14px 18px 16px; }
+.tile-host { margin-top: 8px; font-size: 11.5px; color: var(--text-muted); }
+.tile.link .tile-badge { top: 10px; right: 10px; font-size: 12px; background: rgba(11, 12, 24, .7); color: var(--text); }
+
 /* ── App view ──────────────────────────────── */
 #app {
   height: 100vh;   /* fallback */
@@ -225,7 +270,7 @@ a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.t
 }
 
 @media (max-width: 520px) {
-  #home { padding-left: 16px; padding-right: 16px; }
+  #home, .tile-page { padding-left: 16px; padding-right: 16px; }
   .hero { padding: 28px 0 22px; flex-wrap: wrap; }
   .hero-title { font-size: 22px; }
   .hero > .logo + div { flex: 1 1 0; min-width: 0; }      /* the title stays beside the logo; only the setting wraps below */
@@ -241,4 +286,10 @@ a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.t
   .tile > div:not(.tile-icon) { padding-right: 38px; }
   .tile.review > .tile-body { padding-right: 0; }
   .section-head { flex-wrap: wrap; row-gap: 2px; }
+  /* link tiles: the thumbnail moves to the left edge, like a tile's icon */
+  .page-note { padding: 18px 0 16px; }
+  .tile.link { padding: 0; gap: 14px; align-items: stretch; }
+  .tile.link > .tile-thumb { width: 84px; height: auto; min-height: 72px; padding-right: 0; border-bottom: 0; border-right: 1px solid var(--border); font-size: 26px; }
+  .tile.link > .tile-body  { padding: 11px 38px 11px 0; align-self: center; }
+  .tile-host { margin-top: 4px; }
 }

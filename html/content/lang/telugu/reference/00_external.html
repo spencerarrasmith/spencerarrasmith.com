@@ -3,24 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>External Links · Telugu Suite</title>
-<link rel="stylesheet" href="shell.css">
+<title>External Links</title>
+<link rel="stylesheet" href="../home.css">
 </head>
 <body>
-<div id="lesson"></div>
 
-<script src="settings.js"></script>
-<script src="units.js"></script>
-<script src="telugu-data.js"></script>
-<script src="progress.js"></script>
-<script src="lesson-shell.js"></script>
+<main class="tile-page">
+  <div class="home-inner">
+    <p class="page-note">Pages on other sites that go further than this app does. Each one opens in a new tab.</p>
+    <div id="sections"></div>
+  </div>
+</main>
 
-<a href="https://en.wikipedia.org/wiki/International_Phonetic_Alphabet">Wikipedia - International Phonetic Alphabet</a>
-<a href="https://en.wikipedia.org/wiki/Help:IPA/Telugu">Wikipedia - IPA Representations of Telugu</a>
-<a href="https://en.wikipedia.org/wiki/Telugu_script">Wikiepdia - Telugu Script</a>
-<a href="https://www.omniglot.com/writing/telugu.htm">Omniglot - Telugu</a>
-<a href="https://telugu.earth/">Telugu Earth</a>
-<a href="https://learn101.org/telugu.php">Learn101 - Telugu</a>
+<script>
+/* ─────────────────────────────────────────────────────────
+   CONFIG — the links. Add, remove or reorder them here.
 
+   A section:  { title, links: [ … ] }
+   A link:     { href, title, desc, thumb }
+     href    the page to open (https)
+     title   the tile's heading
+     desc    one line on what is there (optional)
+     thumb   the thumbnail: the address of an image ON THE
+             LINKED SITE (optional)
+
+   Thumbnails are never copied into this app; every one is
+   loaded from the site the tile leads to. With no `thumb`:
+     · a Wikipedia article shows the article's own lead image,
+       which Wikipedia is asked for when the page opens
+     · any other site shows its icon (/favicon.ico)
+   If an image cannot be loaded the tile shows the first
+   letter of the site's name instead, so a tile is never broken.
+───────────────────────────────────────────────────────── */
+const SECTIONS = [
+  { title: 'Wikipedia', links: [
+    { href: 'https://en.wikipedia.org/wiki/International_Phonetic_Alphabet',
+      title: 'International Phonetic Alphabet',
+      desc: 'The IPA symbols and the full vowel and consonant charts' },
+    { href: 'https://en.wikipedia.org/wiki/Help:IPA/Telugu',
+      title: 'IPA for Telugu',
+      desc: 'The key Wikipedia uses to write Telugu sounds in IPA, with example words' },
+    { href: 'https://en.wikipedia.org/wiki/Telugu_script',
+      title: 'Telugu script',
+      desc: 'The history of the script, its letters, vowel signs, conjuncts, and numerals' },
+  ] },
+  { title: 'Other sites', links: [
+    { href: 'https://www.omniglot.com/writing/telugu.htm',
+      title: 'Omniglot: Telugu',
+      desc: 'An overview of the script and the language, with an alphabet chart and further links' },
+    { href: 'https://telugu.earth/',
+      title: 'Telugu Earth' },
+    { href: 'https://learn101.org/telugu.php',
+      title: 'Learn101: Telugu',
+      desc: 'Free beginner lessons with audio, starting from the alphabet' },
+  ] },
+];
+
+// Shown for a Wikipedia page that has no lead image (a Help page, say), or when Wikipedia cannot be asked
+const WIKIPEDIA_ICON = 'https://en.wikipedia.org/static/apple-touch/wikipedia.png';
+
+/* ─────────────────────────────────────────────────────────
+   RENDER — the same sections and tiles as the home page
+   (home.css), each tile with a thumbnail above its text.
+───────────────────────────────────────────────────────── */
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const LINKS = SECTIONS.flatMap(s => s.links);
+const host  = href => new URL(href).hostname.replace(/^www\./, '');
+const initial = href => new URL(href).hostname.split('.').slice(-2)[0].charAt(0).toUpperCase();   // en.wikipedia.org → W
+
+// https://en.wikipedia.org/wiki/Telugu_script → { lang: 'en', title: 'Telugu script' }; any other address → null
+const wikiPage = href => {
+  const m = /^https:\/\/([a-z-]+)\.wikipedia\.org\/wiki\/([^?#]+)/.exec(href);
+  return m ? { lang: m[1], title: decodeURIComponent(m[2]).replace(/_/g, ' ') } : null;
+};
+
+function tileHTML(l, i) {
+  return `<a class="tile link" href="${esc(l.href)}" target="_blank" rel="noopener noreferrer" data-link="${i}">
+    <div class="tile-thumb" aria-hidden="true"><span>${esc(initial(l.href))}</span></div>
+    <div class="tile-body">
+      <div class="tile-title">${esc(l.title)}</div>
+      ${l.desc ? `<div class="tile-desc">${esc(l.desc)}</div>` : ''}
+      <div class="tile-host">${esc(host(l.href))}</div>
+    </div>
+    <span class="tile-badge" title="Opens in a new tab" aria-label="Opens in a new tab">↗</span></a>`;
+}
+
+document.getElementById('sections').innerHTML = SECTIONS.map(s => `
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">${esc(s.title)}</h2>
+      <span class="section-count">${s.links.length} link${s.links.length === 1 ? '' : 's'}</span>
+    </div>
+    <div class="tiles">${s.links.map(l => tileHTML(l, LINKS.indexOf(l))).join('')}</div>
+  </section>`).join('');
+
+/* ─────────────────────────────────────────────────────────
+   THUMBNAILS
+   Each address is tried in turn. An image that fails to load
+   is taken away again, so the letter under it shows.
+   The linked site is not told which page asked (no referrer):
+   some sites refuse images requested from another site.
+───────────────────────────────────────────────────────── */
+function showThumb(i, urls) {
+  const box = document.querySelector(`[data-link="${i}"] .tile-thumb`);
+  const url = urls.find(Boolean);
+  if (!box || !url) return;
+  const rest = urls.slice(urls.indexOf(url) + 1);
+  const img = new Image();
+  img.alt = '';
+  img.setAttribute('referrerpolicy', 'no-referrer');
+  img.addEventListener('load',  () => { img.classList.add('ok'); img.classList.toggle('icon', img.naturalWidth > 0 && img.naturalWidth < 64); });   // a site icon is drawn at one fixed size
+  img.addEventListener('error', () => { img.remove(); showThumb(i, rest); });
+  img.src = url;
+  box.appendChild(img);
+}
+
+// The lead image of each article, straight from Wikipedia's own API: title → image address
+async function wikipediaImages(lang, titles) {
+  const api = `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&redirects=1` +
+              `&prop=pageimages&piprop=thumbnail&pithumbsize=480&titles=${encodeURIComponent(titles.join('|'))}`;
+  const q = (await (await fetch(api)).json()).query || {};
+  const moved = {};                                    // a title Wikipedia rewrote or redirected → the title it answers under
+  [...(q.normalized || []), ...(q.redirects || [])].forEach(x => { moved[x.from] = x.to; });
+  const image = {};
+  (q.pages || []).forEach(p => { if (p.thumbnail && /^https:\/\/upload\.wikimedia\.org\//.test(p.thumbnail.source)) image[p.title] = p.thumbnail.source; });
+  return title => { for (let n = 0; moved[title] && n < 5; n++) title = moved[title]; return image[title]; };
+}
+
+const wiki = {};                                       // language → [{ i, title }] still waiting for Wikipedia's answer
+LINKS.forEach((l, i) => {
+  const page = wikiPage(l.href);
+  if (l.thumb)   showThumb(i, [l.thumb]);
+  else if (page) (wiki[page.lang] = wiki[page.lang] || []).push({ i, title: page.title });
+  else           showThumb(i, [new URL('/favicon.ico', l.href).href]);
+});
+
+Object.entries(wiki).forEach(([lang, pages]) => {
+  const icon = () => pages.forEach(p => showThumb(p.i, [WIKIPEDIA_ICON]));
+  if (typeof fetch !== 'function') return icon();
+  wikipediaImages(lang, pages.map(p => p.title))
+    .then(imageOf => pages.forEach(p => showThumb(p.i, [imageOf(p.title), WIKIPEDIA_ICON])))
+    .catch(icon);
+});
+</script>
 </body>
 </html>
