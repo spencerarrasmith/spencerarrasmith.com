@@ -159,7 +159,7 @@ function conjCardsHTML() {
   return CONS.map(l => {
     const ex = SD.HOST + '్' + l.ch;
     const below = SD.BELOW.includes(l.ch);
-    const sup = l.ch === 'ష' ? [noteOf('kssa')] : l.ch === 'ర' ? [noteOf('ra')] : l.ch === 'త' ? [noteOf('ta')] : 'జటడదల'.includes(l.ch) ? [noteOf('low')] : [];
+    const sup = l.ch === 'ష' ? [noteOf('kssa')] : l.ch === 'ర' ? [noteOf('ra')] : l.ch === 'త' ? [noteOf('ta')] : [];
     const alt = SD.ALT[l.ch];
     return `<div class="cj${isRare(l) ? ' rare' : ''}" data-rare="${isRare(l) ? 1 : 0}" data-ch="${esc(l.ch)}">
       <span class="full">${esc(l.ch)}</span><span class="arrow" aria-hidden="true">→</span>

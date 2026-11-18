@@ -46,9 +46,6 @@
     { id: 'ha-aa', title: 'ా on హ',
       text: 'హా is drawn more compactly than other ా forms: the tick tucks over the letter instead of adding width to it.',
       letters: 'హ', signs: 'ా', usual: ['కా'] },
-    { id: 'high', title: 'ె ే ై ొ ౌ on ఖ ఙ జ ఞ ణ బ ఱ ల',
-      text: 'On these eight letters the marks above the letter sit noticeably higher than on the rest.',
-      letters: 'ఖఙజఞణబఱల', signs: 'ెేైొౌ', usual: ['కె', 'కే', 'కై'] },
     { id: 'ai-two', title: 'ై is two parts',
       text: 'ై is ె plus a second mark ౖ. Typing ె then ౖ gives the same shape as the single sign ై, so you may meet it written either way.',
       letters: '', signs: '', usual: [] },
@@ -73,9 +70,6 @@
     { id: 'ta', title: '్త comes in three widths',
       text: 'The below-form of త is narrow after క గ ఠ ర శ, wide after ఘ ఝ ఞ ణ మ య ఱ హ, and sits low after ష. After any other letter it takes its ordinary form.',
       examples: ['క్త', 'గ్త', 'ఘ్త', 'మ్త', 'ష్త'], usual: ['ద్త'] },
-    { id: 'low', title: 'Below-forms drop lower after ఖ ఛ ఢ థ ధ ఫ భ',
-      text: 'After these seven letters the below-forms of జ ట డ ద ల are drawn lower, so they clear the base letter.',
-      examples: ['ఖ్జ', 'ఛ్ట', 'ఢ్డ', 'థ్ద', 'ఫ్ల', 'భ్ద'], usual: ['క్జ', 'క్ద'] },
   ];
 
   /* Guard: everything named here must exist in telugu-data.js */
