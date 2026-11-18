@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sound Charts</title>
+<link rel="stylesheet" href="../game.css">
+<link rel="stylesheet" href="../reference.css">
+<style>
+/* ── Sound Charts-specific. The scrolling page, sticky header, hint, tools row,
+      jump pills and tags are in reference.css; the header and colours in game.css / base.css ── */
+
+.wrap { gap: 16px; max-width: 1440px; }      /* wider than the other reference pages: the consonant grid has twelve columns */
+.hint { max-width: 78ch; }
+.te  { font-family: 'Noto Sans Telugu', 'Inter', sans-serif; }
+.snd { font-family: 'Noto Sans', 'Inter', sans-serif; }
+
+section.part { display: grid; gap: 12px; scroll-margin-top: 64px; }
+section.part > h2 { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; margin-top: 6px; }
+
+/* legend: what a Telugu entry and an English entry look like */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-size: 12.5px; color: var(--text-muted); }
+.legend .eg { display: inline-flex; align-items: baseline; gap: 5px; margin-right: 8px; }
+
+/* a Telugu entry (letter + its sound) and an English entry (sound + key word), used in both charts' lists */
+.tel { display: inline-flex; align-items: baseline; gap: 5px; white-space: nowrap; }
+.tel .te  { font-size: 24px; font-weight: 700; line-height: 1.25; color: var(--accent-light); }
+.tel .snd { font-size: 12.5px; color: var(--text); }
+.eng { display: inline-flex; align-items: baseline; gap: 5px; white-space: nowrap; font-size: 12.5px; color: var(--text-dim); }
+.eng .snd { color: var(--text-dim); }
+.eng .kw  { color: var(--text-muted); }
+.eng .kw b { color: var(--text); font-weight: 600; }
+
+/* the two charts sit in the same kind of box; both scroll sideways when the screen is narrower than they are */
+.chart { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); overflow-x: auto; }
+
+/* vowel chart (an SVG; every text in it is sized here) */
+.vc { display: block; width: 100%; min-width: 700px; max-width: 900px; height: auto; margin: 0 auto; }
+.vc .frame  { fill: none; stroke: var(--text-muted); stroke-width: 1.5; }
+.vc .grid   { stroke: var(--border); stroke-width: 1.5; }
+.vc text    { font-family: 'Noto Sans', 'Inter', sans-serif; font-size: 13px; fill: var(--text-dim); }
+.vc .axis   { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; fill: var(--text-muted); }
+.vc .t-te   { font-family: 'Noto Sans Telugu', sans-serif; font-size: 22px; font-weight: 700; fill: var(--accent-light); }
+.vc .t-snd  { fill: var(--text); }
+.vc .t-kw   { fill: var(--text-muted); }
+.vc .t-b    { fill: var(--text); font-weight: 600; }
+.vc .dot-te { fill: var(--accent-light); }
+.vc .dot-en { fill: var(--surface); stroke: var(--text-dim); stroke-width: 1.5; }
+
+/* the lists under a chart */
+.rows { display: grid; gap: 8px; }
+.rowline { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; padding: 9px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.rowline .lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; min-width: 62px; }
+.rowline .why { flex-basis: 100%; font-size: 12.5px; line-height: 1.5; color: var(--text-muted); }
+
+/* consonant grid */
+table.cons { border-collapse: separate; border-spacing: 0; width: 100%; }
+.cons th, .cons td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 5px 4px; text-align: center; vertical-align: middle; }
+.cons tr > :last-child { border-right: none; }
+.cons tbody tr:last-child > * { border-bottom: none; }
+.cons thead th { background: var(--surface-up); font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; }
+.cons thead tr.groups th { color: var(--text-muted); letter-spacing: .12em; padding: 4px 6px; }
+.cons th.row { position: sticky; left: 0; z-index: 1; background: var(--surface-up); text-align: left; font-size: 11px; font-weight: 600; color: var(--text-dim); min-width: 96px; max-width: 120px; line-height: 1.3; }
+.cons td { min-width: 64px; }
+.cons td.empty { background: rgba(0, 0, 0, .18); }                 /* no sound here in either language */
+.cell { display: flex; justify-content: center; align-items: center; gap: 4px; }
+.vg   { display: grid; gap: 4px; }                       /* one side of a pair: voiceless (left) or voiced (right) */
+.ph   { display: grid; justify-items: center; gap: 1px; padding: 3px 5px 4px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-up); }
+.ph.both { border-color: var(--accent); background: var(--accent-glow); }      /* a sound both languages have */
+.ph.en   { background: none; }                                                 /* English only */
+.ph .tel { gap: 4px; }
+.ph .tel .te { font-size: 22px; }
+.tel.rare { border-bottom: 1px dashed var(--accent); }                      /* a rare or extra letter */
+
+/* notes */
+ol.notes { list-style: none; display: grid; gap: 10px; }
+.note { display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.note .num { grid-row: 1 / span 2; width: 24px; height: 24px; border-radius: 50%; background: var(--accent-glow); border: 1px solid var(--accent); color: var(--accent-light); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.note h4 { font-size: 14.5px; font-weight: 600; color: var(--text); font-family: 'Noto Sans Telugu', 'Inter', sans-serif; }
+.note p { font-size: 13px; line-height: 1.55; color: var(--text-dim); max-width: 80ch; }
+.note .te { font-size: 1.3em; line-height: 1.2; }
+</style>
+</head>
+<body>
+
+<header class="g-header">
+  <div class="g-header-top">
+    <span class="g-title">Sound Charts</span>
+    <div class="g-right"><div class="g-stats"><span id="count"></span></div></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="hint">Telugu and English sounds on the two charts of the International Phonetic Alphabet, so you can see which sounds the languages share and where each has something the other lacks. <b>Vowels</b> are placed by where the tongue is; <b>consonants</b> by where in the mouth the sound is made (across) and how (down). English is <span id="accent"></span>.</p>
+
+  <div class="tools">
+    <label class="menu-opt" for="show-rare"><input type="checkbox" id="show-rare" checked> <span>Include rare and extra letters</span></label>
+    <label class="menu-opt" for="compact"><input type="checkbox" id="compact"> <span>Only rows and columns in use</span></label>
+    <nav class="jump" aria-label="Jump to"><a href="#sec-vowels">Vowels</a><a href="#sec-consonants">Consonants</a><a href="#sec-notes">Notes</a></nav>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <section class="part" id="sec-vowels">
+    <h2>Vowels</h2>
+    <p class="hint">Front of the mouth on the left, back on the right; tongue high at the top, low at the bottom. A filled dot is a Telugu vowel, a ring an English one.</p>
+    <div class="chart" id="vowel-chart"></div>
+    <div class="rows" id="vowel-rows"></div>
+  </section>
+
+  <section class="part" id="sec-consonants">
+    <h2>Consonants</h2>
+    <p class="hint">Lips on the left, throat on the right. Where a box holds a pair, the voiceless sound is on the left and the voiced one on the right. A gold box is a sound both languages have.</p>
+    <div class="chart"><table class="cons" id="cons"></table></div>
+    <div class="rows" id="cons-rows"></div>
+  </section>
+
+  <section class="part" id="sec-notes">
+    <h2>Notes</h2>
+    <ol class="notes" id="notes"></ol>
+  </section>
+
+</div>
+
+<script src="../settings.js"></script>
+<script src="../telugu-data.js"></script>
+<script src="sound-charts-data.js"></script>
+<script>
+if (!window.TeluguData)      throw new Error('../telugu-data.js was not found');
+if (!window.SoundChartsData) throw new Error('sound-charts-data.js was not found next to this page');
+
+/* ─────────────────────────────────────────────────────────
+   DATA
+   The Telugu letters and their sounds come from telugu-data.js.
+   Where each sound sits on the charts, the English sounds and
+   the notes come from sound-charts-data.js. Edit them there.
+
+   A Telugu letter carries its sound in the reader's notation
+   (IPA or ISO, chosen on the home page). English has no ISO
+   spelling, and the charts themselves are IPA's, so English
+   sounds are always IPA, between slashes.
+───────────────────────────────────────────────────────── */
+const TD = TeluguData, SD = SoundChartsData, N = TD.notation;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const isRare = l => l.rare || !l.inBook;                  // rare and extra letters both go behind the option
+const shown  = l => $('show-rare').checked || !isRare(l);
+
+// 's|k|y' → s<b>k</b>y : the letters that spell the sound
+const word = (w, open = '<b>', close = '</b>') => { const [a, b, c] = w.split('|'); return esc(a) + open + esc(b) + close + esc(c); };
+
+const telHTML = l => `<span class="tel${isRare(l) ? ' rare' : ''}" data-ch="${esc(l.ch)}"><span class="te">${esc(l.ch)}</span> <span class="snd">${esc(N.wrap(N.letter(l)))}</span></span>`;
+const engHTML = (ipa, w) => `<span class="eng" data-ipa="${esc(ipa)}"><span class="snd">/${esc(ipa)}/</span> <span class="kw">${word(w)}</span></span>`;
+
+/* Telugu inside running text gets its own font */
+const teRuns = s => esc(s).replace(/[ఀ-౿]+/g, m => `<span class="te">${m}</span>`);
+
+/* ─────────────────────────────────────────────────────────
+   VOWEL CHART  (SVG)
+   The IPA vowel quadrilateral: the front edge slopes, because
+   the tongue has less room to move at the bottom of the mouth.
+───────────────────────────────────────────────────────── */
+const VB = [860, 452];                                              // viewBox width, height
+const FC = [214, 66], BC = [654, 66], BO = [654, 386], FO = [414, 386];   // corners: front/back × close/open
+const at = (back, open) => {
+  const left = FC[0] + (FO[0] - FC[0]) * open;
+  return [left + (BC[0] - left) * back, FC[1] + (FO[1] - FC[1]) * open];
+};
+
+function vowelChartSVG() {
+  const line = (a, b, cls) => `<line class="${cls}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`;
+  const frame = `<polygon class="frame" points="${[FC, BC, BO, FO].map(p => p.join(',')).join(' ')}"/>` +
+    [1 / 3, 2 / 3].map(o => line(at(0, o), at(1, o), 'grid')).join('') + line(at(0.5, 0), at(0.5, 1), 'grid');
+  const axes =
+    [['Front', 0], ['Central', 0.5], ['Back', 1]].map(([t, b]) => `<text class="axis" x="${at(b, 0)[0]}" y="30" text-anchor="middle">${t}</text>`).join('') +
+    [['Close', 0], ['Close-mid', 1 / 3], ['Open-mid', 2 / 3], ['Open', 1]].map(([t, o]) => `<text class="axis" x="14" y="${at(0, o)[1] + 4}">${t}</text>`).join('');
+
+  const telugu = {};                                                // quality → [letters]: a short/long pair shares a spot
+  SD.teluguVowels.filter(shown).forEach(l => (telugu[SD.quality(l.ipa)] = telugu[SD.quality(l.ipa)] || []).push(l));
+  const english = Object.fromEntries(SD.ENGLISH_VOWELS);
+
+  const spots = Object.entries(SD.SPOTS).map(([ipa, [back, open, side]]) => {
+    const te = telugu[ipa] || [], en = english[ipa];
+    if (!te.length && !en) return '';
+    const [x, y] = at(back, open);
+    const teLine = te.map(l => `<tspan class="t-te">${esc(l.ch)}</tspan><tspan class="t-snd" dx="4">${esc(N.wrap(N.letter(l)))}</tspan>`).join('<tspan dx="10"> </tspan>');
+    const enLine = en ? `<tspan class="t-snd">/${esc(ipa)}/</tspan><tspan class="t-kw" dx="5">${word(en, '<tspan class="t-b">', '</tspan>')}</tspan>` : '';
+    const lines = [teLine, enLine].filter(Boolean);
+    const anchor = side === 'l' ? 'end' : side === 'r' ? 'start' : 'middle';
+    const tx = side === 'l' ? x - 16 : side === 'r' ? x + 16 : x;
+    // first baseline: beside the dot for l / r, clear of it for above / below
+    const y0 = side === 'a' ? y - 16 - (lines.length - 1) * 22
+             : side === 'b' ? y + (te.length ? 34 : 28)
+             : y + (lines.length === 2 ? -2 : te.length ? 8 : 5);
+    const text = lines.map((ln, i) => `<text x="${tx}" y="${y0 + i * 22}" text-anchor="${anchor}">${ln}</text>`).join('');
+    const dots = (en ? `<circle class="dot-en" cx="${x}" cy="${y}" r="${te.length ? 9.5 : 6}"/>` : '') + (te.length ? `<circle class="dot-te" cx="${x}" cy="${y}" r="5.5"/>` : '');
+    return `<g class="spot ${te.length && en ? 'both' : te.length ? 'te' : 'en'}" data-ipa="${esc(ipa)}">${dots}${text}</g>`;
+  }).join('');
+
+  return `<svg class="vc" viewBox="0 0 ${VB[0]} ${VB[1]}" role="img" aria-label="Vowel chart: Telugu and English vowels by tongue position">${frame}${axes}${spots}</svg>`;
+}
+
+function vowelRowsHTML() {
+  const diph = SD.teluguDiphthongs.filter(shown).map(telHTML).join('') + SD.DIPHTHONGS.en.map(([ipa, w]) => engHTML(ipa, w)).join('');
+  const off = SD.teluguOffChart.map(o => ({ html: o.letters.filter(shown).map(telHTML).join(''), why: o.why }))
+    .concat(SD.OFF_CHART_EN.map(o => ({ html: engHTML(o.ipa, o.word), why: o.why })))
+    .filter(o => o.html);
+  return `<div class="rowline" id="diphthongs"><span class="lbl">Glides</span>${diph}<span class="why">Diphthongs glide from one position to another, so they have no single spot. Telugu has two; English has five.</span></div>` +
+    off.map(o => `<div class="rowline offchart"><span class="lbl">Not on<br>the chart</span>${o.html}<span class="why">${teRuns(o.why)}</span></div>`).join('');
+}
+
+/* ─────────────────────────────────────────────────────────
+   CONSONANT GRID
+   One box per place × manner. Inside it, each sound is a small
+   card: the Telugu letter(s) for it, and the English sound.
+───────────────────────────────────────────────────────── */
+function consonantPhones() {
+  // ipa → { ipa, place, manner, voiced, te: [letters], en: key word | null }, in first-seen order
+  const phones = new Map();
+  const get = ipa => {
+    if (!phones.has(ipa)) { const [place, manner, voiced] = SD.WHERE[ipa]; phones.set(ipa, { ipa, place, manner, voiced, te: [], en: null }); }
+    return phones.get(ipa);
+  };
+  SD.teluguConsonants.filter(shown).forEach(l => get(l.ipa).te.push(l));
+  SD.ENGLISH_CONSONANTS.forEach(([ipa, w]) => { get(ipa).en = w; });
+  return [...phones.values()];
+}
+
+const phoneHTML = p => `<div class="ph ${p.te.length && p.en ? 'both' : p.te.length ? 'te' : 'en'}" data-ipa="${esc(p.ipa)}">${p.te.map(telHTML).join('')}${p.en ? engHTML(p.ipa, p.en) : ''}</div>`;
+
+function consonantsHTML() {
+  const phones = consonantPhones();
+  const used = (key, v) => phones.some(p => p[key] === v);
+  const compact = $('compact').checked;
+  const places  = SD.PLACES.filter(([p]) => !compact || used('place', p));
+  const manners = SD.MANNERS.filter(m => !compact || used('manner', m));
+
+  const groups = [];                                                // [group, how many columns]
+  places.forEach(([, g]) => { const last = groups[groups.length - 1]; if (last && last[0] === g) last[1]++; else groups.push([g, 1]); });
+  const head = `<thead><tr class="groups"><th class="row" rowspan="2" scope="col"></th>${groups.map(([g, n]) => `<th colspan="${n}" scope="colgroup">${esc(g)}</th>`).join('')}</tr>` +
+    `<tr>${places.map(([p]) => `<th scope="col">${esc(p)}</th>`).join('')}</tr></thead>`;
+
+  const body = manners.map(m => `<tr data-manner="${esc(m)}"><th class="row" scope="row">${esc(m)}</th>${places.map(([pl]) => {
+    const here = phones.filter(p => p.manner === m && p.place === pl);
+    if (!here.length) return `<td class="empty" data-place="${esc(pl)}"></td>`;
+    const side = v => { const list = here.filter(p => p.voiced === v); return list.length ? `<div class="vg ${v ? 'voiced' : 'voiceless'}">${list.map(phoneHTML).join('')}</div>` : ''; };
+    return `<td data-place="${esc(pl)}"><div class="cell">${side(false)}${side(true)}</div></td>`;
+  }).join('')}</tr>`).join('');
+  return head + '<tbody>' + body + '</tbody>';
+}
+
+function consonantRowsHTML() {
+  return SD.OFF_GRID.map(o => {
+    const letter = o.ch ? [...TD.letters].find(l => l.ch === o.ch) : null;
+    if (letter && !shown(letter)) return '';
+    return `<div class="rowline offgrid"><span class="lbl">Not on<br>the grid</span>${letter ? telHTML(letter) : engHTML(o.ipa, o.word)}<span class="why">${teRuns(o.why)}</span></div>`;
+  }).join('');
+}
+
+/* ─────────────────────────────────────────────────────────
+   LEGEND, NOTES, COUNT
+───────────────────────────────────────────────────────── */
+function legendHTML() {
+  const k = TD.letters.find(l => l.ch === 'క');
+  return `<span><span class="eg">${telHTML(k)}</span>a Telugu letter and its sound${N.id === 'iso' ? ' (ISO, as chosen on the home page)' : ''}</span>` +
+         `<span><span class="eg">${engHTML('k', '|k|in')}</span>an English sound (always IPA) and a word with it</span>` +
+         `<span><span class="eg">${telHTML(TD.letters.find(l => l.ch === 'ఱ'))}</span>a dashed line marks a rare or extra letter</span>`;
+}
+
+const notesHTML = () => SD.NOTES.map((n, i) =>
+  `<li class="note" data-id="${esc(n.id)}"><span class="num">${i + 1}</span><h4>${teRuns(n.title)}</h4><p>${teRuns(n.text)}</p></li>`).join('');
+
+// How many sounds the two languages share, and how many each has alone (what is drawn right now)
+function countText() {
+  const kinds = [...document.querySelectorAll('#cons .ph, #vowel-chart .spot')].map(e => e.classList.contains('both') ? 'both' : e.classList.contains('te') ? 'te' : 'en');
+  const n = k => kinds.filter(x => x === k).length;
+  return `${n('both')} shared · ${n('te')} Telugu only · ${n('en')} English only`;
+}
+
+function render() {
+  $('vowel-chart').innerHTML = vowelChartSVG();
+  $('vowel-rows').innerHTML  = vowelRowsHTML();
+  $('cons').innerHTML        = consonantsHTML();
+  $('cons-rows').innerHTML   = consonantRowsHTML();
+  $('count').textContent     = countText();
+}
+
+$('accent').textContent = SD.ENGLISH;
+$('legend').innerHTML   = legendHTML();
+$('notes').innerHTML    = notesHTML();
+$('show-rare').addEventListener('change', render);
+$('compact').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>

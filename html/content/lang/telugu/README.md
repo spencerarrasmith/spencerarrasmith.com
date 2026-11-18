@@ -6,7 +6,7 @@ Open `index.html` in a browser. Everything is static: no build step, no server n
 
 | Folder | Holds | Home-page section |
 |---|---|---|
-| `reference/` | Rosetta Stone, Signs & Conjuncts, idioms, dictionary, verbs | Resources |
+| `reference/` | Rosetta Stone, Signs & Conjuncts, Sound Charts, idioms, dictionary, verbs | Resources |
 | `alphabet/` | Phonemes, Diacritics, Conjuncts, Lookalike Builder, Lookalikes, … | Alphabet |
 | `grammar/` | Sentence, nouns, cases, … | Grammar |
 | `vocabulary/` | Greetings, numbers, home, … | Vocabulary |
@@ -28,7 +28,7 @@ At the top level: `index.html` (the tile launcher), `review.html` (replay of mis
 ## Conventions
 
 - Pages are named `NN_name.html`, numbered in the order their tiles appear on the home page.
-- A page in a section folder links the top-level files as `../…` (for example `../game.css`). Data that belongs to one page sits next to it (`reference/rosetta-data.js`, `reference/signs-conjuncts-data.js`).
+- A page in a section folder links the top-level files as `../…` (for example `../game.css`). Data that belongs to one page sits next to it (`reference/rosetta-data.js`, `reference/signs-conjuncts-data.js`, `reference/sound-charts-data.js`).
 - Tile ids in `units.js` never change when a file is renamed, so saved progress is kept.
 - A page's title, description and placeholder text are written once, in its tile in `units.js`.
 - To build a lesson: copy `lesson-template.html` over the placeholder in its folder (and put `../` in front of its six links), then delete the `soon` block from its tile in `units.js`.
