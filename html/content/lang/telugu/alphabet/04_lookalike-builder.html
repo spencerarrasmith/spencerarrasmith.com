@@ -14,7 +14,7 @@
    <body>: the header and the bar below it can only stay in view against the thing that scrolls. */
 html { height: auto; overflow: auto; }
 body { height: auto; overflow: visible; }
-:root { --telugu: 'Noto Sans Telugu', 'Noto Sans', sans-serif; --hdr: 47px; }
+:root { --telugu: 'Noto Sans Telugu', 'Noto Sans', sans-serif; --hdr: 47px; }   /* --hdr: the header's height; the page measures it (below) */
 body { min-height: 100vh; min-height: 100dvh; }
 .te { font-family: var(--telugu); }
 
@@ -636,6 +636,18 @@ $('clear').addEventListener('click',function(){
 
 /* ---------- start ---------- */
 load(); render();
+
+/* The bar sticks just under the header, so it needs the header's real height. That is a pixel or
+   two different from one font to the next (when the web font has not loaded, say), so it is
+   measured, and measured again whenever the header changes size. */
+(function(){
+  var header=document.querySelector('.g-header');
+  function fit(){document.documentElement.style.setProperty('--hdr',header.getBoundingClientRect().height+'px');}
+  fit();
+  if(window.ResizeObserver) new ResizeObserver(fit).observe(header);
+  window.addEventListener('resize',fit);
+  window.addEventListener('load',fit);
+})();
 })();
 </script>
 </body>
