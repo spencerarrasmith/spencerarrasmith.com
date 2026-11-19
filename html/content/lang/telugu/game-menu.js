@@ -1,10 +1,13 @@
 /* ═════════════════════════════════════════════════════════
-   game-menu.js — behavior of the ⋮ options menu that the
-   practice games share (phonemes, diacritics, conjuncts, …).
+   game-menu.js — the keyboard options the practice games
+   share ("Show categories", "Shuffle keyboard"), and the ⋮
+   options menu of a game that has one (Lookalikes). Phonemes,
+   Diacritics, and Conjuncts keep their checkboxes in the
+   session popup (game-setup.js) and have no ⋮ menu.
    Exposes window.GameMenu. Pairs with game.css.
 
    The page supplies the markup (ids matter):
-     #menu-wrap  #menu-btn  #opts-menu     the ⋮ button + popover
+     #menu-wrap  #menu-btn  #opts-menu     the ⋮ button + popover (optional)
      #show-cat   #shuffle-kb  #cat-note    keyboard options (optional)
      #cat-badge                            the card's category label
 

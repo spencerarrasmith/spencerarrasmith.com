@@ -20,7 +20,8 @@ At the top level: `index.html` (the tile launcher), `review.html` (replay of mis
 | `units.js` | The one list of sections and tiles. The home page, Review, and the "Coming soon" pages all read it. |
 | `telugu-data.js`, `lookalikes-data.js` | Letters, signs, digits, clusters, and lookalike groups, each sound in both IPA and ISO; `notation` (which of the two to show) and `read()` (the sound of any Telugu character); the CSV reader the Lookalikes game and the Lookalike Builder share. |
 | `progress.js` | Completed units and missed items (this browser only). A missed character is stored as the character, so Review can show it in either notation. |
-| `game-core.js`, `game-menu.js` | The round every game plays (deck, counters, complete screen) and the ⋮ menu. |
+| `game-core.js`, `game-menu.js` | The round every game plays (deck, counters, complete screen), and the keyboard options plus the ⋮ menu of a game that has one. |
+| `game-setup.js` | The popup a game opens before a session. It holds every option the game has (direction, number of rounds, mistakes allowed, its checkboxes), so a game that uses it has no ⋮ menu. Used by Phonemes, Diacritics, and Conjuncts; Lookalikes keeps its ⋮ menu. |
 | `lesson-shell.js` | The frame for lesson pages and the "Coming soon" placeholders. |
 | `base.css` | Fonts, reset, and color tokens. Defined here only. |
 | `home.css`, `game.css`, `shell.css`, `reference.css` | One stylesheet per kind of page: home (and the External Links page, which is laid out as tiles), games, lessons/placeholders/Review, and the Reference pages (on top of `game.css`). |

@@ -14,25 +14,12 @@
     <div class="g-header-top">
       <div class="g-title-row">
         <span class="g-title" id="g-title">Telugu → IPA</span>
-        <button class="rev-btn" id="rev-btn" type="button" aria-pressed="false"
-                aria-label="Reverse direction: IPA to Telugu" title="Reverse direction">🔀</button>
       </div>
       <div class="g-right">
         <div class="g-stats">
           <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
           <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">0</span></span>
-        </div>
-        <div class="menu-wrap" id="menu-wrap">
-          <button class="menu-btn" id="menu-btn" type="button" aria-haspopup="true" aria-expanded="false"
-                  aria-controls="opts-menu" aria-label="Options" title="Options">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="2.8" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="8" cy="13.2" r="1.6"/></svg>
-          </button>
-          <div class="menu" id="opts-menu" role="group" aria-label="Options" hidden>
-            <label class="menu-opt"><input type="checkbox" id="show-cat" checked> <span class="menu-txt"><span>Show categories</span><span class="menu-note" id="cat-note" hidden>Off while keyboard is shuffled</span></span></label>
-            <label class="menu-opt"><input type="checkbox" id="shuffle-kb"> <span>Shuffle keyboard</span></label>
-            <label class="menu-opt"><input type="checkbox" id="include-extra"> <span>Include extra letters</span></label>
-            <label class="menu-opt"><input type="checkbox" id="highlight-correct" checked> <span>Highlight correct answer</span></label>
-          </div>
+          <span class="g-lives" id="s-lives" role="img" hidden></span>
         </div>
       </div>
     </div>
@@ -64,9 +51,11 @@
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
 <script src="../game-core.js"></script>
+<script src="../game-setup.js"></script>
 <script>
 if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
 if (!window.GameCore)   throw new Error('../game-core.js was not found');
+if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
 
 /* ─────────────────────────────────────────────────────────
    DATA
@@ -78,6 +67,9 @@ if (!window.GameCore)   throw new Error('../game-core.js was not found');
 
    The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the ✓ on the home tile) is game-core.js.
+   The popup that opens first is game-setup.js. It holds every
+   option: direction, number of rounds, mistakes allowed, and
+   the four checkboxes. There is no ⋮ menu on this page.
    This page draws the card and the keyboard and checks answers.
 ───────────────────────────────────────────────────────── */
 const GAME  = 'phonemes';                // tile id: finishing either direction checks off the tile
@@ -104,12 +96,12 @@ function btnForLetter(letter) {
 /* ─────────────────────────────────────────────────────────
    BUILD KEYBOARD  (layout comes from telugu-data.js)
 ───────────────────────────────────────────────────────── */
-// Both keyboards (sound and Telugu) follow the options menu:
+// Both keyboards (sound and Telugu) follow the options in the session popup:
 //   Show categories checked   → grouped and labeled by place of articulation
 //   Show categories unchecked → one plain block of keys, alphabet order
 //   Shuffle keyboard checked  → that block in a random order (kbOrder), which
 //                              stays fixed for the round so keys can be found
-// Rebuilding (e.g. when an option changes) never restarts the round.
+// Rebuilding (when one of those two boxes changes) never restarts the round.
 let activeLetters = new Set();
 let kbOrder = null;                      // null = alphabet order
 function buildKB() {
@@ -154,7 +146,8 @@ function onAnswer(letter, btn) {
   btn.classList.add(ok ? 'ok' : 'err');
 
   // Wrong: highlight the correct key and scroll it into view (optional).
-  // The answer text under the card is shown either way.
+  // The line under the card says what was picked (the key just pressed), right or wrong.
+  // It never gives the answer: with the highlight off, a wrong guess leaves it unsaid.
   const correctBtn = !ok && $('highlight-correct').checked ? btnForLetter(cur) : null;
   if (correctBtn) {
     correctBtn.classList.add('ok');
@@ -162,8 +155,8 @@ function onAnswer(letter, btn) {
   }
 
   game.judge(ok, {
-    feedback: ok ? '✓  Correct!' : reversed ? `✗  ${cur.ch}` : `✗  ${N.wrap(N.letter(cur))}`,
-    te:       !ok && reversed,
+    feedback: `${ok ? '✓' : '✗'}  ${reversed ? letter.ch : N.wrap(N.letter(letter))}`,
+    te:       reversed,
     miss:     reversed
       ? { game: GAME + '-reverse', key: cur.ch, ask: 'sound',  note: cur.cat }
       : { game: GAME,              key: cur.ch, ask: 'telugu', note: cur.cat },
@@ -177,13 +170,15 @@ function onAnswer(letter, btn) {
 /* ─────────────────────────────────────────────────────────
    THE ROUND  (game-core.js)
 ───────────────────────────────────────────────────────── */
+const pool = () => TeluguData.pool(CHARS, $('include-extra').checked);
 const game = GameCore.create({
   id:    GAME,
-  errMs: 850,
-  pool:  () => TeluguData.pool(CHARS, $('include-extra').checked),
+  errMs: 1500,                           // a wrong pick stays on screen for a second and a half
+  pool,
+  onRetry: () => openSetup(),            // "Practice Again" asks how to play the next session
   onStart(g) {
     $('kb-area').scrollTop = 0;
-    activeLetters = new Set(g.deck);
+    activeLetters = new Set(pool());     // every letter in play is a key, however few rounds are dealt
     kbOrder = GameMenu.shuffled() ? shuffle(CHARS) : null;   // fresh order each round
     buildKB();
   },
@@ -194,34 +189,50 @@ const game = GameCore.create({
 });
 const SOUNDS = N.id === 'iso' ? 'ISO spellings' : 'IPA phonemes';
 
-// The title and the 🔀 button say which way around the game is, in the reader's notation
-function showDirection() {
-  const btn = $('rev-btn');
-  btn.setAttribute('aria-pressed', String(reversed));
-  btn.setAttribute('aria-label', reversed ? `Reverse direction: Telugu to ${N.name}` : `Reverse direction: ${N.name} to Telugu`);
-  $('g-title').textContent = reversed ? `${N.name} → Telugu` : `Telugu → ${N.name}`;
-}
+// The two ways around, in the reader's notation. The title says which one is being played.
+const DIRECTIONS = [`Telugu → ${N.name}`, `${N.name} → Telugu`];
+function showDirection() { $('g-title').textContent = DIRECTIONS[reversed ? 1 : 0]; }
 
-// 🔀 flips direction and starts a fresh round in the new direction
-function setReversed(rev) {
-  reversed = rev;
-  showDirection();
-  game.start();
-}
+/* ─────────────────────────────────────────────────────────
+   SESSION SETUP  (game-setup.js)
+   The popup that opens with the page, and again from
+   "Practice Again". Every option is in it; the checkboxes
+   keep the ids this page reads them by. Start deals a new
+   session with what it shows.
+───────────────────────────────────────────────────────── */
+const setup = GameSetup.create({
+  title:     'Phonemes',
+  home:      '../index.html',
+  direction: DIRECTIONS,
+  options: [
+    { id: 'show-cat',          label: 'Show categories', checked: true,
+      note: { id: 'cat-note', text: 'Off while keyboard is shuffled' } },
+    { id: 'shuffle-kb',        label: 'Shuffle keyboard' },
+    { id: 'include-extra',     label: 'Include extra letters' },
+    { id: 'highlight-correct', label: 'Highlight correct answer', checked: true },
+  ],
+  max: () => pool().length,              // 51, or 54 with the extra letters
+  onStart(v) {
+    reversed = v.reversed;
+    showDirection();
+    game.start({ size: v.rounds, misses: v.misses });
+  },
+});
+// leave: Cancel goes back to Home (only when the page has just opened and nothing was played)
+const openSetup = (leave = false) => setup.open({ leave });
 
-$('rev-btn').addEventListener('click', () => setReversed(!reversed));
-
-/* ── Options menu (⋮) ─────────────────────────────────── */
-// Open/close, "Show categories", and "Shuffle keyboard" are shared: game-menu.js.
+/* ── The keyboard options ─────────────────────────────── */
+// game-menu.js keeps "Show categories" and "Shuffle keyboard" in step (a shuffled keyboard
+// has no groups) and redraws the keyboard when either changes. It finds the two boxes by
+// id, which is why the popup is created above this line. This page has no ⋮ menu for it to open.
 GameMenu.init({
   rebuild: buildKB,
   reorder: on => { kbOrder = on ? shuffle(CHARS) : null; },
 });
 
-$('include-extra').addEventListener('change', game.start);
-
 showDirection();
-game.start();
+game.start();                            // a round is dealt behind the popup; Start deals the one that is played
+openSetup(true);
 </script>
 </body>
 </html>
