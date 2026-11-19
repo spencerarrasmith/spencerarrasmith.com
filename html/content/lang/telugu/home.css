@@ -52,6 +52,29 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
 }
 
 .hero-title { font-size: 26px; font-weight: 700; letter-spacing: .01em; }
+
+/* Title flip: "Telugu Telusu" ⇄ తెలుగు తెలుసు, a card to a syllable (index.html builds the cards).
+   A card (.flip) holds two faces back to back and turns about its upright axis. .is-te on the
+   title turns every card to its Telugu face; the cards go one after another (--i × 30 ms), each
+   taking .35 s, so the whole title has turned in half a second. A card is as wide as the face it
+   shows (--la / --te, measured by the page), and changes width as it turns. */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.flip-word { display: inline-flex; white-space: nowrap; }
+.flip {
+  --turn: .35s;
+  --wait: calc(var(--i, 0) * 30ms);
+  position: relative;
+  display: inline-block;
+  width: var(--la, auto);
+  perspective: 320px;
+  transition: width var(--turn) ease var(--wait);
+}
+.flip-title.is-te .flip { width: var(--te, auto); }
+.flip-in { display: block; position: relative; transform-style: preserve-3d; transition: transform var(--turn) ease var(--wait); }
+.flip-title.is-te .flip-in { transform: rotateY(180deg); }
+.flip-face { display: block; width: max-content; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip-face.te { position: absolute; left: 0; bottom: -.16em; transform: rotateY(180deg); font-family: 'Noto Sans Telugu', sans-serif; font-size: 1.1em; line-height: 1; letter-spacing: 0; }   /* a touch larger: Telugu letters are shorter than capitals */
+@media (prefers-reduced-motion: reduce) { .flip, .flip-in { transition: none; } }
 .hero-sub   { font-size: 14px; color: var(--text-dim); margin-top: 3px; }
 
 /* ── Settings in the hero: how sounds are written (IPA | ISO) ── */

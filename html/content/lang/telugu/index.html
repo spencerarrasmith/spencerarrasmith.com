@@ -13,7 +13,7 @@
     <header class="hero">
       <div class="logo">తె</div>
       <div>
-        <h1 class="hero-title">Telugu Telusu</h1>
+        <h1 class="hero-title" id="hero-title">Telugu Telusu</h1>
       </div>
       <div class="prefs" id="prefs"></div>
     </header>
@@ -194,6 +194,54 @@ window.addEventListener('hashchange', route);
 // a game in the iframe just wrote progress (or another tab did)
 Progress.onChange(() => { if (!home.hidden) renderHome(); });
 route();
+
+/* ─────────────────────────────────────────────────────────
+   THE TITLE — "Telugu Telusu" turns over into తెలుగు తెలుసు
+   and back again: one card to a syllable, Latin on its
+   front and Telugu on its back.
+   Every FLIP_EVERY ms the cards turn, left to right; the
+   turn itself takes half a second (home.css, "Title flip").
+   The two faces of a card are not the same width, so each
+   card is measured and takes the width of the face it is
+   showing: the letters sit as close as in ordinary text,
+   in either script.
+   A reader who has asked for reduced motion gets the plain
+   title; a screen reader always gets "Telugu Telusu".
+───────────────────────────────────────────────────────── */
+const TITLE = [                          // a row to a word; a pair to a card: [Latin, Telugu]
+  [['Te', 'తె'], ['lu', 'లు'], ['gu', 'గు']],
+  [['Te', 'తె'], ['lu', 'లు'], ['su', 'సు']],
+];
+const FLIP_EVERY = 5000;                 // ms from one flip to the next
+
+(function titleFlip() {
+  const h1 = document.getElementById('hero-title');
+  let n = 0;                             // the card's place in the title: it turns n × 30 ms after the first
+  const card = ([la, te]) => `<span class="flip" style="--i:${n++}"><span class="flip-in"><span class="flip-face la">${esc(la)}</span><span class="flip-face te" lang="te">${esc(te)}</span></span></span>`;
+  const plain = TITLE.map(word => word.map(pair => pair[0]).join('')).join(' ');
+  h1.innerHTML = `<span class="sr-only">${esc(plain)}</span><span class="flip-title" id="flip-title" aria-hidden="true">`
+    + TITLE.map(word => `<span class="flip-word">${word.map(card).join('')}</span>`).join(' ') + '</span>';
+  const title = document.getElementById('flip-title');
+
+  // Each card's two widths, in em so they follow the title's size (it is smaller on a phone)
+  function measure() {
+    title.querySelectorAll('.flip').forEach(c => {
+      const size = parseFloat(getComputedStyle(c).fontSize);
+      const wide = face => parseFloat(getComputedStyle(c.querySelector(face)).width);
+      const la = wide('.la'), te = wide('.te');
+      if (size > 0 && la > 0 && te > 0) { c.style.setProperty('--la', la / size + 'em'); c.style.setProperty('--te', te / size + 'em'); }
+    });
+  }
+  measure();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);     // the Telugu font arrives after the page
+  window.addEventListener('load', measure);
+
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  setInterval(() => {
+    if (document.hidden || home.hidden) return;        // nobody is looking at the title
+    title.classList.toggle('is-te');
+  }, FLIP_EVERY);
+})();
 </script>
 </body>
 </html>
