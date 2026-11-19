@@ -3,7 +3,7 @@
 
    A lesson page is a few lines of data plus one practice
    function. The shell supplies the layout, the Learn →
-   Remarks → Practice flow, completion + the ✓ on the home tile.
+   Remarks → Practice flow.
 
    Page needs:
      <link rel="stylesheet" href="../shell.css">   (from a page inside a section folder)
@@ -41,8 +41,6 @@
                                             (it was shown) or 'sound' (its sound
                                             was shown). Review then writes the
                                             sound in the reader's notation.
-     ctx.complete({accuracy, attempts})     mark the unit done (✓)
-     ctx.isComplete()
      ctx.id
 
    A unit that isn't written yet is one line:
@@ -106,7 +104,7 @@
       section: cfg.section ?? (sec ? sec.title : ''),
       title:   cfg.title   ?? (tile ? tile.title : cfg.id),
     });
-    const Progress = root.TeluguProgress || { miss() {}, complete() {}, isComplete() { return false; } };
+    const Progress = root.TeluguProgress || { miss() {} };
 
     const stages = [
       cfg.learn && cfg.learn.length ? { id: 'learn',    label: 'Learn' }    : null,
@@ -120,10 +118,7 @@
       <div class="shell">
         <header class="shell-head">
           <div class="eyebrow">${esc(cfg.section)}</div>
-          <div class="title-row">
-            <h1>${esc(cfg.title)}</h1>
-            <span class="pill done" id="ls-done" hidden>Completed ✓</span>
-          </div>
+          <h1>${esc(cfg.title)}</h1>
           ${cfg.telugu ? `<div class="te-title">${esc(cfg.telugu)}</div>` : ''}
           <nav class="stepper" role="tablist">
             ${stages.map(s => `<button class="step" role="tab" data-stage="${s.id}" id="tab-${s.id}"
@@ -151,21 +146,7 @@
         Progress.miss(key && typeof key === 'object'
           ? Object.assign({}, key, { game: cfg.id })
           : { game: cfg.id, key, prompt, answer, note }),
-      complete(info) {
-        const was = Progress.isComplete(cfg.id);
-        Progress.complete(cfg.id, info || {});
-        $('ls-done').hidden = false;
-        if (!was) toast('Unit completed ✓');
-      },
-      isComplete: () => Progress.isComplete(cfg.id),
     };
-
-    function toast(msg) {
-      const t = document.createElement('div');
-      t.className = 'toast'; t.textContent = msg; t.setAttribute('role', 'status');
-      host.appendChild(t);
-      setTimeout(() => t.remove(), 2200);
-    }
 
     let current = null, practiceStarted = false;
     function go(id) {
@@ -194,7 +175,6 @@
     $('ls-back').addEventListener('click', () => { const i = stages.findIndex(s => s.id === current); if (i > 0) go(stages[i - 1].id); });
     $('ls-next').addEventListener('click', () => { const i = stages.findIndex(s => s.id === current); if (i < stages.length - 1) go(stages[i + 1].id); });
 
-    $('ls-done').hidden = !ctx.isComplete();
     go(stages[0].id);
     return { go, ctx, stages: stages.map(s => s.id) };
   }

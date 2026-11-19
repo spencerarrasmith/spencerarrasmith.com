@@ -15,7 +15,21 @@
       <div>
         <h1 class="hero-title" id="hero-title">Telugu Telusu</h1>
       </div>
-      <div class="prefs" id="prefs"></div>
+      <!-- top right: the Profile page, and the Settings menu -->
+      <div class="hero-tools">
+        <a class="icon-btn" id="profile-btn" href="#/profile" aria-label="Profile" title="Profile">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="6.6" r="3.4"/><path d="M3.2 17.2c.5-3.6 3.3-5.6 6.8-5.6s6.3 2 6.8 5.6"/></svg>
+        </a>
+        <div class="settings-wrap" id="settings-wrap">
+          <button class="icon-btn" id="settings-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="settings-menu" aria-label="Settings" title="Settings">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M3.5 10h13M3.5 14.5h13"/></svg>
+          </button>
+          <div class="settings-menu" id="settings-menu" role="group" aria-label="Settings" hidden>
+            <div class="settings-title">Settings</div>
+            <div class="prefs" id="prefs"></div>
+          </div>
+        </div>
+      </div>
     </header>
     <div class="featured" id="featured"></div>
     <div id="sections"></div>
@@ -48,13 +62,12 @@ const FEATURED = TeluguUnits.featured;     // pinned above the sections (Review)
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-// Progress is optional: without progress.js the home page simply shows no ✓ or counts.
-const Progress = window.TeluguProgress || { doneIds: () => [], missCount: () => 0, onChange() {} };
+// Progress is optional: without progress.js the home page simply shows no Review count.
+const Progress = window.TeluguProgress || { missCount: () => 0, onChange() {} };
 const Settings = window.TeluguSettings || null;
 
-function tileHTML(t, done) {
-  const mark = t.soon ? '<span class="tile-badge">Soon</span>'
-             : done.has(t.id) ? '<span class="tile-check" title="Completed" aria-label="Completed">✓</span>' : '';
+function tileHTML(t) {
+  const mark = t.soon ? '<span class="tile-badge">Soon</span>' : '';
   return `<a class="tile${t.soon ? ' soon' : ''}" href="#/${esc(t.id)}">
     <div class="tile-icon" aria-hidden="true">${esc(t.icon)}</div>
     <div>
@@ -95,23 +108,18 @@ function toggleHTML(s, i) {
   return `<button type="button" class="section-toggle" aria-expanded="${!shut}" aria-controls="section-${i}" aria-label="${esc(what)}" title="${esc(what)}">${ARROW}</button>`;
 }
 
-const readyCount = (s, done) => {
-  const ready = s.tiles.filter(t => !t.soon).length;
-  const n     = s.tiles.filter(t => done.has(t.id)).length;
-  return `${ready} of ${s.tiles.length} ready` + (n ? ` · ${n} done` : '');
-};
+const readyCount = s => `${s.tiles.filter(t => !t.soon).length} of ${s.tiles.length} ready`;
 
 function renderHome() {
-  const done = new Set(Progress.doneIds());
   document.getElementById('featured').innerHTML = FEATURED.map(featuredHTML).join('');
   document.getElementById('sections').innerHTML = SECTIONS.map((s, i) => `
     <section class="section${collapsed.has(s.title) ? ' collapsed' : ''}" data-section="${esc(s.title)}">
       <div class="section-head">
         <h2 class="section-title">${esc(s.title)}</h2>
-        <span class="section-count">${readyCount(s, done)}</span>
+        <span class="section-count">${readyCount(s)}</span>
         ${toggleHTML(s, i)}
       </div>
-      <div class="tiles" id="section-${i}"${collapsed.has(s.title) ? ' hidden' : ''}>${s.tiles.map(t => tileHTML(t, done)).join('')}</div>
+      <div class="tiles" id="section-${i}"${collapsed.has(s.title) ? ' hidden' : ''}>${s.tiles.map(tileHTML).join('')}</div>
     </section>`).join('');
 }
 renderHome();
@@ -133,10 +141,12 @@ document.getElementById('sections').addEventListener('click', e => {
 
 /* ─────────────────────────────────────────────────────────
    SETTINGS  (settings.js)
-   How sounds are written, everywhere in the app: IPA or ISO.
-   This is the only place it is chosen. Every page reads it as
-   it loads, and a page is loaded afresh each time it is opened
-   from here, so the next page opened shows the new choice.
+   The ☰ button at the top right opens the Settings menu. One
+   setting so far: how sounds are written, everywhere in the
+   app, IPA or ISO. This is the only place it is chosen. Every
+   page reads it as it loads, and a page is loaded afresh each
+   time it is opened from here, so the next page opened shows
+   the new choice.
 ───────────────────────────────────────────────────────── */
 function renderPrefs() {
   const box = document.getElementById('prefs');
@@ -158,9 +168,24 @@ document.getElementById('prefs').addEventListener('click', e => {
 if (Settings) Settings.onChange(renderPrefs);        // another tab changed it
 renderPrefs();
 
+// The menu: ☰ opens and closes it. It stays open while a setting is changed, and closes
+// on a tap anywhere else, or Escape (which hands the focus back to the button).
+(function settingsMenu() {
+  const wrap = document.getElementById('settings-wrap'), btn = document.getElementById('settings-btn'), menu = document.getElementById('settings-menu');
+  const setOpen = open => { menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); };
+  btn.addEventListener('click', () => setOpen(menu.hidden));
+  document.addEventListener('pointerdown', e => { if (!menu.hidden && !wrap.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
+  window.addEventListener('hashchange', () => setOpen(false));
+})();
+
 /* ─────────────────────────────────────────────────────────
    ROUTING  (#/<tile-id>  → app,  anything else → home)
+   PAGES are the pages that open the same way but are not
+   tiles (units.js lists them too): Profile, reached from the
+   top right of the home page.
 ───────────────────────────────────────────────────────── */
+const PAGES = TeluguUnits.pages || [];
 const home  = document.getElementById('home');
 const app   = document.getElementById('app');
 const frame = document.getElementById('app-frame');
@@ -168,7 +193,7 @@ const ALL   = TeluguUnits.all;         // Review + every tile (units.js rejects 
 
 function route() {
   const id   = location.hash.replace(/^#\/?/, '');
-  const tile = ALL.find(t => t.id === id && t.src);
+  const tile = ALL.find(t => t.id === id && t.src) || PAGES.find(p => p.id === id);
 
   if (tile) {
     home.hidden = true;
@@ -183,7 +208,7 @@ function route() {
   } else {
     app.hidden  = true;
     home.hidden = false;
-    renderHome();                          // pick up ✓ and the Review count from the game just played
+    renderHome();                          // pick up the Review count from the game just played
     document.title = 'Telugu Suite';
     frame.removeAttribute('src');          // leaving resets the sub-app
     delete frame.dataset.src;

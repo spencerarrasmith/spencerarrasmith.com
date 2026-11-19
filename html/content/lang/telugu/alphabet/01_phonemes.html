@@ -66,7 +66,7 @@ if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
      inBook  → false for the extras
 
    The round itself (deck, counters, re-queuing a missed card,
-   the complete screen, the ✓ on the home tile) is game-core.js.
+   the complete screen, the record of each session) is game-core.js.
    The popup that opens first is game-setup.js. It holds every
    option: direction, number of rounds, mistakes allowed, and
    the four checkboxes. There is no ⋮ menu on this page.
@@ -176,6 +176,7 @@ const game = GameCore.create({
   errMs: 1500,                           // a wrong pick stays on screen for a second and a half
   pool,
   onRetry: () => openSetup(),            // "Practice Again" asks how to play the next session
+  variant: () => (reversed ? 'reverse' : ''),   // kept with each session's result (the Profile page)
   onStart(g) {
     $('kb-area').scrollTop = 0;
     activeLetters = new Set(pool());     // every letter in play is a key, however few rounds are dealt

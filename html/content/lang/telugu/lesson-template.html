@@ -83,7 +83,6 @@ LessonShell.mount({
         $('d-prompt').textContent = '✓';
         $('d-fb').textContent = 'Done';
         $('d-opts').innerHTML = '';
-        ctx.complete({ accuracy: Math.round(letters.length / attempts * 100), attempts });
         return;
       }
       $('d-prompt').textContent = deck[0].ch;

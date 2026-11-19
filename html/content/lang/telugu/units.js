@@ -1,10 +1,12 @@
 /* ═════════════════════════════════════════════════════════
    units.js — the list of everything in the app: sections,
-   their tiles, and the Review tile. Edit it HERE, once.
+   their tiles, the Review tile, and the pages that are not
+   tiles (Profile). Edit it HERE, once.
    Exposes window.TeluguUnits.
 
    Read by
      index.html        draws the home page and routes #/<id>
+     profile.html      charts the games marked `stats`
                        (load settings.js before this file there and in
                        review.html: Review names follow the notation)
      review.html       names each game in the Review list
@@ -17,7 +19,7 @@
    TILE FIELDS
      id      unique slug: the URL (#/phonemes) and the key saved
              progress is stored under. Never change one, even when
-             the file is renamed, or its ✓ is lost.
+             the file is renamed, or its history is lost.
      icon    shown on the tile. A short Telugu string where the page is about
              the script (క, కా, అఆ): at most two letters, to fit the box.
              Otherwise a plain object or symbol emoji (📕 🔍 🏠); no faces
@@ -31,6 +33,8 @@
              badge and is left out of the section's "ready" count.
              Delete the whole `soon` block when the real page
              replaces the placeholder.
+     stats   true → a practice game whose sessions are recorded
+             (game-core.js) and charted on the Profile page
      review  { gameId: 'Name' } → names for the Review list, keyed
              by the id a page records its misses under. Only needed
              where the tile's own id and title won't do: a second
@@ -85,22 +89,22 @@
       tiles: [
         { id: "phonemes", icon: "క", title: "Phonemes",
           desc: "Match each Telugu character to its sound",
-          src: "alphabet/01_phonemes.html",
+          src: "alphabet/01_phonemes.html", stats: true,
           review: { "phonemes-reverse": "Phonemes ({sound} → Telugu)" } },
         { id: "diacritics", icon: "కా", title: "Diacritics",
           desc: "Match the consonant and vowel sound of each character",
-          src: "alphabet/02_diacritics.html",
+          src: "alphabet/02_diacritics.html", stats: true,
           review: { "diacritics-reverse": "Diacritics ({sound} → Diacritics)" } },
         { id: "conjuncts", icon: "క్ష", title: "Conjuncts",
           desc: "Match the consonants in combined characters",
-          src: "alphabet/03_conjuncts.html",
+          src: "alphabet/03_conjuncts.html", stats: true,
           review: { "conjuncts-reverse": "Conjuncts ({sound} → Conjuncts)" } },
         { id: "lookalike-builder", icon: "ం", title: "Lookalike Builder",
           desc: "Generate a CSV dataset for Lookalike practice",
           src: "alphabet/04_lookalike-builder.html" },
         { id: "lookalikes", icon: "ఒబ", title: "Lookalikes",
           desc: "Customized training from Lookalike CSV files",
-          src: "alphabet/05_lookalikes.html",
+          src: "alphabet/05_lookalikes.html", stats: true,
           review: { lookalikes: "Lookalikes ({sound} → Telugu)" } },
         { id: "spelling", icon: "🔍", title: "Spelling pitfalls",
           desc: "Explore common spelling mistakes",
@@ -345,8 +349,13 @@
       src: "review.html" },
   ];
 
+  // Pages that are not tiles: reached from the top right of the home page, opened the same way (#/<id>).
+  const pages = [
+    { id: "profile", title: "Profile", src: "profile.html" },     // each practice game's sessions over time
+  ];
+
   const tiles = sections.flatMap(s => s.tiles);        // the learning path, in home-page order
-  const all   = [...featured, ...tiles];               // everything that has a route
+  const all   = [...featured, ...tiles];               // every tile, Review included
 
   // Catch typos while editing the list (a duplicate id breaks routing and progress).
   const byId = new Map(), sectionById = new Map(), labels = new Map();
@@ -354,6 +363,7 @@
     if (byId.has(t.id)) throw new Error('units: duplicate tile id ' + t.id);
     byId.set(t.id, t);
   });
+  pages.forEach(p => { if (byId.has(p.id)) throw new Error('units: a page and a tile share the id ' + p.id); });
   sections.forEach(s => s.tiles.forEach(t => sectionById.set(t.id, s)));
   all.forEach(t => Object.entries(t.review || {}).forEach(([game, name]) => {
     if (labels.has(game)) throw new Error('units: two names for review id ' + game);
@@ -366,7 +376,7 @@
   const pretty = id => String(id).replace(/[-_]+/g, ' ').replace(/^./, c => c.toUpperCase());
 
   const api = Object.freeze({
-    sections, featured, tiles, all,
+    sections, featured, tiles, all, pages,
     get:       id => byId.get(id) || null,
     sectionOf: id => sectionById.get(id) || null,
     // Name of a game in the Review list: its `review` name, else its tile's

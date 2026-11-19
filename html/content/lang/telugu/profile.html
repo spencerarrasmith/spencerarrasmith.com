@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Profile</title>
+  <link rel="stylesheet" href="game.css">
+  <link rel="stylesheet" href="reference.css">
+  <style>
+    /* ── Profile-specific. The scrolling page and its sticky header are in reference.css;
+          the header and the colors in game.css / base.css ── */
+
+    /* The two things a chart draws, the same two colors in every chart on the page.
+       Text never takes these colors: a short stroke of the color sits beside the words. */
+    :root { --correct: #3987e5; --errors: #d95926; }
+
+    /* ── Danger Zone: under all the charts, the one thing on the page that destroys anything ── */
+    .pf-danger { margin-top: 18px; padding: 14px 16px 16px; border: 1px solid rgba(248, 113, 113, .45); border-radius: 14px; }
+    .pf-danger h2 { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--error); }
+    .pf-danger-row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-top: 8px; }
+    .pf-danger-row p { flex: 1 1 280px; font-size: 13px; line-height: 1.55; color: var(--text-dim); }
+    .pf-reset {
+      font: inherit; font-size: 13.5px; font-weight: 700; color: #0b0c18; cursor: pointer;
+      background: var(--error); border: 1px solid var(--error); border-radius: 9px; padding: 9px 16px;
+      transition: filter .12s, box-shadow .12s;
+    }
+    .pf-reset:hover:not(:disabled) { filter: brightness(1.08); }
+    .pf-reset.armed { box-shadow: 0 0 0 3px var(--error-dim), 0 0 0 4px var(--error); }      /* waiting for the second click */
+    .pf-reset:disabled { opacity: .4; cursor: default; }
+    .pf-reset:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+
+    .pf-cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
+    .pf-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 16px 14px; min-width: 0; }
+    .pf-head { display: flex; align-items: center; gap: 12px; }
+    .pf-icon {
+      flex-shrink: 0; width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+      background: var(--surface-up); border: 1px solid var(--border);
+      font-family: 'Noto Sans Telugu', sans-serif; font-size: 19px; font-weight: 700; color: var(--accent-light);
+    }
+    .pf-name { font-size: 15.5px; font-weight: 600; color: var(--text); }
+    .pf-sub  { font-size: 12.5px; color: var(--text-muted); margin-top: 1px; }
+
+    /* three figures under the name */
+    .pf-figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0 6px; }
+    .pf-fig { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+    .pf-fig-val { display: block; font-size: 18px; font-weight: 600; color: var(--text); }
+    .pf-fig-lbl { display: block; font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+
+    .pf-empty { margin-top: 14px; padding: 22px 12px; text-align: center; font-size: 13.5px; color: var(--text-muted); background: var(--bg); border: 1px dashed var(--border); border-radius: 10px; }
+
+    /* ── The chart: two lines against the same runs, one above the other ── */
+    .pf-chart { position: relative; margin-top: 8px; }
+    .pf-chart svg { display: block; width: 100%; touch-action: pan-y; outline: none; border-radius: 8px; }
+    .pf-chart svg:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+    .pf-chart text { font-family: inherit; fill: var(--text-muted); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+    .pf-chart .ttl  { fill: var(--text-dim); font-size: 12px; font-weight: 600; }
+    .pf-chart .end  { fill: var(--text); font-size: 11.5px; font-weight: 600; }
+    .pf-chart .grid { stroke: var(--border); stroke-width: 1; }
+    .pf-chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+    .pf-chart .dot  { stroke: var(--surface); stroke-width: 2; }                 /* a ring of the card's own color */
+    .pf-chart .dot.early { fill: var(--surface); stroke-width: 2; }              /* hollow: that session ran out of mistakes */
+    .pf-chart .cross { stroke: var(--text-muted); stroke-width: 1; }
+    .pf-key { margin-top: 2px; font-size: 11.5px; color: var(--text-muted); }
+    .pf-key i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--text-muted); vertical-align: -1px; margin-right: 5px; }
+
+    .pf-tip {
+      position: absolute; z-index: 3; top: 0; left: 0; pointer-events: none;
+      min-width: 150px; padding: 8px 10px; font-size: 12px; color: var(--text-dim);
+      background: var(--surface-up); border: 1px solid var(--border); border-radius: 9px; box-shadow: 0 10px 24px rgba(0, 0, 0, .5);
+    }
+    .pf-tip-head { color: var(--text-muted); margin-bottom: 4px; }
+    .pf-tip-row  { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+    .pf-tip-row b { color: var(--text); font-weight: 600; }
+    .pf-tip-row i { flex-shrink: 0; width: 12px; height: 2px; border-radius: 1px; align-self: center; }
+    .pf-tip-note { margin-top: 4px; color: var(--text-muted); }
+
+    /* the same numbers as a table */
+    .pf-table { margin-top: 10px; font-size: 12.5px; color: var(--text-dim); }
+    .pf-table summary { cursor: pointer; color: var(--text-muted); width: max-content; border-radius: 6px; padding: 2px 4px; }
+    .pf-table summary:hover { color: var(--text); }
+    .pf-table summary:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+    .pf-scroll { max-height: 260px; overflow: auto; margin-top: 8px; border: 1px solid var(--border); border-radius: 10px; }
+    .pf-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    .pf-table th, .pf-table td { padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+    .pf-table th { position: sticky; top: 0; background: var(--surface-up); color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+    .pf-table th:nth-child(2), .pf-table td:nth-child(2) { text-align: left; }
+    .pf-table tr:last-child td { border-bottom: 0; }
+  </style>
+</head>
+<body>
+
+<header class="g-header">
+  <div class="g-header-top">
+    <span class="g-title">Profile</span>
+    <div class="g-right"><div class="g-stats"><span id="stat"></span></div></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <p class="hint">How each practice game has gone, session by session. A session counts once it is played to its end: every card cleared, or stopped by one mistake too many. Kept in this browser only.</p>
+  <div class="pf-cards" id="cards"></div>
+
+  <section class="pf-danger" aria-labelledby="danger-title">
+    <h2 id="danger-title">Danger Zone</h2>
+    <div class="pf-danger-row">
+      <p>Erase every record of earlier attempts: the sessions charted above and the missed items waiting in Review. This cannot be undone.</p>
+      <button class="pf-reset" id="reset" type="button">Reset statistics</button>
+    </div>
+  </section>
+</div>
+
+<script src="settings.js"></script>
+<script src="units.js"></script>
+<script src="progress.js"></script>
+<script>
+if (!window.TeluguUnits)    throw new Error('units.js was not found');
+if (!window.TeluguProgress) throw new Error('progress.js was not found');
+
+/* ─────────────────────────────────────────────────────────
+   PROFILE — results over time.
+   progress.js keeps every session a game plays to its end
+   (game-core.js records it): how many cards were cleared, out
+   of how many answers. This page draws them, a card to a game
+   (the tiles marked `stats` in units.js), in app order.
+
+   A card's chart is two lines against the same runs:
+     correct answers   how many cards the session cleared
+     error rate        wrong answers ÷ all answers, as a percentage
+   They are different kinds of number, so each has its own
+   panel and its own scale, one above the other, sharing the
+   runs along the bottom. (Two scales on one plot would make
+   the lines cross where nothing happens.)
+   Pointing at the chart, or arrowing along it, reads out a run;
+   "Show as a table" lists every run.
+
+   "Reset statistics", in the Danger Zone under the charts,
+   erases every record of earlier attempts: these sessions, and
+   the missed items waiting in Review.
+───────────────────────────────────────────────────────── */
+const Units    = window.TeluguUnits;
+const Progress = window.TeluguProgress;
+const GAMES    = Units.all.filter(t => t.stats);
+const $        = id => document.getElementById(id);
+const esc      = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const errorRate = r => (r.tries ? (r.tries - r.ok) / r.tries * 100 : 0);
+const pct       = v => Math.round(v) + '%';
+const day       = t => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+const moment    = t => new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+const DIRECTION = { reverse: 'reversed' };                 // a run's `dir`, in words
+
+/* ─────────────────────────────────────────────────────────
+   THE CHART  (plain SVG, drawn to the width it is given)
+───────────────────────────────────────────────────────── */
+const NS = 'http://www.w3.org/2000/svg';
+const svgEl = (name, attrs, text) => {
+  const e = document.createElementNS(NS, name);
+  Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v));
+  if (text !== undefined) e.textContent = text;
+  return e;
+};
+
+// A scale from 0 that ends on a round number: [0, step, 2 × step, …] in at most four steps
+function ticks(max) {
+  const top = Math.max(max, 1);
+  const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500].find(s => top / s <= 4) || 1000;
+  const out = [];
+  for (let v = 0; v < top + step - 1e-9; v += step) out.push(v);
+  return out;
+}
+
+const PANELS = [
+  { key: 'correct', title: 'Correct answers', color: 'var(--correct)', value: r => r.ok,        show: v => String(v),  floor: 4 },
+  { key: 'errors',  title: 'Error rate',      color: 'var(--errors)',  value: r => errorRate(r), show: v => pct(v),     floor: 10 },
+];
+const MARKS_UP_TO = 30;       // with more runs than this, only the last one and the early endings keep a dot
+
+function drawChart(host, runs) {
+  const W = Math.max(260, Math.round(host.clientWidth || 560));
+  const L = 34, R = 40, TITLE = 20, PLOT = 84, GAP = 14, FOOT = 22;
+  const H = PANELS.length * (TITLE + PLOT) + (PANELS.length - 1) * GAP + FOOT;
+  const n = runs.length, x0 = L, x1 = W - R;
+  const x = i => (n === 1 ? (x0 + x1) / 2 : x0 + i * (x1 - x0) / (n - 1));
+
+  host.textContent = '';
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', tabindex: 0,
+    'aria-label': `Correct answers and error rate over ${n} ${n === 1 ? 'run' : 'runs'}. The last run: ${runs[n - 1].ok} correct, ${pct(errorRate(runs[n - 1]))} errors. Use the arrow keys to read each run.` });
+  const marks = [];           // per panel: the dot that follows the pointer
+
+  PANELS.forEach((p, k) => {
+    const top = k * (TITLE + PLOT + GAP) + TITLE, bottom = top + PLOT;
+    const vals = runs.map(p.value), scale = ticks(Math.max(...vals, p.floor)), max = scale[scale.length - 1];
+    const y = v => bottom - v / max * PLOT;
+
+    // the panel's name, keyed by a stroke of its color
+    svg.append(svgEl('line', { x1: x0, x2: x0 + 14, y1: top - 10, y2: top - 10, stroke: p.color, 'stroke-width': 2, 'stroke-linecap': 'round' }),
+               svgEl('text', { x: x0 + 20, y: top - 6, class: 'ttl' }, p.title));
+    scale.forEach(v => svg.append(svgEl('line', { x1: x0, x2: x1, y1: y(v), y2: y(v), class: 'grid' }),
+                                  svgEl('text', { x: x0 - 6, y: y(v) + 3.5, 'text-anchor': 'end' }, p.show(v))));
+    if (n > 1) svg.append(svgEl('path', { class: 'line', stroke: p.color, d: vals.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ') }));
+    vals.forEach((v, i) => {
+      const early = runs[i].end === 'out';
+      if (n > MARKS_UP_TO && i !== n - 1 && !early) return;
+      svg.append(svgEl('circle', early ? { cx: x(i), cy: y(v), r: 3.5, class: 'dot early', style: `stroke: ${p.color}` }
+                                       : { cx: x(i), cy: y(v), r: 4.5, class: 'dot', fill: p.color }));
+    });
+    // the last value, written at the end of its line
+    svg.append(svgEl('text', { x: Math.min(x(n - 1) + 9, W - 2), y: y(vals[n - 1]) + 4, class: 'end', 'text-anchor': 'start' }, p.show(vals[n - 1])));
+    marks.push({ dot: svgEl('circle', { r: 5.5, class: 'dot', fill: p.color, visibility: 'hidden' }), y, vals });
+  });
+
+  // runs along the bottom: the first, the last, and a few between
+  const base = H - FOOT + 14, every = Math.max(1, Math.ceil((n - 1) / 5));
+  for (let i = 0; i < n; i += every) if (i === 0 || n - 1 - i >= every / 2) svg.append(svgEl('text', { x: x(i), y: base, 'text-anchor': 'middle' }, i + 1));
+  if (n > 1) svg.append(svgEl('text', { x: x(n - 1), y: base, 'text-anchor': 'middle' }, n));
+  svg.append(svgEl('text', { x: x0 - 6, y: base, 'text-anchor': 'end' }, 'Run'));
+
+  // the reading line and its two dots, on top of everything
+  const cross = svgEl('line', { y1: TITLE, y2: H - FOOT, class: 'cross', visibility: 'hidden' });
+  svg.append(cross, ...marks.map(m => m.dot));
+  host.append(svg);
+
+  const tip = document.createElement('div');
+  tip.className = 'pf-tip'; tip.hidden = true;
+  host.append(tip);
+  const row = (color, strong, rest) => {
+    const r = document.createElement('div'); r.className = 'pf-tip-row';
+    const key = document.createElement('i'); key.style.background = color;
+    const b = document.createElement('b'); b.textContent = strong;
+    r.append(key, b, document.createTextNode(' ' + rest));
+    return r;
+  };
+
+  let at = -1;
+  function read(i) {
+    at = Math.max(0, Math.min(n - 1, i));
+    const r = runs[at], wrong = r.tries - r.ok;
+    cross.setAttribute('x1', x(at)); cross.setAttribute('x2', x(at)); cross.setAttribute('visibility', 'visible');
+    marks.forEach(m => { m.dot.setAttribute('cx', x(at)); m.dot.setAttribute('cy', m.y(m.vals[at])); m.dot.setAttribute('visibility', 'visible'); });
+
+    tip.textContent = '';
+    const head = document.createElement('div'); head.className = 'pf-tip-head';
+    head.textContent = `Run ${at + 1} · ${moment(r.t)}` + (DIRECTION[r.dir] ? ` · ${DIRECTION[r.dir]}` : '');
+    tip.append(head,
+      row('var(--correct)', String(r.ok), `correct of ${r.n} ${r.n === 1 ? 'card' : 'cards'}`),
+      row('var(--errors)',  pct(errorRate(r)), `errors (${wrong} of ${r.tries} ${r.tries === 1 ? 'answer' : 'answers'})`));
+    if (r.end === 'out') { const note = document.createElement('div'); note.className = 'pf-tip-note'; note.textContent = 'Ended early: out of mistakes'; tip.append(note); }
+    tip.hidden = false;
+    // beside the reading line, on whichever side has room
+    const scale = host.clientWidth / W, px = x(at) * scale, w = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(host.clientWidth - w, px + 12 + w > host.clientWidth ? px - 12 - w : px + 12)) + 'px';
+    tip.style.top  = TITLE + 'px';
+  }
+  function hide() { at = -1; tip.hidden = true; cross.setAttribute('visibility', 'hidden'); marks.forEach(m => m.dot.setAttribute('visibility', 'hidden')); }
+
+  // The pointer only has to be nearest a run, anywhere over the chart
+  svg.addEventListener('pointermove', e => {
+    const box = svg.getBoundingClientRect();
+    if (!box.width) return;                                  // not laid out (yet)
+    const px = (e.clientX - box.left) / box.width * W;
+    read(n === 1 ? 0 : Math.round((px - x0) / (x1 - x0) * (n - 1)));
+  });
+  svg.addEventListener('pointerleave', () => { if (document.activeElement !== svg) hide(); });
+  svg.addEventListener('focus', () => { if (at < 0) read(n - 1); });
+  svg.addEventListener('blur', hide);
+  svg.addEventListener('keydown', e => {
+    const to = { ArrowLeft: at - 1, ArrowRight: at + 1, Home: 0, End: n - 1 }[e.key];
+    if (to === undefined) return;
+    e.preventDefault();
+    read(to);
+  });
+}
+
+/* ─────────────────────────────────────────────────────────
+   THE CARDS
+───────────────────────────────────────────────────────── */
+function tableHTML(runs) {
+  const rows = runs.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(moment(r.t))}${DIRECTION[r.dir] ? ' · ' + esc(DIRECTION[r.dir]) : ''}</td><td>${r.ok}</td><td>${r.n}</td><td>${r.tries - r.ok}</td><td>${pct(errorRate(r))}</td><td>${r.end === 'out' ? 'Out of mistakes' : 'Finished'}</td></tr>`);
+  return `<details class="pf-table"><summary>Show as a table</summary>
+    <div class="pf-scroll"><table>
+      <thead><tr><th>Run</th><th>When</th><th>Correct</th><th>Cards</th><th>Errors</th><th>Error rate</th><th>Ended</th></tr></thead>
+      <tbody>${rows.reverse().join('')}</tbody>
+    </table></div></details>`;
+}
+
+function cardHTML(t, runs) {
+  const head = `<div class="pf-head"><span class="pf-icon" aria-hidden="true">${esc(t.icon)}</span><div><div class="pf-name">${esc(t.title)}</div><div class="pf-sub">${esc(t.desc)}</div></div></div>`;
+  if (!runs.length) return `<section class="pf-card" data-game="${esc(t.id)}">${head}<div class="pf-empty">No sessions yet. Play ${esc(t.title)} to its end and it shows up here.</div></section>`;
+  const last = runs[runs.length - 1], best = Math.min(...runs.map(errorRate));
+  const fig = (val, lbl) => `<div class="pf-fig"><span class="pf-fig-val">${esc(val)}</span><span class="pf-fig-lbl">${esc(lbl)}</span></div>`;
+  return `<section class="pf-card" data-game="${esc(t.id)}">${head}
+    <div class="pf-figs">${fig(runs.length, runs.length === 1 ? 'session' : 'sessions')}${fig(pct(errorRate(last)), 'errors, last session')}${fig(pct(best), 'fewest errors')}</div>
+    <div class="pf-chart" data-chart="${esc(t.id)}"></div>
+    ${runs.some(r => r.end === 'out') ? '<div class="pf-key"><i></i>a session that ran out of mistakes</div>' : ''}
+    ${tableHTML(runs)}
+  </section>`;
+}
+
+let shown = {};               // game id → its runs, as drawn
+function render() {
+  shown = Object.fromEntries(GAMES.map(t => [t.id, Progress.runs(t.id)]));
+  const total = Object.values(shown).reduce((s, l) => s + l.length, 0);
+  $('stat').textContent = total + (total === 1 ? ' session' : ' sessions');
+  $('cards').innerHTML = GAMES.map(t => cardHTML(t, shown[t.id])).join('');
+  drawCharts();
+  disarm();
+  $('reset').disabled = Progress.runCount() === 0 && Progress.missCount() === 0;      // nothing to erase
+}
+function drawCharts() {
+  document.querySelectorAll('[data-chart]').forEach(host => drawChart(host, shown[host.dataset.chart]));
+}
+
+/* ── Reset statistics: asked for twice, so one stray tap does not wipe everything ── */
+let armed = 0;
+function disarm() { armed = 0; $('reset').classList.remove('armed'); $('reset').textContent = 'Reset statistics'; }
+$('reset').addEventListener('click', () => {
+  if (armed && Date.now() - armed < 5000) { Progress.reset(); return; }           // (the change redraws the page)
+  armed = Date.now();
+  $('reset').classList.add('armed');
+  $('reset').textContent = 'Click again to erase all history';
+  setTimeout(() => { if (armed && Date.now() - armed >= 5000) disarm(); }, 5100);
+});
+
+Progress.onChange(render);                                  // a reset here, or a session finished in another tab
+let width = 0;
+window.addEventListener('resize', () => { const w = document.documentElement.clientWidth; if (w !== width) { width = w; drawCharts(); } });
+render();
+</script>
+</body>
+</html>

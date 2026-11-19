@@ -3,7 +3,8 @@
    a shuffled deck of cards, one shown at a time; a right
    answer clears the card, a wrong one sends it back into the
    deck; counters and the progress bar follow; when the deck
-   is empty the complete screen shows and the unit gets its ✓.
+   is empty the complete screen shows. Each session played to
+   its end is recorded (progress.js), for the Profile page.
    A session can be given a length and a number of mistakes
    it allows (game-setup.js asks for them); one mistake more
    than that ends it early.
@@ -25,7 +26,7 @@
 
    Usage:
      const game = GameCore.create({
-       id: 'phonemes',                  // the tile id in units.js: gets the ✓
+       id: 'phonemes',                  // the tile id in units.js: its sessions are kept under it
        pool:     () => [cards…],        // the cards of a new round
        render:   card => { … },         // draw this card
        size:     40,                    // optional: play at most this many cards a round,
@@ -35,6 +36,9 @@
        onRetry:  game => { … },         // optional: "Practice Again" was pressed. Without it the
                                         //           button deals a new round; with it the page
                                         //           decides (open the setup popup, say)
+       variant:  game => 'reverse',     // optional: how this session is being played, when the game has
+                                        //           more than one way ('' for the usual one). Kept with
+                                        //           the session's result (progress.js, "A RUN")
        doneText: game => 'All … done.', // the sentence on the complete screen
        okMs: 500, errMs: 1000,          // optional: pause before the next card
      });
@@ -43,8 +47,6 @@
                                         // the 4th ends it (misses: 0 → the first one does).
                                         // size: null → the usual length; misses: null → no limit.
                                         // Both stay in force for later start() calls until set again.
-                                        // A session shorter than the usual length, or one ended by
-                                        // mistakes, does not give the unit its ✓.
 
    In the page's answer handler:
      if (game.locked) return;           // the last answer is still showing
@@ -60,7 +62,7 @@
    State, read-only from outside:
      game.deck  game.current  game.total  game.completed  game.attempts  game.locked
      game.misses  game.limit (mistakes allowed; null = no limit)  game.left (mistakes still allowed)
-     game.over (ended by one mistake too many)  game.short
+     game.over (ended by one mistake too many)
    Also:
      game.render()       redraw the current card (an option changed)
      game.front(pred)    bring the first card matching pred to the front and
@@ -116,18 +118,18 @@
     <button class="retry-btn" id="retry-btn" type="button">Practice Again</button>`;
 
   function create(opts) {
-    const { id, pool, render, size, onStart, onEmpty, onRetry, doneText, okMs = 500, errMs = 1000 } = opts || {};
+    const { id, pool, render, size, onStart, onEmpty, onRetry, variant, doneText, okMs = 500, errMs = 1000 } = opts || {};
     if (!id || typeof pool !== 'function' || typeof render !== 'function') {
       throw new Error('game-core: create() needs id, pool() and render()');
     }
     // Progress is optional: without progress.js the game plays, it just isn't remembered.
-    const Progress = root.TeluguProgress || { miss() {}, complete() {} };
+    const Progress = root.TeluguProgress || { miss() {}, run() {} };
 
     let deck = [], total = 0, completed = 0, attempts = 0, locked = false;
     // This session's own settings (start({ size, misses })), and how it is going
     let want = null;            // cards asked for; null = the usual length
     let limit = null;           // mistakes allowed (3 = the fourth ends the session); null = no limit
-    let misses = 0, over = false, short = false;
+    let misses = 0, over = false;
 
     // Mistakes still allowed (null when there is no limit), and how the header shows them:
     // "❤️×20" down to "❤️×4"; then a heart each, 💚🤍🧡 → 🤍🧡 → 🧡; an empty ring, ⭕, when there are none.
@@ -174,8 +176,8 @@
       $('c-attempts').textContent = attempts;
       $('c-accuracy').textContent = accuracy + '%';
       $('c-errors').textContent   = over ? misses : attempts - total;
-      // The ✓ is for a whole session: not one cut short by mistakes, or dealt shorter than usual
-      if (!over && !short) Progress.complete(id, { accuracy, attempts });
+      // Every session played to its end is kept for the Profile page, whatever its length
+      if (Progress.run) Progress.run(id, { total, correct: completed, attempts, ended: over ? 'out' : 'done', variant: variant ? variant(game) : '' });
     }
 
     function start(o) {
@@ -188,7 +190,6 @@
       const n      = want === null ? usual : Math.min(want, all.length);
       deck      = all.slice(0, n);
       total     = deck.length;
-      short     = total < usual;
       completed = 0;
       attempts  = 0;
       misses    = 0;
@@ -259,7 +260,6 @@
       get limit()     { return limit; },
       get left()      { return left(); },
       get over()      { return over; },
-      get short()     { return short; },
     };
 
     const done = $('g-complete');

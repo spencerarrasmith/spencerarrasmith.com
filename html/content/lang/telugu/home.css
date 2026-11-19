@@ -77,11 +77,34 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .flip, .flip-in { transition: none; } }
 .hero-sub   { font-size: 14px; color: var(--text-dim); margin-top: 3px; }
 
-/* ── Settings in the hero: how sounds are written (IPA | ISO) ── */
-.prefs { margin-left: auto; }
-.pref  { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 6px 10px; }
+/* ── Top right of the hero: the Profile button and the Settings menu (☰) ── */
+.hero-tools { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.icon-btn {
+  width: 40px; height: 40px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-dim); background: var(--surface); border: 1px solid var(--border); border-radius: 11px;
+  cursor: pointer; text-decoration: none;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn:hover { border-color: var(--accent); color: var(--text); }
+.icon-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-glow); color: var(--accent-light); }
+.icon-btn:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+
+.settings-wrap { position: relative; }
+.settings-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 30;
+  width: max-content; max-width: min(320px, calc(100vw - 32px));
+  padding: 14px 16px 16px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .55);
+}
+.settings-title { margin-bottom: 12px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+
+/* A setting in the menu: how sounds are written (IPA | ISO) */
+.pref  { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
 .pref-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
-.seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
 .seg-opt {
   font: inherit; font-size: 13px; font-weight: 600; color: var(--text-dim); cursor: pointer;
   background: none; border: 0; border-radius: 7px; padding: 6px 14px;
@@ -90,7 +113,7 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
 .seg-opt:hover { color: var(--text); }
 .seg-opt.on { background: var(--accent-glow); color: var(--accent-light); box-shadow: inset 0 0 0 1px var(--accent); }
 .seg-opt:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
-.pref-eg { flex-basis: 100%; text-align: right; font-size: 12.5px; color: var(--text-muted); }
+.pref-eg { flex-basis: 100%; font-size: 12.5px; color: var(--text-muted); }
 .pref-eg .te { font-family: 'Noto Sans Telugu', sans-serif; font-size: 15px; color: var(--text-dim); }
 .pref-eg b { font-family: 'Noto Sans', 'Inter', sans-serif; font-weight: 500; color: var(--text); }
 
@@ -194,23 +217,6 @@ a.tile:active { transform: translateY(0); }
 a.tile.soon:hover, a.tile.soon:focus-visible { box-shadow: none; }
 a.tile.soon:hover .tile-icon, a.tile.soon:hover .tile-title, a.tile.soon:hover .tile-desc,
 a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.tile.soon:focus-visible .tile-desc { opacity: 1; }
-
-/* Completed ✓ (same corner as the "Soon" badge; a tile is never both) */
-.tile-check {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: 13px;
-  font-weight: 700;
-  color: #0b0c18;
-  background: var(--success);
-}
 
 /* Review strip above the sections */
 .featured { margin-bottom: 30px; }
@@ -320,11 +326,9 @@ a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.t
 
 @media (max-width: 520px) {
   #home, .tile-page { padding-left: 16px; padding-right: 16px; }
-  .hero { padding: 28px 0 22px; flex-wrap: wrap; }
+  .hero { padding: 28px 0 22px; gap: 12px; }
   .hero-title { font-size: 22px; }
-  .hero > .logo + div { flex: 1 1 0; min-width: 0; }      /* the title stays beside the logo; only the setting wraps below */
-  .prefs { flex-basis: 100%; margin-left: 0; }
-  .pref { justify-content: flex-start; }
+  .hero > .logo + div { flex: 1 1 0; min-width: 0; }      /* the title takes what the logo and the two buttons leave */
   .pref-eg { flex-basis: auto; text-align: left; }
   .tiles { grid-template-columns: 1fr; gap: 10px; }
   /* compact horizontal tiles keep the 35+ item list scannable on a phone */

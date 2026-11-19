@@ -2,10 +2,10 @@
    progress.js — progress + review store shared by every page.
 
    Two things are remembered, both in this browser only:
-     • done    which units have been completed (shows a ✓ on the
-               home tile)
      • misses  items answered wrong in any game, replayed by the
                Review page
+     • runs    every session a game finished, with how it went
+               (the statistics charted on the Profile page)
 
    Every page just calls the API below; none of them touch
    localStorage directly. If storage is blocked (private window,
@@ -13,9 +13,6 @@
    page view — it simply isn't remembered.
 
    API  (window.TeluguProgress)
-     complete(unitId, {accuracy, attempts})  mark a unit done
-     isComplete(unitId)  → boolean
-     doneIds()           → [unitId, …]
      miss({game, key, ask, syllable, note})  record a wrong answer
                          about a Telugu character (see A MISS)
      miss({game, key, prompt, answer, note}) …or about anything else
@@ -24,7 +21,13 @@
      misses()            → items, most-missed first
      missCount()         → number
      clearMisses()       forget all misses
-     reset()             forget everything
+     run(game, {total, correct, attempts, ended, variant})
+                         record a finished session (see A RUN)
+     runs(game)          → that game's runs, oldest first
+     runs()              → { game: [run, …], … }
+     runCount()          → number of runs, all games together
+     reset()             forget everything, runs and misses alike
+                         (the Profile page's "Reset statistics")
      onChange(fn)        fn() runs when anything changes (also
                          when another tab / frame changed it)
      persistent          → false if storage is unavailable
@@ -45,21 +48,36 @@
    A lesson whose items are not single characters stores the two
    texts instead: prompt and answer, shown as they are.
 
+   A RUN  is one session played to its end: every card cleared, or
+   stopped by one mistake too many. A session left half way is
+   not a run. Stored, oldest first, the last RUN_CAP per game:
+     t      when it ended (ms)
+     n      cards in the session
+     ok     cards cleared (correct answers)
+     tries  answers given; tries − ok of them were wrong
+     end    'done' (every card cleared) or 'out' (out of mistakes)
+     dir    the game's own name for how it was played, if it has
+            more than one way ('reverse'); absent otherwise
+
    STORED FORMAT  v2. v1 kept every miss as prompt/answer text
    ("/k/"); those from the four script games are converted the
    first time they are read. Lesson misses are left as they are.
+   Stores written before November 2026 also hold `done` (which
+   units had been "completed", for a ✓ on the home page). Nothing
+   reads it any more; it is dropped the next time anything is saved.
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
 
   const KEY          = 'telugu.progress.v1';
   const CLEAR_STREAK = 2;           // consecutive "got it" answers that clear a miss
+  const RUN_CAP      = 100;         // runs kept per game (the oldest go first)
 
   let memory = null;                // fallback when localStorage is unavailable
   let persistent = true;
 
   const VERSION = 2;
-  const blank = () => ({ v: VERSION, done: {}, misses: {} });
+  const blank = () => ({ v: VERSION, misses: {}, runs: {} });
 
   // v1 → v2: what each script game was asking, by the id it filed misses under.
   // [ask, syllable]
@@ -88,7 +106,9 @@
     try {
       const raw = root.localStorage.getItem(KEY);
       const s = raw ? JSON.parse(raw) : blank();
-      if (!s || typeof s !== 'object' || !s.done || !s.misses) return blank();
+      if (!s || typeof s !== 'object' || !s.misses || typeof s.misses !== 'object') return blank();
+      if (!s.runs || typeof s.runs !== 'object') s.runs = {};         // stored before runs were kept
+      delete s.done;                                                   // the ✓ marks of an older version
       if (s.v !== VERSION) {
         upgrade(s);
         root.localStorage.setItem(KEY, JSON.stringify(s));     // once; nothing visible changed, so no event
@@ -123,20 +143,6 @@
   const idOf = (game, key) => game + '|' + key;
 
   const api = {
-    complete(unitId, info = {}) {
-      update(s => {
-        const prev = s.done[unitId] || { runs: 0, best: 0 };
-        const acc  = Number.isFinite(info.accuracy) ? info.accuracy : null;
-        s.done[unitId] = {
-          at:   Date.now(),
-          runs: prev.runs + 1,
-          best: acc === null ? prev.best : Math.max(prev.best, acc),
-        };
-      });
-    },
-    isComplete(unitId) { return !!load().done[unitId]; },
-    doneIds()          { return Object.keys(load().done); },
-
     miss({ game, key, ask, syllable, prompt, answer, note = '' }) {
       if (!game || key === undefined || key === '') return;
       update(s => {
@@ -177,6 +183,26 @@
     },
     missCount()   { return Object.keys(load().misses).length; },
     clearMisses() { update(s => { s.misses = {}; }); },
+
+    run(game, { total, correct, attempts, ended = 'done', variant = '' } = {}) {
+      const whole = v => Number.isFinite(v) && v >= 0 ? Math.floor(v) : null;
+      const n = whole(total), ok = whole(correct), tries = whole(attempts);
+      if (!game || n === null || ok === null || !tries) return;       // nothing was answered: not a run
+      update(s => {
+        const r = { t: Date.now(), n, ok: Math.min(ok, tries), tries, end: ended === 'out' ? 'out' : 'done' };
+        if (variant) r.dir = String(variant);
+        const list = (Array.isArray(s.runs[game]) ? s.runs[game] : []).concat(r);
+        s.runs[game] = list.slice(-RUN_CAP);
+      });
+    },
+    runs(game) {
+      const all = load().runs;
+      const list = g => (Array.isArray(all[g]) ? all[g].slice() : []);
+      if (game !== undefined) return list(game);
+      return Object.fromEntries(Object.keys(all).map(g => [g, list(g)]));
+    },
+    runCount()    { return Object.values(load().runs).reduce((n, l) => n + (Array.isArray(l) ? l.length : 0), 0); },
+
     reset()       { save(blank()); },
 
     onChange(fn) {
@@ -185,7 +211,7 @@
     },
 
     get persistent() { load(); return persistent; },
-    CLEAR_STREAK,
+    CLEAR_STREAK, RUN_CAP,
   };
 
   root.TeluguProgress = api;
