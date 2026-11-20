@@ -137,6 +137,7 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
   letter-spacing: .12em;
 }
 
+/* (the External Links page counts its links at the end of the heading line) */
 .section-count { margin-left: auto; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
 
 /* A section folds away to its heading line. The arrow at the end of the line does it:
@@ -149,7 +150,7 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
   flex-shrink: 0;
   width: 28px;
   height: 28px;
-  margin: -6px -6px -6px -4px;      /* a comfortable target without making the heading line taller */
+  margin: -6px -6px -6px auto;      /* at the end of the line; a comfortable target without making the line taller */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -163,6 +164,9 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
 .section-toggle:hover { background: rgba(255, 255, 255, .06); color: var(--text); }
 .section-toggle:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
 .section-toggle svg { transition: transform .15s; }
+/* Items are waiting in Review: the arrow of the section that holds the Review tile takes the highlight color */
+.section.has-due .section-toggle { color: var(--accent); }
+.section.has-due .section-toggle:hover { color: var(--accent-light); }
 .section-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
 
 .tiles {
@@ -218,12 +222,9 @@ a.tile.soon:hover, a.tile.soon:focus-visible { box-shadow: none; }
 a.tile.soon:hover .tile-icon, a.tile.soon:hover .tile-title, a.tile.soon:hover .tile-desc,
 a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.tile.soon:focus-visible .tile-desc { opacity: 1; }
 
-/* Review strip above the sections */
-.featured { margin-bottom: 30px; }
-.tile.review { flex-direction: row; align-items: center; gap: 16px; min-height: 0; padding: 14px 18px; border-color: var(--accent); background: linear-gradient(120deg, var(--surface-up), var(--surface)); }
-.tile.review .tile-body { flex: 1; min-width: 0; }
-.tile.review .tile-badge { position: static; flex-shrink: 0; font-size: 11.5px; padding: 3px 10px; }
-.tile.review .tile-badge.has { background: var(--accent); color: #0b0c18; font-weight: 700; }
+/* The Review tile while items are waiting: outlined in the highlight color, its count in a badge of the same */
+.tile.due { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 6px 22px rgba(201, 152, 26, 0.16); }
+.tile.due .tile-badge { background: var(--accent); color: #0b0c18; font-weight: 700; }
 
 .tile-badge {
   position: absolute;
@@ -337,7 +338,7 @@ a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.t
   .tile-desc { margin-top: 1px; }
   .tile-badge { top: 10px; right: 10px; }
   .tile > div:not(.tile-icon) { padding-right: 38px; }
-  .tile.review > .tile-body { padding-right: 0; }
+  .tile.due > div:not(.tile-icon) { padding-right: 92px; }      /* room for the Review count ("12 to revisit") */
   .section-head { flex-wrap: wrap; row-gap: 2px; }
   /* link tiles: the thumbnail moves to the left edge, like a tile's icon */
   .page-note { padding: 18px 0 16px; }

@@ -31,7 +31,6 @@
         </div>
       </div>
     </header>
-    <div class="featured" id="featured"></div>
     <div id="sections"></div>
   </div>
 </main>
@@ -54,7 +53,7 @@
 ───────────────────────────────────────────────────────── */
 if (!window.TeluguUnits) throw new Error('units.js was not found');
 const SECTIONS = TeluguUnits.sections;
-const FEATURED = TeluguUnits.featured;     // pinned above the sections (Review)
+const REVIEW   = 'review';                 // the tile that carries the count of items waiting in Review
 
 /* ─────────────────────────────────────────────────────────
    RENDER HOME
@@ -66,25 +65,20 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g,
 const Progress = window.TeluguProgress || { missCount: () => 0, onChange() {} };
 const Settings = window.TeluguSettings || null;
 
+// How many items are waiting in Review, and how that reads ("3 to revisit")
+const due     = () => Progress.missCount();
+const dueText = n => n + ' to revisit';
+
+// A tile. The Review tile, while items are waiting, is highlighted and says how many.
 function tileHTML(t) {
-  const mark = t.soon ? '<span class="tile-badge">Soon</span>' : '';
-  return `<a class="tile${t.soon ? ' soon' : ''}" href="#/${esc(t.id)}">
+  const n    = t.id === REVIEW ? due() : 0;
+  const mark = t.soon ? '<span class="tile-badge">Soon</span>' : n ? `<span class="tile-badge">${esc(dueText(n))}</span>` : '';
+  return `<a class="tile${t.soon ? ' soon' : ''}${n ? ' due' : ''}" href="#/${esc(t.id)}">
     <div class="tile-icon" aria-hidden="true">${esc(t.icon)}</div>
     <div>
       <div class="tile-title">${esc(t.title)}</div>
       <div class="tile-desc">${esc(t.desc)}</div>
     </div>${mark}</a>`;
-}
-
-function featuredHTML(t) {
-  const n = Progress.missCount();
-  return `<a class="tile review" href="#/${esc(t.id)}">
-    <div class="tile-icon" aria-hidden="true">${esc(t.icon)}</div>
-    <div class="tile-body">
-      <div class="tile-title">${esc(t.title)}</div>
-      <div class="tile-desc">${esc(t.desc)}</div>
-    </div>
-    <span class="tile-badge${n ? ' has' : ''}">${n ? n + ' to revisit' : 'All clear'}</span></a>`;
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -103,20 +97,21 @@ const saveCollapsed = () => { try { localStorage.setItem(FOLD_KEY, JSON.stringif
 
 const ARROW = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 5.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+// The section that holds the Review tile takes the highlight on its arrow while items are waiting,
+// so a folded section still shows there is something to review. The arrow's label says so too.
+const dueIn = s => (s.tiles.some(t => t.id === REVIEW) ? due() : 0);
+const toggleLabel = (s, shut) => (shut ? 'Show ' : 'Hide ') + s.title + (dueIn(s) ? ` (${dueText(dueIn(s))})` : '');
+
 function toggleHTML(s, i) {
-  const shut = collapsed.has(s.title), what = (shut ? 'Show ' : 'Hide ') + s.title;
+  const shut = collapsed.has(s.title), what = toggleLabel(s, shut);
   return `<button type="button" class="section-toggle" aria-expanded="${!shut}" aria-controls="section-${i}" aria-label="${esc(what)}" title="${esc(what)}">${ARROW}</button>`;
 }
 
-const readyCount = s => `${s.tiles.filter(t => !t.soon).length} of ${s.tiles.length} ready`;
-
 function renderHome() {
-  document.getElementById('featured').innerHTML = FEATURED.map(featuredHTML).join('');
   document.getElementById('sections').innerHTML = SECTIONS.map((s, i) => `
-    <section class="section${collapsed.has(s.title) ? ' collapsed' : ''}" data-section="${esc(s.title)}">
+    <section class="section${collapsed.has(s.title) ? ' collapsed' : ''}${dueIn(s) ? ' has-due' : ''}" data-section="${esc(s.title)}">
       <div class="section-head">
         <h2 class="section-title">${esc(s.title)}</h2>
-        <span class="section-count">${readyCount(s)}</span>
         ${toggleHTML(s, i)}
       </div>
       <div class="tiles" id="section-${i}"${collapsed.has(s.title) ? ' hidden' : ''}>${s.tiles.map(tileHTML).join('')}</div>
@@ -134,9 +129,10 @@ document.getElementById('sections').addEventListener('click', e => {
   saveCollapsed();
   section.classList.toggle('collapsed', shut);
   section.querySelector('.tiles').hidden = shut;
+  const what = toggleLabel(SECTIONS.find(s => s.title === title), shut);
   btn.setAttribute('aria-expanded', String(!shut));
-  btn.setAttribute('aria-label', (shut ? 'Show ' : 'Hide ') + title);
-  btn.title = (shut ? 'Show ' : 'Hide ') + title;
+  btn.setAttribute('aria-label', what);
+  btn.title = what;
 });
 
 /* ─────────────────────────────────────────────────────────
@@ -189,7 +185,7 @@ const PAGES = TeluguUnits.pages || [];
 const home  = document.getElementById('home');
 const app   = document.getElementById('app');
 const frame = document.getElementById('app-frame');
-const ALL   = TeluguUnits.all;         // Review + every tile (units.js rejects duplicate ids)
+const ALL   = TeluguUnits.all;         // every tile (units.js rejects duplicate ids)
 
 function route() {
   const id   = location.hash.replace(/^#\/?/, '');
@@ -208,7 +204,7 @@ function route() {
   } else {
     app.hidden  = true;
     home.hidden = false;
-    renderHome();                          // pick up the Review count from the game just played
+    renderHome();                          // pick up what is waiting in Review from the game just played
     document.title = 'Telugu Suite';
     frame.removeAttribute('src');          // leaving resets the sub-app
     delete frame.dataset.src;

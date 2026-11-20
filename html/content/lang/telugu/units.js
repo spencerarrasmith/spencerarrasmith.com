@@ -1,15 +1,15 @@
 /* ═════════════════════════════════════════════════════════
    units.js — the list of everything in the app: sections,
-   their tiles, the Review tile, and the pages that are not
-   tiles (Profile). Edit it HERE, once.
+   their tiles (Review among them, first in Training), and the
+   pages that are not tiles (Profile). Edit it HERE, once.
    Exposes window.TeluguUnits.
 
    Read by
      index.html        draws the home page and routes #/<id>
      profile.html      charts the games marked `stats`
                        (load settings.js before this file there and in
-                       review.html: Review names follow the notation)
-     review.html       names each game in the Review list
+                       training/01_review.html: Review names follow the notation)
+     training/01_review.html   names each game in the Review list
      lesson-shell.js   the "Coming soon" pages, and a lesson's
                        section and title when it doesn't give them
 
@@ -29,8 +29,8 @@
      src     path to the page, from this folder
      soon    { learn, practice, fits } → the page is a placeholder.
              The three lines are what its "Coming soon" page says.
-             The tile still opens, is drawn dashed with a "Soon"
-             badge and is left out of the section's "ready" count.
+             The tile still opens, and is drawn dashed with a "Soon"
+             badge.
              Delete the whole `soon` block when the real page
              replaces the placeholder.
      stats   true → a practice game whose sessions are recorded
@@ -89,12 +89,17 @@
     {
       title: "Training",
       tiles: [
+        // Review: the home page shows how many items are waiting on this tile, and
+        // highlights it (and the section's arrow) while there are any
+        { id: "review", icon: "🔁", title: "Review",
+          desc: "Replay the items you missed in any game",
+          src: "training/01_review.html" },
         { id: "lookalike-builder", icon: "ం", title: "Lookalike Builder",
           desc: "Generate a CSV dataset for Lookalike practice",
-          src: "training/01_lookalike-builder.html" },
+          src: "training/02_lookalike-builder.html" },
         { id: "lookalikes", icon: "ఒబ", title: "Lookalikes",
           desc: "Customized training from Lookalike CSV files",
-          src: "training/02_lookalikes.html",
+          src: "training/03_lookalikes.html",
           review: { lookalikes: "Lookalikes ({sound} → Telugu)" } },
       ],
     },
@@ -331,20 +336,13 @@
     },
   ];
 
-  // Pinned above the sections (not part of the learning path). Same tile fields.
-  const featured = [
-    { id: "review", icon: "🔁", title: "Review",
-      desc: "Replay the items you missed in any game.",
-      src: "review.html" },
-  ];
-
   // Pages that are not tiles: reached from the top right of the home page, opened the same way (#/<id>).
   const pages = [
     { id: "profile", title: "Profile", src: "profile.html" },     // each practice game's sessions over time
   ];
 
-  const tiles = sections.flatMap(s => s.tiles);        // the learning path, in home-page order
-  const all   = [...featured, ...tiles];               // every tile, Review included
+  const tiles = sections.flatMap(s => s.tiles);        // every tile, in home-page order
+  const all   = tiles;                                 // the same list (Review used to sit outside the sections)
 
   // Catch typos while editing the list (a duplicate id breaks routing and progress).
   const byId = new Map(), sectionById = new Map(), labels = new Map();
@@ -365,7 +363,7 @@
   const pretty = id => String(id).replace(/[-_]+/g, ' ').replace(/^./, c => c.toUpperCase());
 
   const api = Object.freeze({
-    sections, featured, tiles, all, pages,
+    sections, tiles, all, pages,
     get:       id => byId.get(id) || null,
     sectionOf: id => sectionById.get(id) || null,
     // Name of a game in the Review list: its `review` name, else its tile's

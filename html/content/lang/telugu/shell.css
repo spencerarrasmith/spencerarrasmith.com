@@ -2,7 +2,7 @@
    shell.css — shared look for lesson pages and Review.
    Colors, fonts, and the reset come from base.css (shared
    with game.css, the stylesheet for the practice games).
-   Pages that use it: lesson-template.html, review.html, every lesson
+   Pages that use it: lesson-template.html, training/01_review.html, every lesson
    built on lesson-shell.js and every "Coming soon" placeholder.
 ═════════════════════════════════════════════════════════ */
 @import url('base.css');   /* fonts, reset, color tokens, page defaults — shared with game.css */

@@ -7,13 +7,13 @@ Open `index.html` in a browser. Everything is static: no build step, no server n
 | Folder | Holds | Home-page section |
 |---|---|---|
 | `reference/` | External Links, Rosetta Stone, Signs & Conjuncts, Sound Charts, idioms, dictionary, verbs | Reference |
-| `training/` | Lookalike Builder, Lookalikes | Training |
+| `training/` | Review (replay of missed items), Lookalike Builder, Lookalikes | Training |
 | `alphabet/` | Phonemes, Diacritics, Conjuncts, Words | Alphabet |
 | `grammar/` | Sentence, nouns, cases, … | Grammar |
 | `vocabulary/` | Greetings, numbers, home, … | Vocabulary |
 | `advanced-grammar/` | Expressions, commands, tenses, … | Advanced Grammar |
 
-At the top level: `index.html` (the tile launcher, with the Profile button and the Settings menu at its top right), `review.html` (replay of missed items), `profile.html` (each practice game's sessions over time, and a Danger Zone with "Reset statistics"), `lesson-template.html`, and the shared files:
+At the top level: `index.html` (the tile launcher, with the Profile button and the Settings menu at its top right), `profile.html` (each practice game's sessions over time, and a Danger Zone with "Reset statistics"), `lesson-template.html`, and the shared files:
 
 | File | What it is |
 |---|---|
