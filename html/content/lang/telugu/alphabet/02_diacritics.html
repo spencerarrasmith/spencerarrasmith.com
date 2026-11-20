@@ -125,7 +125,7 @@ if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
    The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the record of each session) is game-core.js.
    The popup that opens first is game-setup.js. It holds every
-   option: direction, number of rounds, mistakes allowed, and
+   option: direction, number of rounds, game over, and
    the four checkboxes. There is no ⋮ menu on this page.
    This page draws the card, the two keyboards, and the slots,
    and checks the pair of picks.
@@ -349,7 +349,7 @@ function renderCard(c) {
   }
 
   const badge = $('cat-badge');
-  badge.textContent      = c.cat;
+  badge.textContent      = `${c.cat} + ${c.v.grp}`;        // the consonant's category and the vowel's: "Velar + Short"
   badge.style.visibility = $('show-cat').checked ? '' : 'hidden';
   $('rare-badge').style.display = c.rare ? '' : 'none';
   clearRound();
@@ -454,7 +454,7 @@ const setup = GameSetup.create({
   home:      '../index.html',
   direction: DIRECTIONS,
   options: [
-    { id: 'show-cat',      label: 'Show categories', checked: true,
+    { id: 'show-cat',      label: 'Show categories',
       note: { id: 'cat-note', text: 'Off while keyboard is shuffled' } },
     { id: 'shuffle-kb',    label: 'Shuffle keyboard' },
     { id: 'include-extra', label: 'Include extra letters' },

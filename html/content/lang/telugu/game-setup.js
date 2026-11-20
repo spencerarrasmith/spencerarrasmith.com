@@ -1,8 +1,8 @@
 /* ═════════════════════════════════════════════════════════
    game-setup.js — the popup a practice game opens before a
    session. It holds every option the game has, top to bottom:
-   which direction to play, how many rounds, how many mistakes
-   are allowed, and the game's checkboxes (show categories,
+   which direction to play, how many rounds, the mistake that
+   is game over, and the game's checkboxes (show categories,
    shuffle the keyboard, …). A game that uses it has no ⋮ menu.
    Exposes window.GameSetup. Pairs with game.css (section
    "Session setup"), game-core.js and game-menu.js.
@@ -34,7 +34,7 @@
    onStart(v)
      v.reversed true when the 🔀 button has turned the direction around
      v.rounds   a number, or null for "all of them" (the slider at its top end)
-     v.misses   how many mistakes the session allows (3 = the fourth ends it, 0 = the first does),
+     v.misses   the mistake that is game over (3 = the third ends the session, 1 = the first does),
                 or null for unlimited (the slider at its top end)
      All three are remembered for the next open() on this page.
      The checkboxes are ordinary inputs: the page reads $('shuffle-kb').checked as it always did.
@@ -48,7 +48,7 @@
      #setup-dir  #rev-btn                  the direction, and the 🔀 button that turns it around
      #setup-rounds  #setup-rounds-n        slider + text box, kept in step
      #setup-misses  #setup-misses-out      slider + what it says
-     #setup-misses-note                    the line under it: "Ends on the 4th mistake"
+     #setup-misses-note                    the line under it: "Ends on the 3rd mistake"
      the option ids the page gave          one checkbox each, at the right of its row
 
    GameSetup.current    the popup most recently created on this page
@@ -56,7 +56,7 @@
 (function (root) {
   'use strict';
 
-  const MISS_STOPS = 20;                 // the mistakes slider runs 0 … 20, then one more stop: Unlimited
+  const MISS_STOPS = 20;                 // the "Game over" slider runs 1 … 20, then one more stop: Unlimited
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g,
     c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -91,9 +91,9 @@
           </div>
         </div>
         <div class="setup-row">
-          <label class="setup-label" for="setup-misses">Allowed mistakes</label>
+          <label class="setup-label" for="setup-misses">Game over</label>
           <div class="setup-slide">
-            <input type="range" id="setup-misses" min="0" max="${MISS_STOPS + 1}" step="1">
+            <input type="range" id="setup-misses" min="1" max="${MISS_STOPS + 1}" step="1">
             <output class="setup-out" id="setup-misses-out" for="setup-misses"></output>
           </div>
           <div class="setup-note" id="setup-misses-note"></div>
@@ -134,11 +134,11 @@
 
     const top = () => Math.max(1, Math.floor(max()) || 1);
     const clamp = n => Math.min(Number(rounds.max), Math.max(1, Math.round(n) || 1));
-    // The number is how many mistakes are let go; the line under the slider says what that
-    // means: 0 → "Ends on the first mistake", 3 → "Ends on the 4th mistake".
+    // "Game over": the number is the mistake that ends the session, and the line under the
+    // slider says so: 1 → "Ends on the first mistake", 3 → "Ends on the 3rd mistake".
     const showMisses = () => {
       const n = Number(misses.value), unlimited = n > MISS_STOPS;
-      const note = unlimited ? 'Never ends early' : `Ends on the ${n === 0 ? 'first' : ordinal(n + 1)} mistake`;
+      const note = unlimited ? 'Never ends early' : `Ends on the ${n === 1 ? 'first' : ordinal(n)} mistake`;
       $('setup-misses-out').textContent  = unlimited ? 'Unlimited' : misses.value;
       $('setup-misses-note').textContent = note;
       misses.setAttribute('aria-valuetext', `${unlimited ? 'Unlimited' : misses.value}: ${note.toLowerCase()}`);
@@ -208,7 +208,7 @@
       rounds.max = roundsN.max = now;
       const first = !chosen && usual ? Math.max(1, Math.floor(usual()) || now) : now;      // nothing chosen yet: the game's usual number
       rounds.value = roundsN.value = Math.min(chosen && values.rounds !== null ? values.rounds : first, now);
-      misses.value = values.misses === null ? MISS_STOPS + 1 : Math.min(values.misses, MISS_STOPS);
+      misses.value = values.misses === null ? MISS_STOPS + 1 : Math.max(1, Math.min(values.misses, MISS_STOPS));
       showMisses();
       rev = values.reversed;
       showDirection();

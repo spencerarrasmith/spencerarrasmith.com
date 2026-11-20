@@ -49,13 +49,13 @@
    texts instead: prompt and answer, shown as they are.
 
    A RUN  is one session played to its end: every card cleared, or
-   stopped by one mistake too many. A session left half way is
+   ended by game over. A session left half way is
    not a run. Stored, oldest first, the last RUN_CAP per game:
      t      when it ended (ms)
      n      cards in the session
      ok     cards cleared (correct answers)
      tries  answers given; tries − ok of them were wrong
-     end    'done' (every card cleared) or 'out' (out of mistakes)
+     end    'done' (every card cleared) or 'out' (game over)
      dir    the game's own name for how it was played, if it has
             more than one way ('reverse'); absent otherwise
 

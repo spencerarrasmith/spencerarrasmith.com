@@ -68,7 +68,7 @@ if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
    The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the record of each session) is game-core.js.
    The popup that opens first is game-setup.js. It holds every
-   option: direction, number of rounds, mistakes allowed, and
+   option: direction, number of rounds, game over, and
    the five checkboxes. There is no ⋮ menu on this page.
    This page draws the card and the keyboard and checks answers.
 ───────────────────────────────────────────────────────── */
@@ -206,7 +206,7 @@ const setup = GameSetup.create({
   home:      '../index.html',
   direction: DIRECTIONS,
   options: [
-    { id: 'show-cat',          label: 'Show categories', checked: true,
+    { id: 'show-cat',          label: 'Show categories',
       note: { id: 'cat-note', text: 'Off while keyboard is shuffled' } },
     { id: 'shuffle-kb',        label: 'Shuffle keyboard' },
     { id: 'include-extra',     label: 'Include extra letters' },

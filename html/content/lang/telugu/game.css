@@ -511,7 +511,7 @@ button.slot.filled:hover { border-color: var(--accent-light); }
 
 /* ── 8. Session setup ──────────────────────────────────── */
 /* The popup a game opens before a session (game-setup.js): Cancel and Start along the top,
-   then the direction, the number of rounds, the mistakes allowed, and the game's checkboxes. */
+   then the direction, the number of rounds, the mistake that is game over, and the game's checkboxes. */
 .setup {
   position: fixed;
   inset: 0;

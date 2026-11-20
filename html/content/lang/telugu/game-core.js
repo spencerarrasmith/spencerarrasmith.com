@@ -5,9 +5,8 @@
    deck; counters and the progress bar follow; when the deck
    is empty the complete screen shows. Each session played to
    its end is recorded (progress.js), for the Profile page.
-   A session can be given a length and a number of mistakes
-   it allows (game-setup.js asks for them); one mistake more
-   than that ends it early. It can also be told not to bring
+   A session can be given a length and a "game over": the
+   mistake that ends it early (game-setup.js asks for both). It can also be told not to bring
    missed cards back: a wrong answer then drops the card, and
    every card is shown exactly once.
    Exposes window.GameCore. Pairs with game.css, game-menu.js,
@@ -46,8 +45,8 @@
        okMs: 500, errMs: 1000,          // optional: pause before the next card
      });
      game.start();                      // deal a round (also what "Practice Again" does)
-     game.start({ size: 10, misses: 3 });   // deal a session of 10 cards that allows 3 mistakes:
-                                        // the 4th ends it (misses: 0 → the first one does).
+     game.start({ size: 10, misses: 3 });   // deal a session of 10 cards that is game over at 3
+                                        // mistakes: the 3rd ends it (misses: 1, the least, → the first does).
                                         // size: null → the usual length; misses: null → no limit.
      game.start({ again: false });      // missed cards do not come back: a wrong answer drops the card
                                         // (again: true, the default, sends it back into the deck).
@@ -66,8 +65,8 @@
 
    State, read-only from outside:
      game.deck  game.current  game.total  game.completed  game.attempts  game.locked
-     game.misses  game.limit (mistakes allowed; null = no limit)  game.left (mistakes still allowed)
-     game.over (ended by one mistake too many)
+     game.misses  game.limit (the mistake that is game over; null = no limit)
+     game.left (mistakes left before game over)  game.over (it is game over)
      game.again (do missed cards come back?)  game.dropped (cards missed and not shown again)
    Also:
      game.render()       redraw the current card (an option changed)
@@ -135,14 +134,14 @@
     let deck = [], total = 0, completed = 0, attempts = 0, locked = false;
     // This session's own settings (start({ size, misses })), and how it is going
     let want = null;            // cards asked for; null = the usual length
-    let limit = null;           // mistakes allowed (3 = the fourth ends the session); null = no limit
+    let limit = null;           // the mistake that is game over (3 = the third ends the session); null = no limit
     let misses = 0, over = false;
     let again = true;           // do missed cards come back into the deck?
     let dropped = 0;            // cards missed and not shown again (only when they do not)
 
-    // Mistakes still allowed (null when there is no limit), and how the header shows them:
+    // Mistakes left before game over (null when there is no limit), and how the header shows them:
     // "❤️×♾️" when there is no limit; "❤️×20" down to "❤️×4"; then a heart each, 💚🤍🧡 → 🤍🧡 → 🧡;
-    // an empty ring, ⭕, when there are none.
+    // an empty ring, ⭕, when there are none (game over).
     const left   = () => limit === null ? null : Math.max(0, limit - misses);
     const hearts = n => n === null ? `${HEART}×${EVER}` : n > 3 ? `${HEART}×${n}` : n > 0 ? LAST.slice(-n).join('') : NONE;
 
@@ -156,7 +155,7 @@
         const n = left(), said = `Mistakes left: ${n === null ? 'unlimited' : n}`;
         lives.hidden      = false;
         lives.textContent = hearts(n);
-        lives.classList.toggle('out', n === 0);                      // none left: the next mistake ends the session
+        lives.classList.toggle('out', n === 0);                      // none left: game over
         lives.setAttribute('aria-label', said);
         lives.title = said;
       }
@@ -171,7 +170,7 @@
       render(deck[0], game);
     }
 
-    // The end of a session: every card cleared, or (over) one mistake more than the session allows.
+    // The end of a session: every card cleared, or (over) the mistake that is game over.
     function showComplete() {
       const part     = over || dropped > 0;              // not every card was cleared
       const accuracy = Math.round((part ? completed : total) / attempts * 100);
@@ -179,9 +178,9 @@
       $('g-complete').classList.add('show');
       if ($('c-title')) {
         $('c-trophy').hidden       = over;
-        $('c-title').textContent   = over ? 'Out of mistakes' : 'Session Complete!';
+        $('c-title').textContent   = over ? 'Game Over' : 'Session Complete!';
       }
-      $('c-sub').textContent      = over ? `${completed} of ${total} cleared. ${limit === 0 ? 'No mistakes were' : limit === 1 ? '1 mistake was' : limit + ' mistakes were'} allowed.`
+      $('c-sub').textContent      = over ? `${completed} of ${total} cleared. Game over at ${limit} ${limit === 1 ? 'mistake' : 'mistakes'}.`
                                   : dropped ? `${completed} of ${total} correct. The ${dropped} missed ${dropped === 1 ? 'was' : 'were'} not shown again.`
                                   : doneText ? doneText(game) : `All ${total} cards cleared.`;
       $('c-attempts').textContent = attempts;
@@ -194,7 +193,7 @@
     function start(o) {
       // (start is also used directly as an event handler: an Event has neither property)
       if (o && 'size' in o)   want  = o.size > 0 ? Math.floor(o.size) : null;
-      if (o && 'misses' in o) limit = o.misses === null || !(o.misses >= 0) || o.misses === Infinity ? null : Math.floor(o.misses);
+      if (o && 'misses' in o) limit = o.misses === null || !(o.misses >= 0) || o.misses === Infinity ? null : Math.max(1, Math.floor(o.misses));
       if (o && 'again' in o)  again = o.again !== false;
 
       const all    = shuffle(pool());
@@ -233,7 +232,7 @@
         updateProgress();
       } else {
         misses++;
-        if (limit !== null && misses > limit) over = true;       // one more than the session allows
+        if (limit !== null && misses >= limit) over = true;      // that was the mistake that ends it
         if (miss) Progress.miss(Object.assign({ game: id }, miss));
         const card = deck.shift();
         // Back into the deck at a random position (never straight back to the front),
