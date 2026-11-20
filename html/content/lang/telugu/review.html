@@ -52,6 +52,10 @@ const N = TeluguData.notation;          // IPA or ISO, as chosen on the home pag
    was asked (progress.js), so its sound is written here, now, in the reader's
    current notation. Any other miss stores its two texts and shows them as is. */
 function faces(m) {
+  if (m.ask === 'word') {                 // a whole word (the Words game): its sound, as the word is written
+    const s = TeluguData.syllables(m.key);
+    return { prompt: m.key, answer: s ? N.wrap(N.word(s)) : 'This word can no longer be read.' };
+  }
   if (m.ask !== 'telugu' && m.ask !== 'sound') return { prompt: m.prompt ?? m.key, answer: m.answer ?? '' };
   const r = TeluguData.read(m.key, { syllable: !!m.syllable, any: true });
   if (!r) return { prompt: m.key, answer: 'This character is no longer in the app.' };
@@ -72,7 +76,7 @@ function overview() {
       <div class="rv-empty">
         <div class="big">✓</div>
         <h2>Nothing to review</h2>
-        <p class="rv-lead">Letters and syllables you get wrong in the games will collect here so you can replay them.</p>
+        <p class="rv-lead">Letters, syllables, and words you get wrong in the games will collect here so you can replay them.</p>
       </div>`;
     return;
   }

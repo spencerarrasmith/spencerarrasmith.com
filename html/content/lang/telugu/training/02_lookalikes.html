@@ -135,7 +135,8 @@ if (!window.GameCore)      throw new Error('../game-core.js was not found');
    "rare" pip; extras (ఱ ఌ ౡ …) wait for "Include extra letters".
 
    The round itself (deck, counters, re-queuing a missed card,
-   the complete screen, the record of each session) is game-core.js.
+   the complete screen) is game-core.js. No record of a session is
+   kept: this is a training tool, with no chart on the Profile page.
    This page draws the card and its choices, checks the pick,
    and looks after your CSV.
 ───────────────────────────────────────────────────────── */
@@ -331,6 +332,7 @@ function showEmpty() {
 const game = GameCore.create({
   id:   GAME,
   size: SESSION_SIZE,
+  record: false,                         // a training tool, not charted on the Profile page: its sessions are not kept
   pool: deal,
   onStart() {
     marks = new Map();

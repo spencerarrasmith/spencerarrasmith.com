@@ -1,13 +1,13 @@
 /* ═════════════════════════════════════════════════════════
    game.css — shared look for every practice game
-   (alphabet/01_phonemes.html, 02_diacritics.html, 03_conjuncts.html, …).
+   (alphabet/01_phonemes.html, 02_diacritics.html, 03_conjuncts.html, 04_words.html, …).
 
    Link it from a game page with one line:
        <link rel="stylesheet" href="../game.css">          (from a page inside a section folder)
    It pulls in base.css (fonts, colors, reset) itself.
 
    Holds only what games have in common. Anything that belongs
-   to one game — its tile size, its extra keyboards — stays in
+   to one game — its tile size, its own keys — stays in
    a small <style> block in that page.
    The behavior that goes with it: game-menu.js (the ⋮ menu),
    game-core.js (the round, counters, and complete screen), and
@@ -395,6 +395,34 @@
   color: var(--error);
 }
 
+/* Two keyboards side by side: consonants (left) and vowels (right). Diacritics and Words. */
+.kb-cols {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.kb-col, .kb-col-keys { display: flex; flex-direction: column; gap: 9px; }
+/* a vowel and its long form: one unit in the row (same spacing as any two keys), so they wrap together */
+.kb-pair { display: inline-flex; gap: inherit; }
+
+.kb-col-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 680px) {
+  .kb-cols { grid-template-columns: 1fr; }
+  .kb-col[data-kind="v"] { order: -1; }   /* short vowel panel first */
+}
+
 /* ── 6. Selection slots (games where several picks make one answer) ── */
 .slots { display: flex; gap: 10px; }
 
@@ -440,6 +468,40 @@ button.slot.filled:hover { border-color: var(--accent-light); }
 .slot.ok  .slot-val { color: var(--success); }
 .slot.err { border-color: var(--error); }
 .slot.err .slot-val { color: var(--error); }
+
+/* A whole word spelled out sound by sound (Words): a row of small boxes under the card, one
+   box per sound, grouped by the character that spells them. */
+.spell {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px 12px;
+  min-height: 30px;
+}
+
+.sp-syl { display: inline-flex; gap: 3px; opacity: .5; transition: opacity .15s; }
+.sp-syl.now, .sp-syl.done { opacity: 1; }
+
+.sp-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 30px;
+  padding: 0 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-dim);
+  transition: border-color .12s;
+}
+
+.sp-slot.cur  { border-color: var(--accent); background: var(--accent-glow); }      /* the sound being asked for */
+.sp-slot.slip { border-color: var(--error); color: var(--error); }                  /* the sound that was missed */
+.sp-slot.skip { color: var(--text-muted); border-style: dashed; }                   /* never asked: its character was missed */
 
 /* ── 7. Complete screen ────────────────────────────────── */
 .g-complete {

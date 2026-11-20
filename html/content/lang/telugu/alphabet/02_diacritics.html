@@ -13,28 +13,7 @@
 
     .slot { min-width: 120px; }
 
-    /* Two keyboards: consonants (left) and vowels (right) */
-    .kb-cols {
-      flex-shrink: 0;
-      display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-      gap: 22px;
-      align-items: start;
-    }
-
-    .kb-col, .kb-col-keys { display: flex; flex-direction: column; gap: 9px; }
-    /* a vowel and its long form: one unit in the row (same spacing as any two keys), so they wrap together */
-    .kb-pair { display: inline-flex; gap: inherit; }
-
-    .kb-col-title {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--border);
-    }
+    /* (the two keyboards side by side, consonants and vowels, are laid out in game.css) */
 
     /* Reversed: bare vowel signs are small marks, so their keys run larger and
        a fixed width, which keeps the row even whatever each mark's own width */
@@ -50,11 +29,6 @@
       background: var(--accent-glow);
       border-color: var(--accent);
       color: var(--accent-light);
-    }
-
-    @media (max-width: 680px) {
-      .kb-cols { grid-template-columns: 1fr; }
-      .kb-col[data-kind="v"] { order: -1; }   /* short vowel panel first */
     }
   </style>
 </head>
@@ -162,20 +136,8 @@ function groupBy(items, key) {
 }
 
 // The vowel keyboard keeps each long vowel beside its short one: a ā · i ī · u ū · e ē · o ō,
-// in one block, as the alphabet itself runs (అ ఆ ఇ ఈ …). The data lists the five short signs
-// and then the five long ones; the rest (diphthongs, vocalic, ం ః, the pollu) keep their order.
-const LONG_MARK = 'ː';
-function shortThenLong(signs) {
-  const out = [];
-  signs.forEach(v => {
-    if (v.grp === 'Long') return;                       // placed after its short vowel, below
-    out.push(v);
-    const long = v.grp === 'Short' && signs.find(x => x.grp === 'Long' && x.ipa === v.ipa + LONG_MARK);
-    if (long) out.push(long);
-  });
-  signs.forEach(v => { if (!out.includes(v)) out.push(v); });      // a long vowel with no short one in play
-  return out;
-}
+// in one block, as the alphabet itself runs (అ ఆ ఇ ఈ …). telugu-data.js puts them in that order.
+const { shortThenLong, LONG_MARK } = TeluguData;
 const vowelBlock = v => (v.grp === 'Short' || v.grp === 'Long' ? 'Short · long' : v.grp);     // the label of a key's block
 
 // Every vowel sign gets PER_VOWEL cards, each with a different random consonant

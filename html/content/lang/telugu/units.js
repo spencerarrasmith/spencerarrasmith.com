@@ -34,7 +34,9 @@
              Delete the whole `soon` block when the real page
              replaces the placeholder.
      stats   true → a practice game whose sessions are recorded
-             (game-core.js) and charted on the Profile page
+             (game-core.js) and charted on the Profile page. A game
+             without it (Lookalikes, a self-guided training tool)
+             tells game-core.js not to keep its sessions: record: false
      review  { gameId: 'Name' } → names for the Review list, keyed
              by the id a page records its misses under. Only needed
              where the tile's own id and title won't do: a second
@@ -85,6 +87,18 @@
       ],
     },
     {
+      title: "Training",
+      tiles: [
+        { id: "lookalike-builder", icon: "ం", title: "Lookalike Builder",
+          desc: "Generate a CSV dataset for Lookalike practice",
+          src: "training/01_lookalike-builder.html" },
+        { id: "lookalikes", icon: "ఒబ", title: "Lookalikes",
+          desc: "Customized training from Lookalike CSV files",
+          src: "training/02_lookalikes.html",
+          review: { lookalikes: "Lookalikes ({sound} → Telugu)" } },
+      ],
+    },
+    {
       title: "Alphabet",
       tiles: [
         { id: "phonemes", icon: "క", title: "Phonemes",
@@ -101,18 +115,7 @@
           review: { "conjuncts-reverse": "Conjuncts ({sound} → Conjuncts)" } },
         { id: "words", icon: "పద", title: "Words",
           desc: "Spell out whole words, one sound at a time",
-          src: "alphabet/04_words.html",
-          soon: {
-            learn:    "How a whole word reads: each character in turn, and every sound it spells.",
-            practice: "A short, real word with its meaning; pick its sounds in order, character by character.",
-            fits:     "The next step after Phonemes, Diacritics, and Conjuncts." } },
-        { id: "lookalike-builder", icon: "ం", title: "Lookalike Builder",
-          desc: "Generate a CSV dataset for Lookalike practice",
-          src: "alphabet/05_lookalike-builder.html" },
-        { id: "lookalikes", icon: "ఒబ", title: "Lookalikes",
-          desc: "Customized training from Lookalike CSV files",
-          src: "alphabet/06_lookalikes.html", stats: true,
-          review: { lookalikes: "Lookalikes ({sound} → Telugu)" } },
+          src: "alphabet/04_words.html", stats: true },
       ],
     },
     {

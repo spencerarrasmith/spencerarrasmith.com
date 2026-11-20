@@ -4,7 +4,8 @@
    answer clears the card, a wrong one sends it back into the
    deck; counters and the progress bar follow; when the deck
    is empty the complete screen shows. Each session played to
-   its end is recorded (progress.js), for the Profile page.
+   its end is recorded (progress.js), for the Profile page
+   (unless the game asks for none to be kept: record: false).
    A session can be given a length and a "game over": the
    mistake that ends it early (game-setup.js asks for both). It can also be told not to bring
    missed cards back: a wrong answer then drops the card, and
@@ -38,6 +39,9 @@
        onRetry:  game => { … },         // optional: "Practice Again" was pressed. Without it the
                                         //           button deals a new round; with it the page
                                         //           decides (open the setup popup, say)
+       record:   false,                 // optional: keep no record of this game's sessions (a game
+                                        //           that is not charted on the Profile page: no
+                                        //           `stats` on its tile in units.js). Misses still go to Review.
        variant:  game => 'reverse',     // optional: how this session is being played, when the game has
                                         //           more than one way ('' for the usual one). Kept with
                                         //           the session's result (progress.js, "A RUN")
@@ -62,6 +66,22 @@
                                         // (add game: '…' to file it under another id)
        after() { … },                   // optional: runs just before the next card is drawn
      });
+
+   A card that takes several answers (Words: its sounds, one pick each):
+     game.step(isRight, { feedback, te, miss, after() { … } });
+                                        // one answer of the card. It is counted, and a wrong one is
+                                        // a mistake like any other (it can be game over), but the
+                                        // card stays up. A wrong answer's line under the card clears
+                                        // by itself; a right one clears it at once.
+                                        // after: for a wrong answer. The game is held (locked) for
+                                        // errMs with the answer on screen, then after() runs and
+                                        // play goes on. Not called when that mistake was game over.
+     game.judge(clean, { counted: true, feedback });
+                                        // when the card is finished. Nothing more is counted (step()
+                                        // counted every answer): `clean` says whether the card got
+                                        // through without a mistake. If not, it looks wrong and comes
+                                        // back later like any missed card (or is dropped, when missed
+                                        // cards do not come back).
 
    State, read-only from outside:
      game.deck  game.current  game.total  game.completed  game.attempts  game.locked
@@ -124,7 +144,7 @@
     <button class="retry-btn" id="retry-btn" type="button">Practice Again</button>`;
 
   function create(opts) {
-    const { id, pool, render, size, onStart, onEmpty, onRetry, variant, doneText, okMs = 500, errMs = 1000 } = opts || {};
+    const { id, pool, render, size, onStart, onEmpty, onRetry, variant, doneText, record = true, okMs = 500, errMs = 1000 } = opts || {};
     if (!id || typeof pool !== 'function' || typeof render !== 'function') {
       throw new Error('game-core: create() needs id, pool() and render()');
     }
@@ -138,6 +158,8 @@
     let misses = 0, over = false;
     let again = true;           // do missed cards come back into the deck?
     let dropped = 0;            // cards missed and not shown again (only when they do not)
+    let fading = null;          // the timer that clears a wrong step()'s line under the card
+    let holding = null;         // the timer of a wrong step() that holds the game before going on (its `after`)
 
     // Mistakes left before game over (null when there is no limit), and how the header shows them:
     // "❤️×♾️" when there is no limit; "❤️×20" down to "❤️×4"; then a heart each, 💚🤍🧡 → 🤍🧡 → 🧡;
@@ -161,19 +183,26 @@
       }
     }
 
+    // Clear the last answer's marks (the line under the card, the card's own color)
+    function clearMarks() {
+      clearTimeout(fading);
+      fading = null;
+      $('feedback').textContent = '';
+      $('feedback').className   = 'feedback';
+      $('char-card').classList.remove('correct', 'wrong');
+    }
+
     // Clear the last answer's marks, then let the page draw the card.
     function draw() {
       if (!deck.length) return;
-      $('feedback').textContent = '';
-      $('feedback').className   = 'feedback';
+      clearMarks();
       $('char-card').className  = 'char-card';
       render(deck[0], game);
     }
 
     // The end of a session: every card cleared, or (over) the mistake that is game over.
     function showComplete() {
-      const part     = over || dropped > 0;              // not every card was cleared
-      const accuracy = Math.round((part ? completed : total) / attempts * 100);
+      const accuracy = Math.round((attempts - misses) / attempts * 100);      // right answers out of all answers
       $('g-main').style.display = 'none';
       $('g-complete').classList.add('show');
       if ($('c-title')) {
@@ -185,9 +214,9 @@
                                   : doneText ? doneText(game) : `All ${total} cards cleared.`;
       $('c-attempts').textContent = attempts;
       $('c-accuracy').textContent = accuracy + '%';
-      $('c-errors').textContent   = part ? misses : attempts - total;
+      $('c-errors').textContent   = misses;
       // Every session played to its end is kept for the Profile page, whatever its length
-      if (Progress.run) Progress.run(id, { total, correct: completed, attempts, ended: over ? 'out' : 'done', variant: variant ? variant(game) : '' });
+      if (record && Progress.run) Progress.run(id, { total, correct: completed, attempts, misses, ended: over ? 'out' : 'done', variant: variant ? variant(game) : '' });
     }
 
     function start(o) {
@@ -196,6 +225,8 @@
       if (o && 'misses' in o) limit = o.misses === null || !(o.misses >= 0) || o.misses === Infinity ? null : Math.max(1, Math.floor(o.misses));
       if (o && 'again' in o)  again = o.again !== false;
 
+      clearTimeout(holding);                                     // a wrong answer still on hold belongs to the last round
+      holding = null;
       const all    = shuffle(pool());
       const usual  = size > 0 ? Math.min(size, all.length) : all.length;      // the game's own session length
       const n      = want === null ? usual : Math.min(want, all.length);
@@ -216,12 +247,46 @@
       else if (onEmpty) onEmpty(game);
     }
 
+    // One answer of a card that takes several. The card stays; see the header.
+    function step(ok, info = {}) {
+      if (locked || !deck.length) return;
+      attempts++;
+      clearMarks();
+      if (ok) return;
+
+      const { feedback = '✗', te = false, miss, after } = info;
+      misses++;
+      if (miss) Progress.miss(Object.assign({ game: id }, miss));
+      $('feedback').textContent = feedback;
+      $('feedback').className   = 'feedback err' + (te ? ' te' : '');
+      void $('char-card').offsetWidth;                           // so the shake plays again on a second mistake
+      $('char-card').classList.add('wrong');
+      if (limit !== null && misses >= limit) {                   // that was the mistake that ends it
+        over = true;
+        locked = true;
+        updateProgress();
+        setTimeout(showComplete, errMs);
+        return;
+      }
+      updateProgress();
+      if (!after) { fading = setTimeout(clearMarks, errMs); return; }
+      locked  = true;                                            // hold what is on screen, then go on
+      holding = setTimeout(() => {
+        holding = null;
+        clearMarks();
+        locked = false;
+        after();
+      }, errMs);
+    }
+
     function judge(ok, info = {}) {
       if (locked || !deck.length) return;
       locked = true;
-      attempts++;
 
-      const { feedback = ok ? '✓  Correct!' : '✗', te = false, miss, after } = info;
+      // counted: the card's answers went through step(), mistakes included, so nothing is counted here
+      const { feedback = ok ? '✓  Correct!' : '✗', te = false, miss, after, counted = false } = info;
+      if (!counted) attempts++;
+      clearMarks();
       $('feedback').textContent = feedback;
       $('feedback').className   = 'feedback ' + (ok ? 'ok' : 'err') + (te ? ' te' : '');
       $('char-card').classList.add(ok ? 'correct' : 'wrong');
@@ -231,9 +296,11 @@
         completed++;
         updateProgress();
       } else {
-        misses++;
-        if (limit !== null && misses >= limit) over = true;      // that was the mistake that ends it
-        if (miss) Progress.miss(Object.assign({ game: id }, miss));
+        if (!counted) {
+          misses++;
+          if (limit !== null && misses >= limit) over = true;      // that was the mistake that ends it
+          if (miss) Progress.miss(Object.assign({ game: id }, miss));
+        }
         const card = deck.shift();
         // Back into the deck at a random position (never straight back to the front),
         // unless missed cards do not come back: then it is gone for this session
@@ -262,7 +329,7 @@
     }
 
     const game = {
-      id, start, judge, front, put,
+      id, start, judge, step, front, put,
       render: draw,
       get deck()      { return deck; },
       get current()   { return deck[0] || null; },

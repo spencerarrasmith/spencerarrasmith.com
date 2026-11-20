@@ -1,18 +1,469 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="te">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Words · Telugu Suite</title>
-<link rel="stylesheet" href="../shell.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Words</title>
+  <link rel="stylesheet" href="../game.css">
+  <style>
+    /* ── Words-specific (everything shared lives in game.css) ── */
+
+    /* The meaning, above the card for as long as the word is up */
+    .word-en {
+      min-height: 20px;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 20px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    /* A whole word needs a wider card than a single character: the same height, up to 420px across */
+    .char-card { width: min(420px, 100%); aspect-ratio: auto; height: 144px; }
+
+    /* The word, sized by how many characters it has (data-n, set with each card) */
+    .tel-char { font-size: 5rem; margin-top: 18px; white-space: nowrap; }
+    .tel-char[data-n="3"] { font-size: 4.4rem; }
+    .tel-char[data-n="4"] { font-size: 3.6rem; }
+    .tel-char[data-n="5"] { font-size: 3rem; }
+
+    /* The character being spelled, in the highlight color; one that was missed stays red */
+    .syl { transition: color .15s; }
+    .syl.now  { color: var(--accent); }
+    .syl.miss { color: var(--error); }
+
+    /* Instruction line shown until the first sound is picked */
+    .feedback.hint {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    /* Narrow phones: the longer words step down once more */
+    @media (max-width: 400px) {
+      .tel-char[data-n="3"] { font-size: 4rem; }
+      .tel-char[data-n="4"] { font-size: 3.1rem; }
+      .tel-char[data-n="5"] { font-size: 2.6rem; }
+    }
+  </style>
 </head>
 <body>
-<div id="lesson"></div>
+<div class="game-wrap">
 
-<!-- Placeholder: its text is the `soon` block of this unit's tile in ../units.js.
-     To build the unit, copy ../lesson-template.html over this file. -->
-<script src="../units.js"></script>
-<script src="../lesson-shell.js"></script>
-<script>LessonShell.placeholder('words');</script>
+  <!-- ── Progress header ── -->
+  <header class="g-header">
+    <div class="g-header-top">
+      <div class="g-title-row">
+        <span class="g-title" id="g-title">Words → IPA</span>
+      </div>
+      <div class="g-right">
+        <div class="g-stats">
+          <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
+          <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">0</span></span>
+          <span class="g-lives" id="s-lives" role="img"></span>
+        </div>
+      </div>
+    </div>
+    <div class="g-prog-track">
+      <div class="g-prog-fill" id="prog-fill"></div>
+    </div>
+  </header>
+
+  <!-- ── Game main ── -->
+  <div class="g-main" id="g-main">
+    <div class="card-area">
+      <div class="word-en" id="word-en"></div>
+      <div class="char-card" id="char-card">
+        <span class="tel-char" id="tel-char"></span>
+      </div>
+      <div class="spell" id="spell" role="group" aria-label="The sounds picked so far"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="kb-area" id="kb-area"></div>
+  </div>
+
+  <!-- ── Complete screen (filled in by game-core.js) ── -->
+  <div class="g-complete" id="g-complete"></div>
+
+</div>
+
+<script src="../settings.js"></script>
+<script src="../telugu-data.js"></script>
+<script src="words-data.js"></script>
+<script src="../progress.js"></script>
+<script src="../game-menu.js"></script>
+<script src="../game-core.js"></script>
+<script src="../game-setup.js"></script>
+<script>
+if (!window.TeluguData)  throw new Error('../telugu-data.js was not found');
+if (!window.TeluguWords) throw new Error('words-data.js was not found');
+if (!window.GameCore)    throw new Error('../game-core.js was not found');
+if (!window.GameSetup)   throw new Error('../game-setup.js was not found');
+
+/* ─────────────────────────────────────────────────────────
+   DATA
+   A card is a whole Telugu word (words-data.js, beside this
+   page), with its meaning above it. The player spells it out:
+   one character at a time, left to right, and for each
+   character every sound it spells, in order. అమ్మ is అ then
+   మ్మ: a · m, m, a. The character being spelled is shown in the
+   highlight color.
+
+   What a character spells comes from TeluguData.syllables():
+     its consonants (a conjunct has two or three; క్ష is k then ʂ),
+     its vowel (the consonant's own a counts: క is k, a),
+     then ం or ః if it carries one (each has its own key).
+
+   MISTAKES ARE COUNTED BY THE SOUND, not by the word. Every
+   pick is one answer. A wrong one is one mistake (a heart, when
+   the session has a game over), and play goes on past that
+   character: its remaining sounds are not asked, it turns red
+   in the word, and after a pause the next character is up. So a
+   word can cost as many mistakes as it has characters, and no
+   more. A word that took a mistake comes back later in the
+   session, like a missed card in the other games ("Missed
+   guesses reappear" unchecked: it does not), and is filed for
+   Review once.
+
+   The round itself (deck, counters, the complete screen, the
+   record of each session) is game-core.js: step() for each
+   sound, judge() when the word is done. The popup that opens
+   first is game-setup.js. It holds every option: number of
+   rounds, game over, and the four checkboxes. The game plays
+   one way only (word → sounds), so the popup has no direction.
+   This page draws the card, the two keyboards, and the row of
+   sounds under the card, and checks each pick.
+───────────────────────────────────────────────────────── */
+const GAME  = 'words';
+const WORDS = TeluguWords.words;
+const N     = TeluguData.notation;      // how sounds are written: IPA (/amma/) or ISO (amma), chosen on the home page
+const { $, shuffle, esc } = GameCore;
+
+const SESSION_SIZE = 20;      // words in the usual session, picked at random (the popup can ask for fewer, or more)
+const HINT         = 'Pick each sound of the highlighted character, in order';
+
+/* The keys. Each is one sound: { kind, key, label, block }
+     kind   'c' consonant · 'v' vowel · 'm' ం or ః        (what a part from syllables() is, too)
+     key    the letter's or sign's ipa: its identity, whatever is printed on it
+     block  the labeled group it sits in when categories are shown
+   Consonants: the 34 of the usual set (no ఱ; క్ష is spelled k, ʂ, so it has no key of its own).
+   Vowels: the 14 vowel sounds, each long one beside its short one, then ం and ః.
+   There is no "no vowel" key: no word in the list ends in a bare consonant.               */
+const isMark = g => g.grp === 'Nasal · aspirate';
+const KEYS = {
+  c: TeluguData.pool(TeluguData.consonants, false)
+       .map(l => ({ kind: 'c', key: l.ipa, label: N.part(l), block: l.cat })),
+  v: TeluguData.shortThenLong(TeluguData.signs.filter(g => g.core && g.sign !== TeluguData.VIRAMA))
+       .map(g => {
+         const kind = isMark(g) ? 'm' : 'v';
+         return { kind, key: g.ipa, label: N.piece({ kind, item: g }),
+                  block: g.grp === 'Short' || g.grp === 'Long' ? 'Short · long' : g.grp };
+       }),
+};
+const idOf = k => k.kind + ':' + k.key;
+
+// Catch a word the keyboards can't spell while editing the list (an extra letter, a final ్)
+(function check() {
+  const have = new Set([...KEYS.c, ...KEYS.v].map(idOf));
+  WORDS.forEach(w => w.syllables.forEach(s => s.parts.forEach(p => {
+    if (!have.has(idOf(p))) throw new Error('words: no key for a sound of ' + w.te + ' (' + s.text + ')');
+  })));
+})();
+
+/* ─────────────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────────────── */
+let word    = null;              // the word on the card
+let at      = { s: 0, p: 0 };    // the sound being asked for: which character, which of its sounds
+let missed  = new Map();         // characters that took a mistake → which of their sounds was missed
+let marks   = null;              // while a wrong pick is showing: { err, ok }: the key pressed, and the right one when it is lit
+let kbOrder = null;              // null, or { c, v }: shuffled copies of the keys (fixed for the round)
+
+const asked = () => (word && at.s < word.syllables.length ? word.syllables[at.s].parts[at.p] : null);
+
+/* ─────────────────────────────────────────────────────────
+   BUILD KEYBOARDS
+───────────────────────────────────────────────────────── */
+// [[label, [items…]], …] keeping first-seen order
+function groupBy(items, key) {
+  const m = new Map();
+  items.forEach(it => {
+    if (!m.has(it[key])) m.set(it[key], []);
+    m.get(it[key]).push(it);
+  });
+  return [...m];
+}
+
+function btnFor(k) {
+  return Array.from(document.querySelectorAll(`.kb-btn[data-kind="${k.kind}"]`))
+    .find(b => b.dataset.ipa === k.key) || null;
+}
+
+function buildPanel(title, name, items, grouped) {
+  const col = document.createElement('div');
+  col.className    = 'kb-col';
+  col.dataset.kind = name;
+
+  const h = document.createElement('div');
+  h.className   = 'kb-col-title';
+  h.textContent = title;
+  col.appendChild(h);
+
+  // Grouped: one labeled block per category. Ungrouped: a single plain block.
+  (grouped ? groupBy(items, 'block') : [[null, items]]).forEach(([label, list]) => {
+    const g = document.createElement('div');
+    g.className = 'kb-group';
+
+    const row = document.createElement('div');
+    row.className = 'kb-row';
+    let pair = null;                       // a short vowel waiting for its long one
+    list.forEach((it, i) => {
+      const btn = document.createElement('button');
+      btn.type         = 'button';
+      btn.className    = 'kb-btn';
+      btn.textContent  = it.label;
+      btn.dataset.ipa  = it.key;
+      btn.dataset.kind = it.kind;
+      if (it.kind === 'm') btn.setAttribute('aria-label', it.key === TeluguData.signs.find(isMark).ipa ? 'anusvara (ం)' : 'visarga (ః)');
+      btn.addEventListener('click', () => onPick(it));
+      // A vowel and its long form go in together, so a row never breaks between the two
+      const next = list[i + 1];
+      if (it.kind === 'v' && next && next.key === it.key + TeluguData.LONG_MARK) {
+        pair = document.createElement('span');
+        pair.className = 'kb-pair';
+        row.appendChild(pair);
+        pair.appendChild(btn);
+      } else if (pair) { pair.appendChild(btn); pair = null; }
+      else row.appendChild(btn);
+    });
+
+    if (label !== null) {
+      const l = document.createElement('div');
+      l.className   = 'kb-label';
+      l.textContent = label;
+      g.appendChild(l);
+    }
+    g.appendChild(row);
+    col.appendChild(g);
+  });
+  return col;
+}
+
+// Both panels follow the options in the session popup:
+//   Show categories checked   → grouped and labeled
+//   Show categories unchecked → one plain block per panel, alphabet order
+//   Shuffle keyboard checked  → that block in a random order (kbOrder), which
+//                              stays fixed for the round so keys can be found
+// Rebuilding (when one of those two boxes changes) never restarts the round.
+function buildKB() {
+  const grouped = GameMenu.grouped();
+  const src     = grouped ? KEYS : (kbOrder || KEYS);
+  const area = $('kb-area');
+  area.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'kb-cols';
+  wrap.append(
+    buildPanel('Consonant', 'c', src.c, grouped),
+    buildPanel('Vowel',     'v', src.v, grouped),
+  );
+  area.appendChild(wrap);
+  markKeys();                             // a wrong pick still showing keeps its marks across a rebuild
+}
+
+const newOrder = () => ({ c: shuffle(KEYS.c), v: shuffle(KEYS.v) });
+
+// While a wrong pick is showing: the key that was pressed (red), and the right one when it is lit (green)
+function markKeys() {
+  document.querySelectorAll('.kb-btn').forEach(b => b.classList.remove('ok', 'err'));
+  if (!marks) return;
+  const bad = btnFor(marks.err), good = marks.ok && btnFor(marks.ok);
+  if (bad)  bad.classList.add('err');
+  if (good) good.classList.add('ok');
+}
+
+/* ─────────────────────────────────────────────────────────
+   THE CARD + THE ROW OF SOUNDS
+───────────────────────────────────────────────────────── */
+// Where the word stands. In the word: the character being spelled is highlighted, a missed one is
+// red. Under it, each character's boxes:
+//   spelled        its sounds, as picked
+//   missed         the sounds picked before the mistake; then the missed sound's box, marked; then
+//                  the boxes of the sounds that were never asked. With "Highlight correct answer"
+//                  those boxes show the right sounds; without it, ✗ and · (the answer is not given)
+//   being spelled  the sounds so far, and the box of the sound being asked for, marked
+function show() {
+  const sylEls = [...$('tel-char').children], rowEls = [...$('spell').children];
+  const reveal = $('highlight-correct').checked;
+  word.syllables.forEach((s, i) => {
+    const miss = missed.has(i) ? missed.get(i) : -1;
+    const now  = i === at.s && miss < 0;
+    sylEls[i].classList.toggle('now',  now);
+    sylEls[i].classList.toggle('miss', miss >= 0);
+    rowEls[i].classList.toggle('now',  now);
+    rowEls[i].classList.toggle('done', i < at.s || miss >= 0);
+    [...rowEls[i].children].forEach((box, j) => {
+      const picked = miss >= 0 ? j < miss : (i < at.s || (i === at.s && j < at.p));
+      const passed = miss >= 0 && j >= miss;                       // the missed sound and those after it
+      box.textContent = picked || (passed && reveal) ? N.piece(s.parts[j]) : passed ? (j === miss ? '✗' : '·') : '';
+      box.classList.toggle('slip', j === miss);
+      box.classList.toggle('skip', miss >= 0 && j > miss);
+      box.classList.toggle('cur',  now && j === at.p);
+    });
+  });
+}
+
+function renderCard(w) {
+  marks  = null;
+  word   = w;
+  at     = { s: 0, p: 0 };
+  missed = new Map();
+
+  $('word-en').textContent = w.en;
+
+  // One span per character, so the one being spelled can take the highlight color
+  const tel = $('tel-char');
+  tel.innerHTML      = w.syllables.map(s => `<span class="syl">${esc(s.text)}</span>`).join('');
+  tel.dataset.n = w.syllables.length;                   // the stylesheet sizes the word by it
+
+  // One box per sound, grouped by character
+  $('spell').innerHTML = w.syllables
+    .map(s => `<span class="sp-syl">${s.parts.map(() => '<span class="sp-slot"></span>').join('')}</span>`).join('');
+
+  show();
+  markKeys();
+
+  // Until the first pick, the line under the card carries the instruction
+  const fb = $('feedback');
+  fb.textContent = HINT;
+  fb.className   = 'feedback hint';
+}
+
+/* ─────────────────────────────────────────────────────────
+   ANSWER HANDLING
+   Every pick answers the sound being asked for.
+   Right: its box fills and the next sound is asked.
+   Wrong: one mistake, and that character is over. It turns
+          red, the key pressed turns red (the right key is lit
+          when "Highlight correct answer" is checked), and after
+          a second and a half the next character is up. The core
+          holds the game for that long (step()'s `after`), so
+          picks made meanwhile are ignored.
+   After the last character the word is done: cleared if no
+   character was missed; otherwise it comes back later.
+───────────────────────────────────────────────────────── */
+const lastCharacter = () => at.s === word.syllables.length - 1;
+
+// The line under a finished word. A clean word: what was spelled. Otherwise how much of it was right.
+function verdict(pickedWrong) {
+  const n = word.syllables.length, good = n - missed.size;
+  if (!missed.size) return `✓  ${N.wrap(N.word(word.syllables))}`;
+  return `✗  ${pickedWrong ? N.wrap(pickedWrong.label) + '  ·  ' : ''}${good} of ${n} ${n === 1 ? 'character' : 'characters'} right`;
+}
+
+// The word's last character is behind us: clear the word, or (a mistake was made) send it back
+const finish = pickedWrong => game.judge(missed.size === 0, { counted: true, feedback: verdict(pickedWrong) });
+
+function onPick(k) {
+  if (game.locked) return;
+  const want = asked();
+  if (!want) return;
+
+  if (k.kind === want.kind && k.key === want.key) {
+    const end = at.p === word.syllables[at.s].parts.length - 1 && lastCharacter();
+    at.p++;
+    if (at.p === word.syllables[at.s].parts.length) { at.s++; at.p = 0; }
+    game.step(true);
+    show();
+    if (end) finish(null);
+    return;
+  }
+
+  // Wrong. The character is missed at this sound; the rest of it is not asked.
+  const first = missed.size === 0;
+  missed.set(at.s, at.p);
+  marks = { err: k, ok: $('highlight-correct').checked ? want : null };
+  show();
+  markKeys();
+  if (marks.ok) { const right = btnFor(want); if (right) right.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+
+  // The line under the card says what was picked. It never gives the answer.
+  const last = lastCharacter();
+  game.step(false, {
+    feedback: `✗  ${N.wrap(k.label)}`,
+    miss:     first ? { key: word.te, ask: 'word', note: word.en } : undefined,      // filed for Review once per word
+    // Not the word's last character: the core holds this on screen, then the next character is up
+    after:    last ? undefined : () => {
+      marks = null;
+      at.s++; at.p = 0;
+      show();
+      markKeys();
+    },
+  });
+  // The word ends here (unless that mistake was game over): judge() holds the card instead
+  if (last && !game.over) { at.s++; at.p = 0; finish(k); }
+}
+
+/* ─────────────────────────────────────────────────────────
+   THE ROUND  (game-core.js)
+───────────────────────────────────────────────────────── */
+const game = GameCore.create({
+  id:    GAME,
+  size:  SESSION_SIZE,
+  okMs:  800,                            // a finished word stays up a moment, spelled out
+  errMs: 1500,                           // a wrong pick (and a word that took one) stays for a second and a half
+  pool:  () => WORDS,
+  onRetry: () => openSetup(),            // "Practice Again" asks how to play the next session
+  onStart() {
+    $('kb-area').scrollTop = 0;
+    kbOrder = GameMenu.shuffled() ? newOrder() : null;   // fresh order each round
+    buildKB();
+  },
+  render:   renderCard,
+  doneText: g => `All ${g.total} words spelled out, sound by sound.`,
+});
+
+$('g-title').textContent = `Words → ${N.name}`;
+
+/* ─────────────────────────────────────────────────────────
+   SESSION SETUP  (game-setup.js)
+   The popup that opens with the page, and again from
+   "Practice Again". Every option is in it; the checkboxes
+   keep the ids this page reads them by. Start deals a new
+   session with what it shows.
+   The rounds slider starts at the usual 20 words and runs up
+   to the whole list.
+───────────────────────────────────────────────────────── */
+const setup = GameSetup.create({
+  title: 'Words',
+  home:  '../index.html',
+  options: [
+    { id: 'show-cat',          label: 'Show categories',
+      note: { id: 'cat-note', text: 'Off while keyboard is shuffled' } },
+    { id: 'shuffle-kb',        label: 'Shuffle keyboard' },
+    { id: 'highlight-correct', label: 'Highlight correct answer', checked: true },
+    { id: 'missed-again',      label: 'Missed guesses reappear', checked: true },
+  ],
+  max:    () => WORDS.length,
+  rounds: () => SESSION_SIZE,
+  onStart(v) {
+    // rounds: null is the slider at its top end, which here is every word and not the usual 20
+    game.start({ size: v.rounds === null ? WORDS.length : v.rounds, misses: v.misses, again: $('missed-again').checked });
+  },
+});
+// leave: Cancel goes back to Home (only when the page has just opened and nothing was played)
+const openSetup = (leave = false) => setup.open({ leave });
+
+/* ── The keyboard options ─────────────────────────────── */
+// game-menu.js keeps "Show categories" and "Shuffle keyboard" in step (a shuffled keyboard
+// has no groups) and redraws the keyboards when either changes. It finds the two boxes by
+// id, which is why the popup is created above this line. This page has no ⋮ menu for it to open.
+GameMenu.init({
+  rebuild: buildKB,
+  reorder: on => { kbOrder = on ? newOrder() : null; },
+});
+
+game.start();                            // a round is dealt behind the popup; Start deals the one that is played
+openSetup(true);
+</script>
 </body>
 </html>

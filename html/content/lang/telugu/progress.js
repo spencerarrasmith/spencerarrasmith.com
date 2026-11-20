@@ -21,7 +21,7 @@
      misses()            → items, most-missed first
      missCount()         → number
      clearMisses()       forget all misses
-     run(game, {total, correct, attempts, ended, variant})
+     run(game, {total, correct, attempts, misses, ended, variant})
                          record a finished session (see A RUN)
      runs(game)          → that game's runs, oldest first
      runs()              → { game: [run, …], … }
@@ -45,6 +45,9 @@
                /kʂa/), not as the letter (/k/, /kʂ/)
      note      a hint shown with the card (its category)
    Review turns key into a sound with TeluguData.read().
+   A whole word (the Words game) is stored the same way: key is the
+   word, ask is 'word', note is its meaning. Review writes its sound
+   with TeluguData.syllables().
    A lesson whose items are not single characters stores the two
    texts instead: prompt and answer, shown as they are.
 
@@ -55,6 +58,9 @@
      n      cards in the session
      ok     cards cleared (correct answers)
      tries  answers given; tries − ok of them were wrong
+     miss   wrong answers, kept only when that is not tries − ok: a
+            game whose cards take several answers each (Words: one
+            for every sound of a word)
      end    'done' (every card cleared) or 'out' (game over)
      dir    the game's own name for how it was played, if it has
             more than one way ('reverse'); absent otherwise
@@ -154,7 +160,7 @@
           streak: 0,
           last:   Date.now(),
         };
-        if (ask === 'telugu' || ask === 'sound') {             // a Telugu character: Review figures out the sound
+        if (ask === 'telugu' || ask === 'sound' || ask === 'word') {   // Telugu text: Review figures out the sound
           m.ask = ask;
           if (syllable) m.syllable = true;
         } else {                                               // anything else: the two texts, as given
@@ -184,12 +190,13 @@
     missCount()   { return Object.keys(load().misses).length; },
     clearMisses() { update(s => { s.misses = {}; }); },
 
-    run(game, { total, correct, attempts, ended = 'done', variant = '' } = {}) {
+    run(game, { total, correct, attempts, misses, ended = 'done', variant = '' } = {}) {
       const whole = v => Number.isFinite(v) && v >= 0 ? Math.floor(v) : null;
-      const n = whole(total), ok = whole(correct), tries = whole(attempts);
+      const n = whole(total), ok = whole(correct), tries = whole(attempts), wrong = whole(misses);
       if (!game || n === null || ok === null || !tries) return;       // nothing was answered: not a run
       update(s => {
         const r = { t: Date.now(), n, ok: Math.min(ok, tries), tries, end: ended === 'out' ? 'out' : 'done' };
+        if (wrong !== null && wrong !== r.tries - r.ok) r.miss = Math.min(wrong, tries);
         if (variant) r.dir = String(variant);
         const list = (Array.isArray(s.runs[game]) ? s.runs[game] : []).concat(r);
         s.runs[game] = list.slice(-RUN_CAP);

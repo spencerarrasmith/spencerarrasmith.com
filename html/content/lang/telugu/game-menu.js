@@ -2,8 +2,8 @@
    game-menu.js — the keyboard options the practice games
    share ("Show categories", "Shuffle keyboard"), and the ⋮
    options menu of a game that has one (Lookalikes). Phonemes,
-   Diacritics, and Conjuncts keep their checkboxes in the
-   session popup (game-setup.js) and have no ⋮ menu.
+   Diacritics, Conjuncts, and Words keep their checkboxes in
+   the session popup (game-setup.js) and have no ⋮ menu.
    Exposes window.GameMenu. Pairs with game.css.
 
    The page supplies the markup (ids matter):

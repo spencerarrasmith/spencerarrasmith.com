@@ -30,6 +30,11 @@
    (a letter, a letter with a sign, a conjunct), so anything that
    stores a character can show its sound later, in either notation.
 
+   A WORD    syllables(text) splits a whole word into its characters as
+   written (అమ్మ is అ + మ్మ), each with the sounds it spells, in order
+   (the Words game asks for them one by one). notation.word() writes the
+   whole word's sound.
+
    KEYBOARD  buildKeyboard() draws the letter keyboard (sound or
    Telugu face) in alphabet order, so pages share one layout.
 
@@ -187,6 +192,22 @@
              sound:    sound === undefined ? ipa : sound,
              isoSound: sign && AFTER_A.includes(sign) ? 'a' + iso : iso }, f));
 
+  // The order of a vowel keyboard: each long vowel right after its short one (a ā · i ī · u ū ·
+  // e ē · o ō), as the alphabet itself runs (అ ఆ ఇ ఈ …). SIGN_ROWS lists the five short signs
+  // and then the five long ones; the rest (diphthongs, vocalic, ం ః, the pollu) keep their order.
+  const LONG_MARK = 'ː';
+  function shortThenLong(list) {
+    const out = [];
+    list.forEach(v => {
+      if (v.grp === 'Long') return;                       // placed after its short vowel, below
+      out.push(v);
+      const long = v.grp === 'Short' && list.find(x => x.grp === 'Long' && x.ipa === v.ipa + LONG_MARK);
+      if (long) out.push(long);
+    });
+    list.forEach(v => { if (!out.includes(v)) out.push(v); });      // a long vowel with no short one in play
+    return out;
+  }
+
   /* ── Digits ──────────────────────────────────────────────
      ౦ – ౯. No game drills them yet; the Lookalike Builder offers
      them as characters to compare.                            */
@@ -295,6 +316,10 @@
        sign(g)          what a sign adds to a syllable    aː     ā     ('' for ్)
        syllable(l, g)   consonant + sign                  kaː    kā
        cluster(c)       a conjunct, as written            kʂa    kṣa
+       piece(p)         one sound of a word (a part from  k  aː     k  ā
+                        syllables()); ం and ః on their    ◌̃  ◌ʰ    ṁ  ḥ
+                        own are a mark with nothing under it
+       word(syls)       a whole word, from syllables()    amma   amma
        of(x)            anything carrying both spellings: a read() result
                         or a lookalike item
 
@@ -316,6 +341,10 @@
       sign:     g => iso ? g.isoSound : g.sound,
       syllable: (l, g) => iso ? l.isoStem + g.isoSound : l.ipa + g.sound,
       cluster:  c => iso ? c.iso : c.sound,
+      piece:    p => p.kind === 'c' ? (iso ? p.item.isoStem : p.item.ipa)
+                   : p.kind === 'v' ? (iso ? p.item.isoSound : p.item.sound) || '∅'
+                   : iso ? p.item.iso : HOLDER + p.item.sound.slice(1),
+      word:     syls => syls.map(s => iso ? s.iso : s.ipa).join(''),
       of:       x => iso ? x.iso : x.ipa,
       wrap:     t => iso ? t : '/' + t + '/',
       html:     t => iso ? escHtml(t)
@@ -401,6 +430,75 @@
       listed: false,
       spoken: null,
     };
+  }
+
+  /* ── READING A WORD ──────────────────────────────────────
+     syllables(text) → [{ text, parts, ipa, iso }, …], one entry per
+                       character as it is written, or null when the text
+                       holds anything that can't be read (a digit, a
+                       stray sign, a space).
+
+     A written character (an akshara) is a vowel letter, or one or more
+     consonants joined by ్ (a conjunct) with their vowel; either can
+     carry ం or ః after it. So అమ్మ is అ + మ్మ, పుస్తకం is పు + స్త + కం.
+
+     parts  the sounds the character spells, in the order they are said:
+              { kind: 'c', key, item }   a consonant (item: its letter)
+              { kind: 'v', key, item }   the vowel   (item: its SIGN; the
+                                         consonant's own a is the sign '';
+                                         a vowel letter gives the sign of
+                                         the same sound; a final ్ gives
+                                         the pollu, key ∅: no vowel)
+              { kind: 'm', key, item }   ం or ః     (item: its sign)
+            key is the item's ipa: what a keyboard key is known by.
+            క్ష is two consonants here (k, ʂ), as on the Conjuncts page.
+     ipa, iso   the whole character's sound in each notation. ం is written
+            the way the rest of the app writes it: nasalizing the vowel in
+            IPA (కొం → kõ), ṁ in ISO (koṁ), whichever nasal it is said as. */
+  const HOLDER   = '\u25CC';                                   // ◌  stands in for the vowel under a mark shown alone
+  const MARKS    = new Set(AFTER_A);                           // ం ః
+  const noSign   = signs.find(g => g.sign === '');             // the consonant's own a
+  const pollu    = signs.find(g => g.sign === VIRAMA);
+  const signFor  = new Map(signs.filter(g => g !== pollu && !MARKS.has(g.sign)).map(g => [g.ipa, g]));   // by sound
+  const vowelCh  = new Map(vowels.filter(l => [...l.ch].length === 1).map(l => [l.ch, signFor.get(l.ipa)]));
+
+  // A vowel's sound with its marks: ం nasalizes it (the tilde goes on its first letter: ãː), ః follows it
+  const marked = (sound, marks) => marks.reduce((t, m) =>
+    m.sign === '\u0C02' ? [...t][0] + NAS + [...t].slice(1).join('') : t + m.sound.slice(1), sound);
+
+  function syllables(text) {
+    const chars = [...String(text)];
+    const out = [];
+    let i = 0;
+    while (i < chars.length) {
+      const start = i, cons = [];
+      let vowel = null;
+      if (vowelCh.has(chars[i])) vowel = vowelCh.get(chars[i++]);            // a vowel letter stands alone
+      else {
+        while (byCh.has(chars[i])) {                                         // consonant (్ consonant)*
+          cons.push(byCh.get(chars[i++]));
+          if (chars[i] === VIRAMA && byCh.has(chars[i + 1])) i++; else break;
+        }
+        if (!cons.length) return null;
+        if (chars[i] === VIRAMA) { vowel = pollu; i++; }
+        else if (signBy.has(chars[i]) && !MARKS.has(chars[i])) vowel = signBy.get(chars[i++]);
+        else vowel = noSign;
+      }
+      const marks = [];
+      while (MARKS.has(chars[i]) && vowel !== pollu) marks.push(signBy.get(chars[i++]));
+      if (!vowel || marks.length > 2) return null;
+      const parts = [
+        ...cons.map(c => ({ kind: 'c', key: c.ipa, item: c })),
+        { kind: 'v', key: vowel.ipa, item: vowel },
+        ...marks.map(m => ({ kind: 'm', key: m.ipa, item: m })),
+      ];
+      out.push({
+        text: chars.slice(start, i).join(''), parts,
+        ipa:  cons.map(c => c.ipa).join('')     + marked(vowel.sound, marks),
+        iso:  cons.map(c => c.isoStem).join('') + vowel.iso + marks.map(m => m.iso).join(''),
+      });
+    }
+    return out.length ? out : null;
   }
 
   /* ── Letter keyboard ─────────────────────────────────────
@@ -504,10 +602,10 @@
   })();
 
   const data = Object.freeze({
-    VIRAMA, DENT, SYL, NAS, RING, MACRON,
+    VIRAMA, DENT, SYL, NAS, RING, MACRON, LONG_MARK,
     letters, vowels, consonants, conjunctLetters,
-    signs, digits, clusterSets: CLUSTER_SETS, clusters,
-    notation, notationFor, read,
+    signs, shortThenLong, digits, clusterSets: CLUSTER_SETS, clusters,
+    notation, notationFor, read, syllables,
     letterGroups, pool, buildKeyboard,
   });
 

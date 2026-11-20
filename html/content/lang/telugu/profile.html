@@ -126,6 +126,8 @@ if (!window.TeluguProgress) throw new Error('progress.js was not found');
    A card's chart is two lines against the same runs:
      correct answers   how many cards the session cleared
      error rate        wrong answers ÷ all answers, as a percentage
+                       (in Words a card is a whole word and an answer is
+                       one of its sounds)
    They are different kinds of number, so each has its own
    panel and its own scale, one above the other, sharing the
    runs along the bottom. (Two scales on one plot would make
@@ -143,7 +145,9 @@ const GAMES    = Units.all.filter(t => t.stats);
 const $        = id => document.getElementById(id);
 const esc      = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const errorRate = r => (r.tries ? (r.tries - r.ok) / r.tries * 100 : 0);
+// Wrong answers in a run. A game whose cards take several answers each (Words) says so itself (miss)
+const wrongOf   = r => (Number.isFinite(r.miss) ? r.miss : r.tries - r.ok);
+const errorRate = r => (r.tries ? wrongOf(r) / r.tries * 100 : 0);
 const pct       = v => Math.round(v) + '%';
 const day       = t => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 const moment    = t => new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
@@ -234,7 +238,7 @@ function drawChart(host, runs) {
   let at = -1;
   function read(i) {
     at = Math.max(0, Math.min(n - 1, i));
-    const r = runs[at], wrong = r.tries - r.ok;
+    const r = runs[at], wrong = wrongOf(r);
     cross.setAttribute('x1', x(at)); cross.setAttribute('x2', x(at)); cross.setAttribute('visibility', 'visible');
     marks.forEach(m => { m.dot.setAttribute('cx', x(at)); m.dot.setAttribute('cy', m.y(m.vals[at])); m.dot.setAttribute('visibility', 'visible'); });
 
@@ -275,7 +279,7 @@ function drawChart(host, runs) {
    THE CARDS
 ───────────────────────────────────────────────────────── */
 function tableHTML(runs) {
-  const rows = runs.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(moment(r.t))}${DIRECTION[r.dir] ? ' · ' + esc(DIRECTION[r.dir]) : ''}</td><td>${r.ok}</td><td>${r.n}</td><td>${r.tries - r.ok}</td><td>${pct(errorRate(r))}</td><td>${r.end === 'out' ? 'Game over' : 'Finished'}</td></tr>`);
+  const rows = runs.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(moment(r.t))}${DIRECTION[r.dir] ? ' · ' + esc(DIRECTION[r.dir]) : ''}</td><td>${r.ok}</td><td>${r.n}</td><td>${wrongOf(r)}</td><td>${pct(errorRate(r))}</td><td>${r.end === 'out' ? 'Game over' : 'Finished'}</td></tr>`);
   return `<details class="pf-table"><summary>Show as a table</summary>
     <div class="pf-scroll"><table>
       <thead><tr><th>Run</th><th>When</th><th>Correct</th><th>Cards</th><th>Errors</th><th>Error rate</th><th>Ended</th></tr></thead>
