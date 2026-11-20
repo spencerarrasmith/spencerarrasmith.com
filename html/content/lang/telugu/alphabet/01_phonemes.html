@@ -69,7 +69,7 @@ if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
    the complete screen, the record of each session) is game-core.js.
    The popup that opens first is game-setup.js. It holds every
    option: direction, number of rounds, mistakes allowed, and
-   the four checkboxes. There is no ⋮ menu on this page.
+   the five checkboxes. There is no ⋮ menu on this page.
    This page draws the card and the keyboard and checks answers.
 ───────────────────────────────────────────────────────── */
 const GAME  = 'phonemes';                // tile id: finishing either direction checks off the tile
@@ -211,12 +211,13 @@ const setup = GameSetup.create({
     { id: 'shuffle-kb',        label: 'Shuffle keyboard' },
     { id: 'include-extra',     label: 'Include extra letters' },
     { id: 'highlight-correct', label: 'Highlight correct answer', checked: true },
+    { id: 'missed-again',      label: 'Missed guesses reappear', checked: true },
   ],
   max: () => pool().length,              // 51, or 54 with the extra letters
   onStart(v) {
     reversed = v.reversed;
     showDirection();
-    game.start({ size: v.rounds, misses: v.misses });
+    game.start({ size: v.rounds, misses: v.misses, again: $('missed-again').checked });
   },
 });
 // leave: Cancel goes back to Home (only when the page has just opened and nothing was played)

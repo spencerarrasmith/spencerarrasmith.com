@@ -124,7 +124,7 @@ if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
    the complete screen, the record of each session) is game-core.js.
    The popup that opens first is game-setup.js. It holds every
    option: direction, number of rounds, mistakes allowed, and
-   the three checkboxes. There is no ⋮ menu on this page.
+   the four checkboxes. There is no ⋮ menu on this page.
    This page draws the card, the two keyboards, and the slots,
    and checks the pair of picks.
 ───────────────────────────────────────────────────────── */
@@ -428,12 +428,13 @@ const setup = GameSetup.create({
       note: { id: 'cat-note', text: 'Off while keyboard is shuffled' } },
     { id: 'shuffle-kb',    label: 'Shuffle keyboard' },
     { id: 'include-extra', label: 'Include extra letters' },
+    { id: 'missed-again',  label: 'Missed guesses reappear', checked: true },
   ],
   max: deckSize,
   onStart(v) {
     reversed = v.reversed;
     showDirection();
-    game.start({ size: v.rounds, misses: v.misses });
+    game.start({ size: v.rounds, misses: v.misses, again: $('missed-again').checked });
   },
 });
 // leave: Cancel goes back to Home (only when the page has just opened and nothing was played)

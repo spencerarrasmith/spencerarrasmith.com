@@ -7,7 +7,9 @@
    its end is recorded (progress.js), for the Profile page.
    A session can be given a length and a number of mistakes
    it allows (game-setup.js asks for them); one mistake more
-   than that ends it early.
+   than that ends it early. It can also be told not to bring
+   missed cards back: a wrong answer then drops the card, and
+   every card is shown exactly once.
    Exposes window.GameCore. Pairs with game.css, game-menu.js,
    game-setup.js and progress.js (load progress.js first).
 
@@ -46,7 +48,9 @@
      game.start({ size: 10, misses: 3 });   // deal a session of 10 cards that allows 3 mistakes:
                                         // the 4th ends it (misses: 0 → the first one does).
                                         // size: null → the usual length; misses: null → no limit.
-                                        // Both stay in force for later start() calls until set again.
+     game.start({ again: false });      // missed cards do not come back: a wrong answer drops the card
+                                        // (again: true, the default, sends it back into the deck).
+                                        // All three stay in force for later start() calls until set again.
 
    In the page's answer handler:
      if (game.locked) return;           // the last answer is still showing
@@ -63,6 +67,7 @@
      game.deck  game.current  game.total  game.completed  game.attempts  game.locked
      game.misses  game.limit (mistakes allowed; null = no limit)  game.left (mistakes still allowed)
      game.over (ended by one mistake too many)
+     game.again (do missed cards come back?)  game.dropped (cards missed and not shown again)
    Also:
      game.render()       redraw the current card (an option changed)
      game.front(pred)    bring the first card matching pred to the front and
@@ -130,6 +135,8 @@
     let want = null;            // cards asked for; null = the usual length
     let limit = null;           // mistakes allowed (3 = the fourth ends the session); null = no limit
     let misses = 0, over = false;
+    let again = true;           // do missed cards come back into the deck?
+    let dropped = 0;            // cards missed and not shown again (only when they do not)
 
     // Mistakes still allowed (null when there is no limit), and how the header shows them:
     // "❤️×20" down to "❤️×4"; then a heart each, 💚🤍🧡 → 🤍🧡 → 🧡; an empty ring, ⭕, when there are none.
@@ -140,7 +147,7 @@
       $('s-rem').textContent   = deck.length;
       $('s-done').textContent  = completed;
       $('s-total').textContent = total;
-      $('prog-fill').style.width = (total ? completed / total * 100 : 0).toFixed(1) + '%';
+      $('prog-fill').style.width = (total ? Math.min(1, (completed + dropped) / total) * 100 : 0).toFixed(1) + '%';      // cards dealt with, right or not
       const lives = $('s-lives');
       if (lives) {
         const n = left();
@@ -164,7 +171,8 @@
 
     // The end of a session: every card cleared, or (over) one mistake more than the session allows.
     function showComplete() {
-      const accuracy = Math.round((over ? completed : total) / attempts * 100);
+      const part     = over || dropped > 0;              // not every card was cleared
+      const accuracy = Math.round((part ? completed : total) / attempts * 100);
       $('g-main').style.display = 'none';
       $('g-complete').classList.add('show');
       if ($('c-title')) {
@@ -172,10 +180,11 @@
         $('c-title').textContent   = over ? 'Out of mistakes' : 'Session Complete!';
       }
       $('c-sub').textContent      = over ? `${completed} of ${total} cleared. ${limit === 0 ? 'No mistakes were' : limit === 1 ? '1 mistake was' : limit + ' mistakes were'} allowed.`
+                                  : dropped ? `${completed} of ${total} correct. The ${dropped} missed ${dropped === 1 ? 'was' : 'were'} not shown again.`
                                   : doneText ? doneText(game) : `All ${total} cards cleared.`;
       $('c-attempts').textContent = attempts;
       $('c-accuracy').textContent = accuracy + '%';
-      $('c-errors').textContent   = over ? misses : attempts - total;
+      $('c-errors').textContent   = part ? misses : attempts - total;
       // Every session played to its end is kept for the Profile page, whatever its length
       if (Progress.run) Progress.run(id, { total, correct: completed, attempts, ended: over ? 'out' : 'done', variant: variant ? variant(game) : '' });
     }
@@ -184,6 +193,7 @@
       // (start is also used directly as an event handler: an Event has neither property)
       if (o && 'size' in o)   want  = o.size > 0 ? Math.floor(o.size) : null;
       if (o && 'misses' in o) limit = o.misses === null || !(o.misses >= 0) || o.misses === Infinity ? null : Math.floor(o.misses);
+      if (o && 'again' in o)  again = o.again !== false;
 
       const all    = shuffle(pool());
       const usual  = size > 0 ? Math.min(size, all.length) : all.length;      // the game's own session length
@@ -193,6 +203,7 @@
       completed = 0;
       attempts  = 0;
       misses    = 0;
+      dropped   = 0;
       over      = false;
       locked    = false;
 
@@ -221,11 +232,13 @@
       } else {
         misses++;
         if (limit !== null && misses > limit) over = true;       // one more than the session allows
-        updateProgress();
         if (miss) Progress.miss(Object.assign({ game: id }, miss));
-        // Back into the deck at a random position (never straight back to the front)
         const card = deck.shift();
-        deck.splice(Math.max(1, Math.floor(Math.random() * (deck.length + 1))), 0, card);
+        // Back into the deck at a random position (never straight back to the front),
+        // unless missed cards do not come back: then it is gone for this session
+        if (again) deck.splice(Math.max(1, Math.floor(Math.random() * (deck.length + 1))), 0, card);
+        else dropped++;
+        updateProgress();
       }
 
       setTimeout(() => {
@@ -260,6 +273,8 @@
       get limit()     { return limit; },
       get left()      { return left(); },
       get over()      { return over; },
+      get again()     { return again; },
+      get dropped()   { return dropped; },
     };
 
     const done = $('g-complete');
