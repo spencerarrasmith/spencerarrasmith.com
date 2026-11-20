@@ -71,7 +71,7 @@
 
 .g-stat-val { font-weight: 600; color: var(--text-dim); }
 
-/* Mistakes left in a session that limits them (game-core.js): ❤️×20 … ❤️×4, 💚🤍🧡, 🤍🧡, 🧡, then ⭕.
+/* Mistakes left in a session (game-core.js): ❤️×♾️ with no limit, else ❤️×20 … ❤️×4, 💚🤍🧡, 🤍🧡, 🧡, then ⭕.
    The box keeps one width (room for three hearts, or ❤️×20) and its text sits at the right, so the
    counters beside it stay put as hearts go, and the hearts that are left do not move. */
 .g-lives { display: inline-block; min-width: 4em; text-align: right; white-space: nowrap; font-weight: 600; color: var(--text-dim); }

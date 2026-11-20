@@ -18,10 +18,11 @@
 
    The page supplies the markup (ids matter):
      #s-rem  #s-done  #s-total  #prog-fill    counters + progress bar
-     #s-lives                                 optional: the mistakes left, as hearts, shown while a
-                                              limit is set:  ❤️×20 … ❤️×4  💚🤍🧡  🤍🧡  🧡  ⭕
+     #s-lives                                 optional: the mistakes left, as hearts:
+                                              ❤️×♾️ (no limit)  ❤️×20 … ❤️×4  💚🤍🧡  🤍🧡  🧡  ⭕
                                               (the last three are green, white, orange; orange goes last;
-                                              the empty ring means none are left)
+                                              the empty ring means none are left). Always shown, so
+                                              that corner of the header never stands empty
      #g-main                                  the playing area
      #char-card  #feedback                    the card and the line under it
      #g-complete                              empty: the core fills it in
@@ -101,6 +102,7 @@
   const HEART = '\u2764\uFE0F';                              // ❤️  four or more mistakes left: ❤️×20
   const LAST  = ['\u{1F49A}', '\u{1F90D}', '\u{1F9E1}'];       // 💚 🤍 🧡  the last three, lost left to right
   const NONE  = '\u2B55';                                    // ⭕  none left: an empty red ring
+  const EVER  = '\u267E\uFE0F';                              // ♾️  no limit: ❤️×♾️
 
   const COMPLETE_HTML = `
     <div class="trophy" id="c-trophy">🏆</div>
@@ -139,9 +141,10 @@
     let dropped = 0;            // cards missed and not shown again (only when they do not)
 
     // Mistakes still allowed (null when there is no limit), and how the header shows them:
-    // "❤️×20" down to "❤️×4"; then a heart each, 💚🤍🧡 → 🤍🧡 → 🧡; an empty ring, ⭕, when there are none.
+    // "❤️×♾️" when there is no limit; "❤️×20" down to "❤️×4"; then a heart each, 💚🤍🧡 → 🤍🧡 → 🧡;
+    // an empty ring, ⭕, when there are none.
     const left   = () => limit === null ? null : Math.max(0, limit - misses);
-    const hearts = n => n > 3 ? `${HEART}×${n}` : n > 0 ? LAST.slice(-n).join('') : NONE;
+    const hearts = n => n === null ? `${HEART}×${EVER}` : n > 3 ? `${HEART}×${n}` : n > 0 ? LAST.slice(-n).join('') : NONE;
 
     function updateProgress() {
       $('s-rem').textContent   = deck.length;
@@ -150,13 +153,12 @@
       $('prog-fill').style.width = (total ? Math.min(1, (completed + dropped) / total) * 100 : 0).toFixed(1) + '%';      // cards dealt with, right or not
       const lives = $('s-lives');
       if (lives) {
-        const n = left();
-        lives.hidden      = n === null;
-        lives.textContent = n === null ? '' : hearts(n);
+        const n = left(), said = `Mistakes left: ${n === null ? 'unlimited' : n}`;
+        lives.hidden      = false;
+        lives.textContent = hearts(n);
         lives.classList.toggle('out', n === 0);                      // none left: the next mistake ends the session
-        if (n === null) lives.removeAttribute('aria-label');
-        else lives.setAttribute('aria-label', `Mistakes left: ${n}`);
-        lives.title = n === null ? '' : `Mistakes left: ${n}`;
+        lives.setAttribute('aria-label', said);
+        lives.title = said;
       }
     }
 

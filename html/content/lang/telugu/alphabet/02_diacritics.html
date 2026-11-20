@@ -23,6 +23,8 @@
     }
 
     .kb-col, .kb-col-keys { display: flex; flex-direction: column; gap: 9px; }
+    /* a vowel and its long form: one unit in the row (same spacing as any two keys), so they wrap together */
+    .kb-pair { display: inline-flex; gap: inherit; }
 
     .kb-col-title {
       font-size: 11px;
@@ -69,7 +71,7 @@
         <div class="g-stats">
           <span>Remaining&nbsp;<span class="g-stat-val" id="s-rem">0</span></span>
           <span>Correct&nbsp;<span class="g-stat-val" id="s-done">0</span>/<span class="g-stat-val" id="s-total">0</span></span>
-          <span class="g-lives" id="s-lives" role="img" hidden></span>
+          <span class="g-lives" id="s-lives" role="img"></span>
         </div>
       </div>
     </div>
@@ -148,15 +150,33 @@ let kbOrder = null;               // null, or { c, v }: shuffled copies (fixed f
 /* ─────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────── */
-// [[label, [items…]], …] keeping first-seen order
+// [[label, [items…]], …] keeping first-seen order. key: a property name, or a function of the item
 function groupBy(items, key) {
+  const of = typeof key === 'function' ? key : it => it[key];
   const m = new Map();
   items.forEach(it => {
-    if (!m.has(it[key])) m.set(it[key], []);
-    m.get(it[key]).push(it);
+    if (!m.has(of(it))) m.set(of(it), []);
+    m.get(of(it)).push(it);
   });
   return [...m];
 }
+
+// The vowel keyboard keeps each long vowel beside its short one: a ā · i ī · u ū · e ē · o ō,
+// in one block, as the alphabet itself runs (అ ఆ ఇ ఈ …). The data lists the five short signs
+// and then the five long ones; the rest (diphthongs, vocalic, ం ః, the pollu) keep their order.
+const LONG_MARK = 'ː';
+function shortThenLong(signs) {
+  const out = [];
+  signs.forEach(v => {
+    if (v.grp === 'Long') return;                       // placed after its short vowel, below
+    out.push(v);
+    const long = v.grp === 'Short' && signs.find(x => x.grp === 'Long' && x.ipa === v.ipa + LONG_MARK);
+    if (long) out.push(long);
+  });
+  signs.forEach(v => { if (!out.includes(v)) out.push(v); });      // a long vowel with no short one in play
+  return out;
+}
+const vowelBlock = v => (v.grp === 'Short' || v.grp === 'Long' ? 'Short · long' : v.grp);     // the label of a key's block
 
 // Every vowel sign gets PER_VOWEL cards, each with a different random consonant
 function buildDeck(cons, vows) {
@@ -230,7 +250,8 @@ function buildPanel(title, kind, items, key, grouped) {
 
     const row = document.createElement('div');
     row.className = 'kb-row';
-    list.forEach(it => {
+    let pair = null;                       // a short vowel waiting for its long one
+    list.forEach((it, i) => {
       const btn = document.createElement('button');
       btn.className   = 'kb-btn' + (reversed ? ' te sign' : '');
       btn.textContent = reversed ? signLabel(it) : soundLabel(kind, it);
@@ -238,7 +259,15 @@ function buildPanel(title, kind, items, key, grouped) {
       btn.dataset.ipa  = it.ipa;
       btn.dataset.kind = kind;
       btn.addEventListener('click', () => onPick(kind, it.ipa, btn));
-      row.appendChild(btn);
+      // A vowel and its long form go in together, so a row never breaks between the two
+      const next = list[i + 1];
+      if (kind === 'v' && next && next.ipa === it.ipa + LONG_MARK) {
+        pair = document.createElement('span');
+        pair.className = 'kb-pair';
+        row.appendChild(pair);
+        pair.appendChild(btn);
+      } else if (pair) { pair.appendChild(btn); pair = null; }
+      else row.appendChild(btn);
     });
 
     if (label !== null) {
@@ -256,6 +285,7 @@ function buildPanel(title, kind, items, key, grouped) {
 // Both panels follow the options in the session popup:
 //   Show categories checked   → grouped and labeled
 //   Show categories unchecked → one plain block per panel, alphabet order
+// (either way, each long vowel sits right after its short one)
 //   Shuffle keyboard checked  → that block in a random order (kbOrder), which
 //                              stays fixed for the round so keys can be found
 // Rebuilding (when one of those two boxes changes) never restarts the round.
@@ -268,7 +298,7 @@ function buildKB() {
   wrap.className = 'kb-cols';
   wrap.append(
     buildPanel('Consonant', 'c', src.c, 'cat', grouped),
-    buildPanel(reversed ? 'Vowel sign' : 'Vowel', 'v', src.v, 'grp', grouped),
+    buildPanel(reversed ? 'Vowel sign' : 'Vowel', 'v', src.v, vowelBlock, grouped),
   );
   area.appendChild(wrap);
 
@@ -382,7 +412,7 @@ function evaluate() {
 // Both keyboards carry all of them, however few rounds are dealt.
 const inPlay = () => {
   const all = $('include-extra').checked;
-  return { c: TeluguData.pool(CONSONANTS, all), v: TeluguData.pool(VOWELS, all) };
+  return { c: TeluguData.pool(CONSONANTS, all), v: shortThenLong(TeluguData.pool(VOWELS, all)) };
 };
 function deal() {
   keys = inPlay();
