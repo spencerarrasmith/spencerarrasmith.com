@@ -77,6 +77,7 @@
     'ɡ': ['Velar', 'Plosive', V],          'ɡʱ': ['Velar', 'Plosive', V],
     'ʔ': ['Glottal', 'Plosive', U],
     // Affricates (a stop released into a fricative)
+    'ts': ['Alveolar', 'Affricate', U],     'dz': ['Alveolar', 'Affricate', V],     // the old letters ౘ ౙ
     'tʃ': ['Postalveolar', 'Affricate', U], 'tʃʰ': ['Postalveolar', 'Affricate', U],
     'dʒ': ['Postalveolar', 'Affricate', V], 'dʒʱ': ['Postalveolar', 'Affricate', V],
     // Fricatives
@@ -90,7 +91,6 @@
     'ʋ': ['Labiodental', 'Approximant', V], 'ɹ': ['Alveolar', 'Approximant', V], 'j': ['Palatal', 'Approximant', V],
     'w': ['Velar', 'Approximant', V],      // labial-velar: the lips round as well (see the note); drawn where the tongue is
     'ɾ': ['Alveolar', 'Tap or flap', V],   'ɽ': ['Retroflex', 'Tap or flap', V],
-    'r': ['Alveolar', 'Trill', V],
     'l': ['Alveolar', 'Lateral approximant', V], 'ɫ': ['Alveolar', 'Lateral approximant', V],   // ɫ: l with the back of the tongue raised
     'ɭ': ['Retroflex', 'Lateral approximant', V],
   };
@@ -124,10 +124,12 @@
     'ə': [0.5, 0.5, 'b'],
     'ɛ': [0, 2 / 3, 'l'],   'ʌ': [0.84, 2 / 3, 'a'], 'ɔ': [1, 2 / 3, 'r'],
     'æ': [0, 0.84, 'l'],
+    'ɐ': [0.5, 0.84, 'r'],
     'a': [0.5, 1, 'b'],     'ɑ': [1, 1, 'r'],
   };
-  // Telugu అ ఆ are written a, a symbol IPA draws at the FRONT of the open row.
-  // They are open central vowels, so that is where a sits here. (English has no a.)
+  // Telugu ఆ is written a, a symbol IPA draws at the FRONT of the open row. It is an open
+  // central vowel, so that is where a sits here. అ (ɐ) is shorter and a little higher, so
+  // the two get separate dots. (English has neither.)
 
   const ENGLISH_VOWELS = [
     ['i', 'f|ee|t'], ['ɪ', 's|i|t'], ['ɛ', 'b|e|d'], ['æ', 'c|a|t'],
@@ -143,10 +145,10 @@
 
   // Telugu letters filed with the vowels that are not plain vowels, by IPA
   const OFF_CHART = [
-    { ipa: ['r' + TD.SYL, 'r' + TD.SYL + 'ː', 'l' + TD.SYL, 'l' + TD.SYL + 'ː'],
-      why: 'r and l used as vowels (from Sanskrit): consonant sounds carrying a syllable' },
-    { ipa: ['a' + TD.NAS, 'aʰ'],
-      why: 'అ followed by ం or ః: a vowel plus a nasal or a breath' },
+    { ipa: ['ru', 'ruː', 'lu', 'luː'],
+      why: 'vowels from Sanskrit, once a syllabic r and l: Telugu says them as r or l followed by u' },
+    { ipa: [TD.INHERENT + 'm', TD.INHERENT + 'ʰ'],
+      why: 'అ followed by ం or ః: a vowel and then a nasal (m on its own; the nasal of the next consonant inside a word) or a breath' },
   ];
   const OFF_CHART_EN = [
     { ipa: 'ɚ', word: 'b|ir|d', why: 'ə with an r coloring' },
@@ -157,7 +159,7 @@
     { id: 'aspiration', title: 'English p, t, and k come in two kinds',
       text: 'At the start of a word (pin, tin, kin) they come with a puff of air: [pʰ] and [kʰ] are the sounds of ఫ and ఖ. After s (spin, stop, skin) the puff is gone, and p and k are the sounds of ప and క. English hears each pair as one sound; Telugu writes them with different letters.' },
     { id: 'variants', title: 'Slashes and square brackets',
-      text: 'Slashes mark a sound English tells apart from its others, like /t/. Square brackets mark a variant English speakers make without hearing a difference: the tt of butter is a single quick tap [ɾ], the tt of button (and the middle of uh-oh) a catch in the throat [ʔ], and the ll of full a dark l [ɫ], with the back of the tongue raised. Telugu ల is the light l of let. ర is described as a trill by some sources and as a single tap by others, so the tt of butter may be the nearest English sound to it.' },
+      text: 'Slashes mark a sound English tells apart from its others, like /t/. Square brackets mark a variant English speakers make without hearing a difference: the tt of butter is a single quick tap [ɾ], the tt of button (and the middle of uh-oh) a catch in the throat [ʔ], and the ll of full a dark l [ɫ], with the back of the tongue raised. Telugu ల is the light l of let. ర is a single tap [ɾ], the tt of butter or the r of Spanish pero, so it shares a box with that English variant.' },
     { id: 'coronals', title: 'English t and d sit between two Telugu pairs',
       text: 'English t and d are made on the ridge behind the teeth (alveolar). Telugu has no stop there: త ద touch the teeth (dental), and ట డ curl the tongue tip back (retroflex).' },
     { id: 'th', title: 'English th is not థ',
@@ -168,8 +170,8 @@
       text: 'For w the back of the tongue rises, which is why it is in the Velar column, while the lips round. Telugu has no w; వ is the nearest letter.' },
     { id: 'h', title: 'హ and h share a box',
       text: 'Both are made in the throat. English h is voiceless; Telugu హ is voiced, a breathy version of the same sound.' },
-    { id: 'length', title: 'Telugu vowel pairs differ only in length',
-      text: 'ఇ ఈ, ఉ ఊ, ఎ ఏ, ఒ ఓ, and అ ఆ are each one tongue position held short or long, so each pair shares a dot. English pairs like sit / feet and put / moon differ in tongue position, so they have separate dots.' },
+    { id: 'length', title: 'Most Telugu vowel pairs differ only in length',
+      text: 'ఇ ఈ, ఉ ఊ, ఎ ఏ, and ఒ ఓ are each one tongue position held short or long, so each pair shares a dot. అ ఆ are the exception: short అ (ɐ) is a little higher than long ఆ (aː), so they have a dot each. English pairs like sit / feet and put / moon differ in tongue position, so they have separate dots.' },
     { id: 'eo', title: 'English has no steady e or o',
       text: 'ఎ ఏ and ఒ ఓ stay in one place. The nearest English vowels, in say and go, start there and glide away (they are listed with the diphthongs).' },
   ];

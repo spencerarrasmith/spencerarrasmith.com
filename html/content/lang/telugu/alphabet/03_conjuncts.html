@@ -295,7 +295,7 @@ function evaluate() {
   // the answer; the keys that should have been pressed are lit on the keyboard.
   // A right answer keeps the note on how the conjunct is usually said.
   const picks  = sel.map(s => CONSONANTS.find(c => c.ipa === s));
-  const picked = reversed ? picks.map(p => p.ch).join(TeluguData.VIRAMA) : N.wrap(picks.map(N.part).join('') + 'a');
+  const picked = reversed ? picks.map(p => p.ch).join(TeluguData.VIRAMA) : N.wrap(picks.map(N.part).join('') + N.inherent);
   game.judge(allOk, {
     feedback: `${allOk ? '✓' : '✗'}  ${picked}${allOk ? spokenNote(cur) : ''}`,
     te:       reversed,

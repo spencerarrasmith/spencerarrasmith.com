@@ -133,6 +133,15 @@ function buildEntries() {
       rare: s.rare, extra: !s.inBook, word: r.word, eng: r.eng, note: r.note || '',
     });
   });
+  // Marks no longer said: rosetta-data.js only, with their own sound and spelling
+  Object.entries(RD.historical).forEach(([sign, r]) => {
+    out.push({
+      kind: 'sign', section: 'signs', heading: 'Historical', key: sign,
+      glyph: SIGN_BASE + sign, caption: r.name,
+      ipa: r.ipa, iso: r.iso, place: 'Historical',
+      rare: true, extra: true, word: r.word, eng: r.eng, note: r.note,
+    });
+  });
   return out;
 }
 

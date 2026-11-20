@@ -10,7 +10,8 @@
    ENTRY
      word    [Telugu, ISO 15919, English meaning]   or null
      eng     [English word, short note]             or null
-     note    what to know about this one (rarity, spelling), or ''
+     note    what to know about this one (rarity, spelling, how it is
+             often said), or ''
 
    WORDS ARE ONLY GIVEN WHERE THEY EXIST
      A few letters are theoretical or archaic: they are in the script and in
@@ -33,29 +34,39 @@
   /* ── Letters (keyed by the letter, as in telugu-data.js) ─ */
   const letters = {
     // Vowels
-    'అ': { word: ['అమ్మ', 'amma', 'mother'],         eng: ['cut',    'short, open vowel, like the u of cup, not the a of cat'] },
-    'ఆ': { word: ['ఆవు', 'āvu', 'cow'],              eng: ['father', 'the same vowel, held twice as long'] },
-    'ఇ': { word: ['ఇల్లు', 'illu', 'house'],         eng: ['sit',    'short i'] },
-    'ఈ': { word: ['ఈగ', 'īga', 'fly'],              eng: ['feet',   'long ee'] },
-    'ఉ': { word: ['ఉడుత', 'uḍuta', 'squirrel'],      eng: ['put',    'short u, never the u of cup'] },
-    'ఊ': { word: ['ఊరు', 'ūru', 'town, village'],    eng: ['moon',   'long oo'] },
-    'ఋ': { word: ['ఋషి', R + 'ṣi', 'sage, seer'],     eng: ['rookie', 'a Sanskrit vowel; spoken in Telugu much like “ru”, classically a syllabic r'],
-           note: 'Found in Sanskrit loanwords.' },
+    'అ': { word: ['అమ్మ', 'amma', 'mother'],         eng: ['cut',    'short vowel, like the u of cup, not the a of cat'] },
+    'ఆ': { word: ['ఆవు', 'āvu', 'cow'],              eng: ['father', 'long and more open than అ, not just అ held longer'],
+           note: 'In some words and dialects it is said like the a of cat, held long [æː]. English loanwords write that sound ్యా: బ్యాగ్ (bag).' },
+    'ఇ': { word: ['ఇల్లు', 'illu', 'house'],         eng: ['sit',    'short i'],
+           note: 'At the start of a word it is often said with a y-glide in front: [ji].' },
+    'ఈ': { word: ['ఈగ', 'īga', 'fly'],              eng: ['feet',   'long ee'],
+           note: 'At the start of a word it is often said with a y-glide in front: [jiː].' },
+    'ఉ': { word: ['ఉడుత', 'uḍuta', 'squirrel'],      eng: ['put',    'short u, never the u of cup'],
+           note: 'At the start of a word it is often said with a v/w-glide in front: [ʋu].' },
+    'ఊ': { word: ['ఊరు', 'ūru', 'town, village'],    eng: ['moon',   'long oo'],
+           note: 'At the start of a word it is often said with a v/w-glide in front: [ʋuː].' },
+    'ఋ': { word: ['ఋషి', R + 'ṣi', 'sage, seer'],     eng: ['rookie', 'said “ru”; in Sanskrit it was a syllabic r'],
+           note: 'Found in Sanskrit loanwords, many of them everyday words (ఋణం, ఋతువు).' },
     'ౠ': { word: null, eng: null,
            note: 'The long form of ఋ. It belongs to Sanskrit grammar tables and a few Sanskrit names; no everyday Telugu word uses it.' },
     'ఌ': { word: null, eng: null,
            note: 'A syllabic l, in the script and in Sanskrit grammar only. No Telugu word uses it, so there is no example to give.' },
     'ౡ': { word: null, eng: null,
            note: 'The long form of ఌ. Theoretical: it appears in letter tables, not in any word.' },
-    'ఎ': { word: ['ఎలుక', 'eluka', 'mouse, rat'],     eng: ['bed',    'short e'] },
-    'ఏ': { word: ['ఏనుగు', 'ēnugu', 'elephant'],     eng: ['say',    'long e, pure: stop before the y-glide English adds'] },
+    'ఎ': { word: ['ఎలుక', 'eluka', 'mouse, rat'],     eng: ['bed',    'short e'],
+           note: 'At the start of a word it is often said with a y-glide in front: [je].' },
+    'ఏ': { word: ['ఏనుగు', 'ēnugu', 'elephant'],     eng: ['say',    'long e, pure: stop before the y-glide English adds'],
+           note: 'At the start of a word it is often said with a y-glide in front: [jeː]. (That glide comes before the vowel; the one English adds in say comes after it.)' },
     'ఐ': { word: ['ఐదు', 'aidu', 'five'],            eng: ['eye',    'a diphthong, a gliding into i'] },
-    'ఒ': { word: ['ఒకటి', 'okaṭi', 'one'],           eng: ['obey',   'short, pure o, with no w-glide'] },
-    'ఓ': { word: ['ఓడ', 'ōḍa', 'boat, ship'],        eng: ['go',     'long o, pure: drop the w-glide of English go'] },
+    'ఒ': { word: ['ఒకటి', 'okaṭi', 'one'],           eng: ['obey',   'short, pure o, with no w-glide after it'],
+           note: 'At the start of a word it is often said with a v/w-glide in front: [ʋo].' },
+    'ఓ': { word: ['ఓడ', 'ōḍa', 'boat, ship'],        eng: ['go',     'long o, pure: drop the w-glide that ends English go'],
+           note: 'At the start of a word it is often said with a v/w-glide in front: [ʋoː]. (That glide comes before the vowel; the one English adds in go comes after it.)' },
     'ఔ': { word: ['ఔషధం', 'auṣadhaṁ', 'medicine'],   eng: ['cow',    'a diphthong, gliding into u'] },
-    'అం': { word: ['అంగడి', 'aṁgaḍi', 'store'],        eng: ['sang',   'ం nasalizes the vowel; before గ and క it sounds like the ng of sang'] },
+    'అం': { word: ['అంగడి', 'aṁgaḍi', 'store'],        eng: ['sang',   'ం is the nasal of the next consonant: ng before గ and క, as in sang'],
+            note: 'On its own, or at the end of a word, ం is said m.' },
     'అః': { word: ['దుఃఖం', 'duḥkhaṁ', 'sorrow'],      eng: ['ahh',    'a light puff of breath after the vowel'],
-            note: 'ః appears in Sanskrit-origin words.' },
+            note: 'ః appears only in a few Sanskrit-origin words.' },
 
     // Velars
     'క': { word: ['కాకి', 'kāki', 'crow'],           eng: ['sky',    'k with no puff of air after it'] },
@@ -65,12 +76,18 @@
     'ఙ': { word: ['అఙ్గము', 'aṅgamu', 'limb, part'],  eng: ['sing',   'the ng sound'],
            note: 'Classical spelling: modern Telugu writes అంగము with ం, so ఙ is rare on its own.' },
     // Palatals
-    'చ': { word: ['చేప', 'cēpa', 'fish'],            eng: ['church', 'before a, o, and u it is often said more like “ts”'] },
+    'చ': { word: ['చేప', 'cēpa', 'fish'],            eng: ['church', 'before a, o, and u it is often said more like “ts”'],
+           note: 'Telugu once wrote that ts with a letter of its own, ౘ.' },
     'ఛ': { word: ['ఛాయ', 'chāya', 'shade, shadow'],   eng: ['catch her', 'ch with a puff of air'] },
-    'జ': { word: ['జింక', 'jiṁka', 'deer'],          eng: ['jug',    'before a, o, and u it is often said more like “dz”'] },
+    'జ': { word: ['జింక', 'jiṁka', 'deer'],          eng: ['jug',    'before a, o, and u it is often said more like “dz”'],
+           note: 'In English loanwords it also writes z. Telugu once wrote the dz with a letter of its own, ౙ.' },
     'ఝ': { word: ['ఝరి', 'jhari', 'stream, waterfall'], eng: ['hedgehog', 'j with a breathy release: “hedge hog” in one breath'] },
-    'ఞ': { word: ['అఞ్జలి', 'añjali', 'offering with cupped hands'], eng: ['canyon', 'the ny sound'],
-           note: 'Classical spelling: modern Telugu writes అంజలి with ం.' },
+    'ఞ': { word: ['జ్ఞానం', 'jñānaṁ', 'knowledge'], eng: ['canyon', 'the ny sound'],
+           note: 'Nearly always written after జ, in జ్ఞ, the way q comes in qu. జ్ఞ is usually said “gny”.' },
+    'ౘ': { word: null, eng: ['cats', 'the ts of cats'],
+           note: 'An old letter for ts, no longer written: modern Telugu writes చ, often said ts before a, o, and u.' },
+    'ౙ': { word: null, eng: ['adze', 'the dz of adze'],
+           note: 'An old letter for dz, no longer written: modern Telugu writes జ, often said dz before a, o, and u.' },
     // Retroflexes
     'ట': { word: ['టోపీ', 'ṭōpī', 'hat, cap'],       eng: ['top',    'curl the tongue tip back; English t is the nearest sound'] },
     'ఠ': { word: ['ఠీవి', 'ṭhīvi', 'stately bearing'], eng: ['hothouse', 'ట with a puff of air, tongue still curled back'] },
@@ -82,23 +99,26 @@
            note: 'Found only in older printed texts; modern Telugu writes ర. No modern word to give.' },
     // Dentals
     'త': { word: ['తల', 'tala', 'head'],             eng: ['tea',    'tongue against the teeth, no puff of air'] },
-    'థ': { word: ['కథ', 'katha', 'story'],           eng: ['hothead', 'త with a puff of air, tongue against the teeth'] },
+    'థ': { word: ['కథ', 'katha', 'story'],           eng: ['hothead', 'త with a puff of air, tongue against the teeth'],
+           note: 'In everyday speech often said like ధ, a breathy d [d̪ʱ].' },
     'ద': { word: ['దారి', 'dāri', 'road, path'],     eng: ['day',    'tongue against the teeth'] },
     'ధ': { word: ['ధనం', 'dhanaṁ', 'wealth'],        eng: ['good hat', 'ద with a breathy release'] },
     'న': { word: ['నీరు', 'nīru', 'water'],          eng: ['noon',   'plain n'] },
     // Labials
     'ప': { word: ['పిల్లి', 'pilli', 'cat'],          eng: ['spin',   'p with no puff of air'] },
-    'ఫ': { word: ['ఫలం', 'phalaṁ', 'fruit'],         eng: ['pin',    'p with a puff of air; not an f'] },
+    'ఫ': { word: ['ఫలం', 'phalaṁ', 'fruit'],         eng: ['pin',    'p with a puff of air; not an f'],
+           note: 'In loanwords it also writes f: ఫోన్ (phone).' },
     'బ': { word: ['బంతి', 'baṁti', 'ball'],          eng: ['bat',    'plain b'] },
     'భ': { word: ['భూమి', 'bhūmi', 'earth, land'],   eng: ['clubhouse', 'b with a breathy release'] },
     'మ': { word: ['మామిడి', 'māmiḍi', 'mango'],       eng: ['mom',    'plain m'] },
     // Approximants
     'య': { word: ['యాత్ర', 'yātra', 'journey, pilgrimage'], eng: ['yes', 'plain y'] },
-    'ర': { word: ['రాత్రి', 'rātri', 'night'],        eng: ['butter', 'a quick tap of the tongue, like the tt of American butter'] },
+    'ర': { word: ['రాత్రి', 'rātri', 'night'],        eng: ['butter', 'a single tap of the tongue, like the tt of American butter or the r of Spanish pero'] },
     'ల': { word: ['లోతు', 'lōtu', 'depth'],          eng: ['leaf',   'a light l'] },
     'వ': { word: ['వంద', 'vaṁda', 'hundred'],        eng: ['wave',   'between English w and v: lips barely touch the teeth'] },
     // Fricatives
-    'శ': { word: ['శరీరం', 'śarīraṁ', 'body'],        eng: ['ship',   'sh'] },
+    'శ': { word: ['శరీరం', 'śarīraṁ', 'body'],        eng: ['ship',   'sh'],
+           note: 'With ా it is often said with the a of cat: శా [ʃæː].' },
     'ష': { word: ['కష్టం', 'kaṣṭaṁ', 'hardship, difficulty'], eng: ['ship', 'sh with the tongue curled back; in everyday speech it sounds like శ'] },
     'స': { word: ['సూర్యుడు', 'sūryuḍu', 'sun'],      eng: ['sun',    'plain s'] },
     'హ': { word: ['హంస', 'haṁsa', 'swan'],           eng: ['behind', 'a light, voiced h'] },
@@ -106,9 +126,18 @@
     'క్ష': { word: ['పక్షి', 'pakṣi', 'bird'],        eng: ['bookshop', 'k and sh run together'] },
   };
 
+  /* ── Historical marks ────────────────────────────────────
+     Signs that are in the script but no longer said, so telugu-data.js
+     (and with it every game) leaves them out. Shown on this page only,
+     with their own sound and spelling.                              */
+  const historical = {
+    'ఁ': { name: 'ardhanusvara', ipa: '∅', iso: 'm̐', word: null, eng: null,
+           note: 'A half circle that once marked a nasal vowel. It is found in older and classical texts and is silent in modern Telugu, which leaves it out.' },
+  };
+
   /* ── Vowel signs (keyed by the sign; '' is "no sign") ───── */
   const signs = {
-    '':       { word: ['కల', 'kala', 'dream'],                 eng: ['cut',   'with no sign, the consonant carries a short a'] },
+    '':       { word: ['కల', 'kala', 'dream'],                 eng: ['cut',   'with no sign, the consonant carries the short vowel of అ'] },
     'ి': { word: ['కిటికీ', 'kiṭikī', 'window'],           eng: ['sit',   'short i'] },
     'ు': { word: ['కుక్క', 'kukka', 'dog'],                eng: ['put',   'short u'] },
     'ె': { word: ['కెరటం', 'keraṭaṁ', 'wave'],             eng: ['bed',   'short e'] },
@@ -151,7 +180,7 @@
     : (o && typeof o === 'object') ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, nfc(v)]))
     : o;
 
-  const data = Object.freeze({ letters: nfc(letters), signs: nfc(signs) });
+  const data = Object.freeze({ letters: nfc(letters), signs: nfc(signs), historical: nfc(historical) });
   root.RosettaData = data;
   if (typeof module !== 'undefined' && module.exports) module.exports = data;
 })(typeof window !== 'undefined' ? window : globalThis);

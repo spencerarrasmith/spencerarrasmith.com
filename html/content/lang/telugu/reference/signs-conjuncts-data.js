@@ -30,6 +30,7 @@
   /* Conjunct (second-letter) forms, by where the reduced letter goes. */
   const BELOW  = 'ఖగఘఙజఝఞటఠడఢణతథదధరఱలషహ';    // tucked under the first letter
   const BESIDE = 'కచఛనపఫబభమయళవశస';            // added after the first letter, at its lower right
+  const NONE   = 'ౘౙ';                          // old letters with no conjunct form of their own
   const HOST = 'క';                              // the first letter used for the examples
   const ALT = { 'ష': 'త్ష' };                    // after క, ష becomes the fused letter క్ష; this is its usual below-form
 
@@ -50,10 +51,13 @@
       text: 'ై is ె plus a second mark ౖ. Typing ె then ౖ gives the same shape as the single sign ై, so you may see it written either way.',
       letters: '', signs: '', usual: [] },
     { id: 'vocalic', title: 'ృ and ౄ',
-      text: 'ృ hangs below the letter at the lower right. ౄ is the long version, the same with an extra stroke. Both appear in Sanskrit loanwords (కృష్ణ), not in everyday Telugu words.',
+      text: 'ృ hangs below the letter at the lower right. ౄ is the long version, the same with an extra stroke. ృ comes in Sanskrit loanwords, many of them everyday words (కృషి, దృష్టి, హృదయం); ౄ is rare.',
       letters: '', signs: '', usual: [] },
     { id: 'nasal', title: 'ం and ః are not vowel signs',
-      text: 'ం (a small circle) nasalizes the vowel and ః (two dots) adds a puff of breath after it. They are listed here because they attach to the letter in the same way.',
+      text: 'ం (a small circle) is a nasal said after the vowel: m on its own or at the end of a word, and inside a word the nasal of the next consonant (ng in అంగడి, n in చందమామ). ః (two dots) adds a puff of breath after the vowel. They are listed here because they attach to the letter in the same way.',
+      letters: '', signs: '', usual: [] },
+    { id: 'ardha', title: 'ఁ is an old mark',
+      text: 'ఁ (a half circle, the ardhanusvara; ISO m̐) once marked a nasal vowel. It is found in older and classical texts and is silent in modern Telugu, so it is not in the chart and no game asks for it.',
       letters: '', signs: '', usual: [] },
   ];
 
@@ -78,13 +82,13 @@
     const have = new Set(TD.signs.map(s => s.sign));
     SIGN_ORDER.forEach(s => { if (!have.has(s)) bad.push('sign ' + s); });
     const cons = TD.letters.filter(l => l.cat !== 'Vowel' && l.cat !== 'Conjunct').map(l => l.ch);
-    cons.forEach(c => { const n = (BELOW.includes(c) ? 1 : 0) + (BESIDE.includes(c) ? 1 : 0); if (n !== 1) bad.push('conjunct family of ' + c); });
-    [...BELOW, ...BESIDE].forEach(c => { if (!cons.includes(c)) bad.push('unknown conjunct letter ' + c); });
+    cons.forEach(c => { const n = (BELOW.includes(c) ? 1 : 0) + (BESIDE.includes(c) ? 1 : 0) + (NONE.includes(c) ? 1 : 0); if (n !== 1) bad.push('conjunct family of ' + c); });
+    [...BELOW, ...BESIDE, ...NONE].forEach(c => { if (!cons.includes(c)) bad.push('unknown conjunct letter ' + c); });
     signNotes.forEach(n => { [...n.letters].forEach(c => { if (!cons.includes(c)) bad.push(n.id + ': ' + c); }); [...n.signs].forEach(s => { if (!have.has(s)) bad.push(n.id + ': sign ' + s); }); });
     if (bad.length) throw new Error('signs-conjuncts-data: ' + bad.join(', '));
   })();
 
-  const data = Object.freeze({ SIGN_ORDER, BELOW, BESIDE, HOST, ALT, signNotes, conjNotes });
+  const data = Object.freeze({ SIGN_ORDER, BELOW, BESIDE, NONE, HOST, ALT, signNotes, conjNotes });
   root.SignsConjunctsData = data;
   if (typeof module !== 'undefined' && module.exports) module.exports = data;
 })(typeof window !== 'undefined' ? window : globalThis);

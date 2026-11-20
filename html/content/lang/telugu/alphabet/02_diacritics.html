@@ -137,7 +137,7 @@ function groupBy(items, key) {
 
 // The vowel keyboard keeps each long vowel beside its short one: a ā · i ī · u ū · e ē · o ō,
 // in one block, as the alphabet itself runs (అ ఆ ఇ ఈ …). telugu-data.js puts them in that order.
-const { shortThenLong, LONG_MARK } = TeluguData;
+const { shortThenLong, longOf } = TeluguData;
 const vowelBlock = v => (v.grp === 'Short' || v.grp === 'Long' ? 'Short · long' : v.grp);     // the label of a key's block
 
 // Every vowel sign gets PER_VOWEL cards, each with a different random consonant
@@ -223,7 +223,7 @@ function buildPanel(title, kind, items, key, grouped) {
       btn.addEventListener('click', () => onPick(kind, it.ipa, btn));
       // A vowel and its long form go in together, so a row never breaks between the two
       const next = list[i + 1];
-      if (kind === 'v' && next && next.ipa === it.ipa + LONG_MARK) {
+      if (kind === 'v' && next && next.ipa === longOf(it.ipa)) {
         pair = document.createElement('span');
         pair.className = 'kb-pair';
         row.appendChild(pair);

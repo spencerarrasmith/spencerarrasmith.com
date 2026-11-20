@@ -286,7 +286,7 @@ var VOWELS=TD.vowels.filter(function(l){return Array.from(l.ch).length===1;}).ma
 /* The consonant keys are laid out as the varnamala is recited, five to a row (the
    games' keyboards group by where a sound is made instead). Only the ORDER is
    kept here; it must name every consonant in telugu-data.js exactly once. */
-var CONS_ORDER='కఖగఘఙ చఛజఝఞ టఠడఢణ తథదధన పఫబభమ యరలవశ షసహళఱ';
+var CONS_ORDER='కఖగఘఙ చఛజఝఞ టఠడఢణ తథదధన పఫబభమ యరలవశ షసహళఱ ౘౙ';
 var CONS=Array.from(CONS_ORDER.replace(/\s/g,'')).map(function(ch){
   var l=LET[ch];
   if(!l||l.kind!=='consonant') throw new Error('lookalike builder: '+ch+' is not a consonant in telugu-data.js');

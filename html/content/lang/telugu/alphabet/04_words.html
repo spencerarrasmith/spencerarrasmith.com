@@ -228,7 +228,7 @@ function buildPanel(title, name, items, grouped) {
       btn.addEventListener('click', () => onPick(it));
       // A vowel and its long form go in together, so a row never breaks between the two
       const next = list[i + 1];
-      if (it.kind === 'v' && next && next.key === it.key + TeluguData.LONG_MARK) {
+      if (it.kind === 'v' && next && next.key === TeluguData.longOf(it.key)) {
         pair = document.createElement('span');
         pair.className = 'kb-pair';
         row.appendChild(pair);

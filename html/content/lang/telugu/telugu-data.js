@@ -6,9 +6,9 @@
 
    FLAGS (one model for the whole app)
      inBook  true if the letter is in the book's set (default).
-             false → "extra": ఌ ౡ ఱ and the signs ౢ ౣ.
+             false → "extra": ఌ ౡ ఱ ౘ ౙ and the signs ౢ ౣ.
      rare    true if it is rare in modern Telugu → shows the
-             "rare" badge. Independent of inBook: ఋ ౠ ఙ ఞ are in
+             "rare" badge. Independent of inBook: ౠ ఙ and ః are in
              the book AND rare.
      core    derived. true → part of the DEFAULT practice set.
              Letters/signs: core = inBook.
@@ -17,7 +17,8 @@
              "Include extra letters/clusters" box is checked.
 
    TWO WAYS TO WRITE A SOUND
-     ipa   the sound, in IPA: క is k, కా is kaː. Also the KEY a
+     ipa   the sound, in IPA: క is k, కా is kaː, క as a syllable is
+           kɐ (the inherent vowel is ɐ; ఆ is the open aː). Also the KEY a
            letter or sign is known by inside the games (answers
            are compared by it), whatever is shown on screen.
      iso   the ISO 15919 spelling: క is ka, కా is kā.
@@ -48,10 +49,12 @@
 
   // IPA combining marks, spelled out so they survive any editor
   const DENT   = '\u032A';   // ̪  dental
-  const SYL    = '\u0329';   // ̩  syllabic
-  const NAS    = '\u0303';   // ̃  nasalized
+  // The vowel every consonant carries when it has no sign (క is kɐ): short and
+  // higher than ఆ's aː, so the two are not one vowel at two lengths.
+  const INHERENT = 'ɐ';
   const VIRAMA = '\u0C4D';   // ్  joins consonants / marks a pure consonant
-  // ISO 15919 combining marks
+  // ISO 15919 combining marks. ISO follows the letters; IPA follows the sound,
+  // so ఋ is r̥ in ISO but ru in IPA (how Telugu speakers say it).
   const RING   = '\u0325';   // ̥  ring below (r̥, l̥: the vocalic r and l)
   const MACRON = '\u0304';   // ̄  long (r̥̄, l̥̄)
 
@@ -74,24 +77,27 @@
   const letters = [
   // Vowels (అచ్చులు)
   ...L('vowel', 'Vowel', [
-    ['అ', 'a', 'a'],
+    ['అ', INHERENT, 'a'],
     ['ఆ', 'aː', 'ā'],
     ['ఇ', 'i', 'i'],
     ['ఈ', 'iː', 'ī'],
     ['ఉ', 'u', 'u'],
     ['ఊ', 'uː', 'ū'],
-    ['ఋ', 'r' + SYL, 'r' + RING, 'rare'],
-    ['ౠ', 'r' + SYL + 'ː', 'r' + RING + MACRON, 'rare'],
-    ['ఌ', 'l' + SYL, 'l' + RING, 'rare extra'],
-    ['ౡ', 'l' + SYL + 'ː', 'l' + RING + MACRON, 'rare extra'],
+    // Taught and written as vowels, said as r or l followed by u
+    ['ఋ', 'ru', 'r' + RING],
+    ['ౠ', 'ruː', 'r' + RING + MACRON, 'rare'],
+    ['ఌ', 'lu', 'l' + RING, 'rare extra'],
+    ['ౡ', 'luː', 'l' + RING + MACRON, 'rare extra'],
     ['ఎ', 'e', 'e'],
     ['ఏ', 'eː', 'ē'],
     ['ఐ', 'ai', 'ai'],
     ['ఒ', 'o', 'o'],
     ['ఓ', 'oː', 'ō'],
     ['ఔ', 'au', 'au'],
-    ['అం', 'a' + NAS, 'aṁ'],
-    ['అః', 'aʰ', 'aḥ'],
+    // ం is said as the nasal of the consonant after it; on its own (here, and
+    // at the end of a word) as m. See NASAL_BEFORE.
+    ['అం', INHERENT + 'm', 'aṁ'],
+    ['అః', INHERENT + 'ʰ', 'aḥ', 'rare'],
   ]),
   // Velars (కంఠ్య)
   ...L('consonant', 'Velar', [
@@ -107,7 +113,10 @@
     ['ఛ', 'tʃʰ', 'ch'],
     ['జ', 'dʒ', 'j'],
     ['ఝ', 'dʒʱ', 'jh'],
-    ['ఞ', 'ɲ', 'ñ', 'rare'],
+    ['ఞ', 'ɲ', 'ñ'],                     // nearly always in జ్ఞ, the way q comes in qu
+    // Old letters for ts and dz, no longer written (చ and జ took over)
+    ['ౘ', 'ts', 'ts', 'rare extra'],
+    ['ౙ', 'dz', 'dz', 'rare extra'],
   ]),
   // Retroflexes (మూర్ధన్య)
   ...L('consonant', 'Retroflex', [
@@ -138,7 +147,7 @@
   // Approximants (అంతస్థలు)
   ...L('consonant', 'Approx.', [
     ['య', 'j', 'y'],
-    ['ర', 'r', 'r'],
+    ['ర', 'ɾ', 'r'],                     // a single tap, as in Spanish pero
     ['ల', 'l', 'l'],
     ['వ', 'ʋ', 'v'],
   ]),
@@ -157,16 +166,19 @@
 
   /* ── Vowel signs (diacritics) ────────────────────────────
      [sign, ipa key, iso, group, flags?, sound?]
-       sign ''    no diacritic (the inherent "a")
+       sign ''    no diacritic (the inherent vowel, ɐ)
        sign ్     virama: a pure consonant, no vowel (key ∅)
        iso        the sign's own ISO 15919 spelling (ā, ṁ)
        sound      what the sign adds to a syllable, in IPA; defaults
                   to the ipa key ('' for the pure consonant)
      Each sign also gets isoSound, what it adds to a syllable in ISO.
      That is its iso, except for ం and ః: they are written after the
-     consonant's own a, so కం is k + aṁ.                              */
+     consonant's own a, so కం is k + aṁ. In IPA ం is kɐm on its own; inside
+     a word it takes the place of the next consonant (see NASAL_BEFORE).
+     ఁ (the ardhanusvara) is not here: it is silent in modern Telugu and
+     shown only on the Reference pages.                               */
   const SIGN_ROWS = [
-    ['', 'a', 'a', 'Short'],
+    ['', INHERENT, 'a', 'Short'],
     ['\u0C3F', 'i', 'i', 'Short'],
     ['\u0C41', 'u', 'u', 'Short'],
     ['\u0C46', 'e', 'e', 'Short'],
@@ -178,12 +190,12 @@
     ['\u0C4B', 'oː', 'ō', 'Long'],
     ['\u0C48', 'ai', 'ai', 'Diphthong'],
     ['\u0C4C', 'au', 'au', 'Diphthong'],
-    ['\u0C43', 'r' + SYL, 'r' + RING, 'Vocalic', 'rare'],
-    ['\u0C44', 'r' + SYL + 'ː', 'r' + RING + MACRON, 'Vocalic', 'rare'],
-    ['\u0C62', 'l' + SYL, 'l' + RING, 'Vocalic', 'rare extra'],
-    ['\u0C63', 'l' + SYL + 'ː', 'l' + RING + MACRON, 'Vocalic', 'rare extra'],
-    ['\u0C02', 'a' + NAS, 'ṁ', 'Nasal · aspirate'],
-    ['\u0C03', 'aʰ', 'ḥ', 'Nasal · aspirate'],
+    ['\u0C43', 'ru', 'r' + RING, 'Vocalic'],
+    ['\u0C44', 'ruː', 'r' + RING + MACRON, 'Vocalic', 'rare'],
+    ['\u0C62', 'lu', 'l' + RING, 'Vocalic', 'rare extra'],
+    ['\u0C63', 'luː', 'l' + RING + MACRON, 'Vocalic', 'rare extra'],
+    ['\u0C02', INHERENT + 'm', 'ṁ', 'Nasal · aspirate'],
+    ['\u0C03', INHERENT + 'ʰ', 'ḥ', 'Nasal · aspirate', 'rare'],
     ['\u0C4D', '∅', '', 'Pure consonant', '', ''],
   ];
   const AFTER_A = '\u0C02\u0C03';       // ం ః
@@ -192,16 +204,23 @@
              sound:    sound === undefined ? ipa : sound,
              isoSound: sign && AFTER_A.includes(sign) ? 'a' + iso : iso }, f));
 
+  // Each short vowel and its long partner, by IPA. Written out because అ and ఆ differ in
+  // quality as well as length (ɐ, aː): a long vowel is not always the short one + ː.
+  const LONG_MARK = 'ː';
+  const LONG_OF = Object.freeze({
+    [INHERENT]: 'aː', 'i': 'iː', 'u': 'uː', 'e': 'eː', 'o': 'oː', 'ru': 'ruː', 'lu': 'luː',
+  });
+  const longOf = ipa => LONG_OF[ipa] || null;
+
   // The order of a vowel keyboard: each long vowel right after its short one (a ā · i ī · u ū ·
   // e ē · o ō), as the alphabet itself runs (అ ఆ ఇ ఈ …). SIGN_ROWS lists the five short signs
   // and then the five long ones; the rest (diphthongs, vocalic, ం ః, the pollu) keep their order.
-  const LONG_MARK = 'ː';
   function shortThenLong(list) {
     const out = [];
     list.forEach(v => {
       if (v.grp === 'Long') return;                       // placed after its short vowel, below
       out.push(v);
-      const long = v.grp === 'Short' && list.find(x => x.grp === 'Long' && x.ipa === v.ipa + LONG_MARK);
+      const long = v.grp === 'Short' && list.find(x => x.grp === 'Long' && x.ipa === longOf(v.ipa));
       if (long) out.push(long);
     });
     list.forEach(v => { if (!out.includes(v)) out.push(v); });      // a long vowel with no short one in play
@@ -235,7 +254,7 @@
       'ష ట', 'స త', 'స థ', 'శ చ', 'స క', 'స ప', 'ష ప', 'ష క'],
     ['Nasal',
       'గ న', 'ద మ', 'త మ', 'స న', 'స మ', 'శ న', 'ష ణ', 'హ మ',
-      'జ ఞ = ɡɲa',
+      'జ ఞ = ɡɲɐ',
       '*మ ప', '*మ బ', '*న త', '*న ద', '*ఙ క', '*ఙ గ', '*ఞ చ', '*ఞ జ'],
     ['+ య (ya)',
       'క య', 'గ య', 'త య', 'ద య', 'న య', 'మ య', 'ల య', 'వ య', 'శ య', 'స య', 'హ య'],
@@ -276,7 +295,7 @@
       parts, cat, rare, inBook,
       classes: parts.map(classOf).join(' + '),
       glyph:  parts.map(p => p.ch).join(VIRAMA),
-      sound:  parts.map(p => p.ipa).join('') + 'a',   // as written, in IPA
+      sound:  parts.map(p => p.ipa).join('') + INHERENT,   // as written, in IPA
       iso:    parts.map(p => p.isoStem).join('') + 'a',   // as written, in ISO 15919
       spoken: spoken || null,                          // as usually said (IPA), if different
       core:   inBook && !rare,
@@ -313,13 +332,16 @@
        letter(l)        a letter on its own               k      ka
        part(l)          a consonant as one piece of a     k      k
                         syllable or cluster
+       inherent         the vowel a bare consonant has    ɐ      a
        sign(g)          what a sign adds to a syllable    aː     ā     ('' for ్)
        syllable(l, g)   consonant + sign                  kaː    kā
-       cluster(c)       a conjunct, as written            kʂa    kṣa
+       cluster(c)       a conjunct, as written            kʂɐ    kṣa
        piece(p)         one sound of a word (a part from  k  aː     k  ā
-                        syllables()); ం and ః on their    ◌̃  ◌ʰ    ṁ  ḥ
-                        own are a mark with nothing under it
-       word(syls)       a whole word, from syllables()    amma   amma
+                        syllables()). ం is its own key,   ṁ  ◌ʰ    ṁ  ḥ
+                        ṁ in both; once a word places it, IPA shows the
+                        nasal it is said as (ŋ in పంగ). ః is a mark with
+                        nothing under it
+       word(syls)       a whole word, from syllables()    ɐmmɐ   amma
        of(x)            anything carrying both spellings: a read() result
                         or a lookalike item
 
@@ -338,12 +360,14 @@
       name:     iso ? 'ISO' : 'IPA',
       letter:   l => iso ? l.iso : l.ipa,
       part:     l => iso ? l.isoStem : l.ipa,
+      inherent: iso ? 'a' : INHERENT,
       sign:     g => iso ? g.isoSound : g.sound,
       syllable: (l, g) => iso ? l.isoStem + g.isoSound : l.ipa + g.sound,
       cluster:  c => iso ? c.iso : c.sound,
       piece:    p => p.kind === 'c' ? (iso ? p.item.isoStem : p.item.ipa)
                    : p.kind === 'v' ? (iso ? p.item.isoSound : p.item.sound) || '∅'
-                   : iso ? p.item.iso : HOLDER + p.item.sound.slice(1),
+                   : iso || p.item.sign === ANUSVARA ? (iso ? p.item.iso : p.sound || p.item.iso)
+                   : HOLDER + p.item.sound.slice(1),
       word:     syls => syls.map(s => iso ? s.iso : s.ipa).join(''),
       of:       x => iso ? x.iso : x.ipa,
       wrap:     t => iso ? t : '/' + t + '/',
@@ -362,7 +386,7 @@
      text   one Telugu character: a letter (క, అం, క్ష), a letter with a
             sign (కా, క్), a conjunct (క్య) or a conjunct with a sign.
      opts.syllable   read a bare consonant as the syllable it is written
-                     as: క → ka. Without it క is the letter, k (as the
+                     as: క → kɐ. Without it క is the letter, k (as the
                      Phonemes game shows it). ISO is ka either way.
      opts.any        also read a stack that isn't in the cluster list
                      (three consonants, …), built from its consonants.
@@ -387,17 +411,17 @@
       if (sign && letter && letter.kind === 'vowel') return null;     // a vowel can't take a sign
       const it = letter || cluster;
       let ipa, iso;
-      if (letter && !sign) {                                          // క → k · ka   (syllable: ka · ka)
-        ipa = letter.ipa + (opts.syllable && letter.kind !== 'vowel' ? 'a' : '');
+      if (letter && !sign) {                                          // క → k · ka   (syllable: kɐ · ka)
+        ipa = letter.ipa + (opts.syllable && letter.kind !== 'vowel' ? INHERENT : '');
         iso = letter.iso;
       } else if (letter) {                                            // కా → kaː · kā
         ipa = letter.ipa + sign.sound;
         iso = letter.isoStem + sign.isoSound;
-      } else if (!sign) {                                             // క్య → kja · kya
+      } else if (!sign) {                                             // క్య → kjɐ · kya
         ipa = cluster.sound;
         iso = cluster.iso;
       } else {                                                        // క్యా → kjaː · kyā
-        ipa = cluster.sound.replace(/a$/, '') + sign.sound;
+        ipa = cluster.sound.slice(0, -INHERENT.length) + sign.sound;
         iso = cluster.iso.replace(/a$/, '') + sign.isoSound;
       }
       return {
@@ -423,7 +447,7 @@
     if (!parts.length) return null;
     return {
       text: String(text),
-      ipa:  parts.map(p => p.ipa).join('')     + (sign ? sign.sound    : virama ? '' : 'a'),
+      ipa:  parts.map(p => p.ipa).join('')     + (sign ? sign.sound    : virama ? '' : INHERENT),
       iso:  parts.map(p => p.isoStem).join('') + (sign ? sign.isoSound : virama ? '' : 'a'),
       rare: parts.some(p => p.rare) || !!(sign && sign.rare),
       core: parts.every(p => p.core) && (!sign || sign.core),
@@ -449,22 +473,33 @@
                                          a vowel letter gives the sign of
                                          the same sound; a final ్ gives
                                          the pollu, key ∅: no vowel)
-              { kind: 'm', key, item }   ం or ః     (item: its sign)
+              { kind: 'm', key, item, sound? }   ం or ః  (item: its sign;
+                                         for ం, sound is the nasal it is
+                                         said as here, in IPA)
             key is the item's ipa: what a keyboard key is known by.
             క్ష is two consonants here (k, ʂ), as on the Conjuncts page.
-     ipa, iso   the whole character's sound in each notation. ం is written
-            the way the rest of the app writes it: nasalizing the vowel in
-            IPA (కొం → kõ), ṁ in ISO (koṁ), whichever nasal it is said as. */
+     ipa, iso   the whole character's sound in each notation. ం is said as
+            the nasal of the next character's first consonant (NASAL_BEFORE:
+            పంగ is pɐŋ + gɐ, పండు pɐɳ + ɖu), and as m before any other sound
+            or at the end of the word (కొం → kom). ISO writes ṁ for all of them. */
   const HOLDER   = '\u25CC';                                   // ◌  stands in for the vowel under a mark shown alone
+  const ANUSVARA = '\u0C02';                                   // ం
   const MARKS    = new Set(AFTER_A);                           // ం ః
+
+  // The nasal ం is said as before each consonant: the one made in the same place. Before
+  // any other letter (య ర ల వ శ ష స హ ళ ఱ), or with nothing after it, ం is m.
+  const NASAL_BEFORE = new Map(Object.entries({
+    'ŋ': 'కఖగఘఙ', 'ɲ': 'చఛజఝఞ', 'ɳ': 'టఠడఢణ', 'n': 'తథదధనౘౙ', 'm': 'పఫబభమ',
+  }).flatMap(([nasal, cs]) => [...cs].map(c => [c, nasal])));
+  const nasalBefore = c => (c && NASAL_BEFORE.get(c.ch)) || 'm';
   const noSign   = signs.find(g => g.sign === '');             // the consonant's own a
   const pollu    = signs.find(g => g.sign === VIRAMA);
   const signFor  = new Map(signs.filter(g => g !== pollu && !MARKS.has(g.sign)).map(g => [g.ipa, g]));   // by sound
   const vowelCh  = new Map(vowels.filter(l => [...l.ch].length === 1).map(l => [l.ch, signFor.get(l.ipa)]));
 
-  // A vowel's sound with its marks: ం nasalizes it (the tilde goes on its first letter: ãː), ః follows it
-  const marked = (sound, marks) => marks.reduce((t, m) =>
-    m.sign === '\u0C02' ? [...t][0] + NAS + [...t].slice(1).join('') : t + m.sound.slice(1), sound);
+  // A vowel's sound with its marks after it: ం as the nasal it is said as, ః as a breath (ʰ)
+  const marked = (sound, marks, nasal) => marks.reduce((t, m) =>
+    t + (m.sign === ANUSVARA ? nasal : m.sound.slice(INHERENT.length)), sound);
 
   function syllables(text) {
     const chars = [...String(text)];
@@ -487,18 +522,25 @@
       const marks = [];
       while (MARKS.has(chars[i]) && vowel !== pollu) marks.push(signBy.get(chars[i++]));
       if (!vowel || marks.length > 2) return null;
-      const parts = [
-        ...cons.map(c => ({ kind: 'c', key: c.ipa, item: c })),
-        { kind: 'v', key: vowel.ipa, item: vowel },
-        ...marks.map(m => ({ kind: 'm', key: m.ipa, item: m })),
-      ];
-      out.push({
-        text: chars.slice(start, i).join(''), parts,
-        ipa:  cons.map(c => c.ipa).join('')     + marked(vowel.sound, marks),
-        iso:  cons.map(c => c.isoStem).join('') + vowel.iso + marks.map(m => m.iso).join(''),
-      });
+      out.push({ text: chars.slice(start, i).join(''), cons, vowel, marks });
     }
-    return out.length ? out : null;
+    if (!out.length) return null;
+
+    // Now that the next character is known, ం can be given the nasal it is said as
+    return out.map(({ text, cons, vowel, marks }, k) => {
+      const nasal = nasalBefore(out[k + 1] && out[k + 1].cons[0]);
+      return {
+        text,
+        parts: [
+          ...cons.map(c => ({ kind: 'c', key: c.ipa, item: c })),
+          { kind: 'v', key: vowel.ipa, item: vowel },
+          ...marks.map(m => m.sign === ANUSVARA ? { kind: 'm', key: m.ipa, item: m, sound: nasal }
+                                                : { kind: 'm', key: m.ipa, item: m }),
+        ],
+        ipa:  cons.map(c => c.ipa).join('')     + marked(vowel.sound, marks, nasal),
+        iso:  cons.map(c => c.isoStem).join('') + vowel.iso + marks.map(m => m.iso).join(''),
+      };
+    });
   }
 
   /* ── Letter keyboard ─────────────────────────────────────
@@ -596,15 +638,17 @@
     dup(signs,   g => g.isoSound, 'sign iso');
     dup(clusters, c => c.sound, 'cluster sound');
     dup(clusters, c => c.iso,   'cluster iso');
-    // (క్ష is both a cluster and a letter: the same character, so the same spelling is right)
+    // (క్ష is both a cluster and a letter: the same character, so the same spelling is right.
+    // ౘ and త్స are both tsa: kept for now, as they are never drilled in the same game.)
+    const SAME_ISO = new Set(['\u0C24\u0C4D\u0C38']);         // త్స
     const single = new Map(letters.map(l => [l.iso, l.ch]));
-    clusters.forEach(c => { if (single.has(c.iso) && single.get(c.iso) !== c.glyph) throw new Error('telugu-data: cluster ' + c.glyph + ' is spelled like the letter ' + single.get(c.iso) + ' in ISO: ' + c.iso); });
+    clusters.forEach(c => { if (single.has(c.iso) && single.get(c.iso) !== c.glyph && !SAME_ISO.has(c.glyph)) throw new Error('telugu-data: cluster ' + c.glyph + ' is spelled like the letter ' + single.get(c.iso) + ' in ISO: ' + c.iso); });
   })();
 
   const data = Object.freeze({
-    VIRAMA, DENT, SYL, NAS, RING, MACRON, LONG_MARK,
+    VIRAMA, DENT, RING, MACRON, LONG_MARK, INHERENT, ANUSVARA,
     letters, vowels, consonants, conjunctLetters,
-    signs, shortThenLong, digits, clusterSets: CLUSTER_SETS, clusters,
+    signs, longOf, shortThenLong, nasalBefore, digits, clusterSets: CLUSTER_SETS, clusters,
     notation, notationFor, read, syllables,
     letterGroups, pool, buildKeyboard,
   });

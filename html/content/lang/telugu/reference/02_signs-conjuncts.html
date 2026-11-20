@@ -160,13 +160,14 @@ function conjCardsHTML() {
   const noteOf = id => SD.conjNotes.findIndex(n => n.id === id) + 1;
   return CONS.map(l => {
     const ex = SD.HOST + '్' + l.ch;
-    const below = SD.BELOW.includes(l.ch);
+    const below = SD.BELOW.includes(l.ch), none = SD.NONE.includes(l.ch);
     const sup = l.ch === 'ష' ? [noteOf('kssa')] : l.ch === 'ర' ? [noteOf('ra')] : l.ch === 'త' ? [noteOf('ta')] : [];
     const alt = SD.ALT[l.ch];
     return `<div class="cj${isRare(l) ? ' rare' : ''}" data-rare="${isRare(l) ? 1 : 0}" data-ch="${esc(l.ch)}">
       <span class="full">${esc(l.ch)}</span><span class="arrow" aria-hidden="true">→</span>
-      <span class="ex">${esc(ex)}${alt ? `<small>then</small> ${esc(alt)}` : ''}${sup.length ? `<sup>${sup.join(',')}</sup>` : ''}</span>
-      <div class="meta"><span class="tag ipa">${esc(N.wrap(N.letter(l)))}</span><span class="tag">${below ? 'below' : 'beside'}</span>${isRare(l) ? '<span class="tag flag">rare</span>' : ''}</div>
+      ${none ? '<span class="ex none">—</span>'
+             : `<span class="ex">${esc(ex)}${alt ? `<small>then</small> ${esc(alt)}` : ''}${sup.length ? `<sup>${sup.join(',')}</sup>` : ''}</span>`}
+      <div class="meta"><span class="tag ipa">${esc(N.wrap(N.letter(l)))}</span><span class="tag">${none ? 'no conjunct form' : below ? 'below' : 'beside'}</span>${isRare(l) ? '<span class="tag flag">rare</span>' : ''}</div>
     </div>`;
   }).join('');
 }

@@ -20,8 +20,8 @@
      iso   its ISO 15919 spelling (క → ka, కా → kā). The game shows
            whichever of the two the reader chose on the home page.
      rare  from telugu-data.js: the letter, sign, or cluster is flagged
-           rare there (ఙ ఞ ఋ ౠ …), so the badge never needs hand-flagging.
-     core  false for extras (ఱ ఌ ౡ ౢ ౣ) and uncommon clusters: the game
+           rare there (ఙ ౠ ః …), so the badge never needs hand-flagging.
+     core  false for extras (ఱ ౘ ౙ ఌ ౡ ౢ ౣ) and uncommon clusters: the game
            hides these unless "Include extra letters" is checked.
 ═════════════════════════════════════════════════════════ */
 (function (root) {
