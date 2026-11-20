@@ -174,8 +174,8 @@ function ticks(max) {
 }
 
 const PANELS = [
-  { key: 'correct', title: 'Correct answers', color: 'var(--correct)', value: r => r.ok,        show: v => String(v),  floor: 4 },
-  { key: 'errors',  title: 'Error rate',      color: 'var(--errors)',  value: r => errorRate(r), show: v => pct(v),     floor: 10 },
+  { key: 'correct', title: 'Correct Answers', color: 'var(--correct)', value: r => r.ok,        show: v => String(v),  floor: 4 },
+  { key: 'errors',  title: 'Error Rate',      color: 'var(--errors)',  value: r => errorRate(r), show: v => pct(v),     floor: 10 },
 ];
 const MARKS_UP_TO = 30;       // with more runs than this, only the last one and the early endings keep a dot
 
@@ -282,7 +282,7 @@ function tableHTML(runs) {
   const rows = runs.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(moment(r.t))}${DIRECTION[r.dir] ? ' · ' + esc(DIRECTION[r.dir]) : ''}</td><td>${r.ok}</td><td>${r.n}</td><td>${wrongOf(r)}</td><td>${pct(errorRate(r))}</td><td>${r.end === 'out' ? 'Game over' : 'Finished'}</td></tr>`);
   return `<details class="pf-table"><summary>Show as a table</summary>
     <div class="pf-scroll"><table>
-      <thead><tr><th>Run</th><th>When</th><th>Correct</th><th>Cards</th><th>Errors</th><th>Error rate</th><th>Ended</th></tr></thead>
+      <thead><tr><th>Run</th><th>When</th><th>Correct</th><th>Cards</th><th>Errors</th><th>Error Rate</th><th>Ended</th></tr></thead>
       <tbody>${rows.reverse().join('')}</tbody>
     </table></div></details>`;
 }

@@ -79,7 +79,7 @@ section.group h2 span { color: var(--text-muted); font-weight: 500; letter-spaci
     <input type="search" id="q" placeholder="Search a letter, sound, or word" aria-label="Search" autocomplete="off">
     <label class="menu-opt" for="show-rare"><input type="checkbox" id="show-rare" checked> <span>Include rare and extra letters</span></label>
     <nav class="jump" aria-label="Jump to">
-      <a href="#sec-vowels">Vowels</a><a href="#sec-consonants">Consonants</a><a href="#sec-signs">Vowel signs</a>
+      <a href="#sec-vowels">Vowels</a><a href="#sec-consonants">Consonants</a><a href="#sec-signs">Vowel Signs</a>
     </nav>
   </div>
 
@@ -168,7 +168,7 @@ function entryHTML(e) {
 function render() {
   const entries = buildEntries();
   // group by section, then by heading, keeping first-seen order
-  const SECTIONS = [['vowels', 'Vowels'], ['consonants', 'Consonants'], ['signs', 'Vowel signs']];
+  const SECTIONS = [['vowels', 'Vowels'], ['consonants', 'Consonants'], ['signs', 'Vowel Signs']];
   $('list').innerHTML = SECTIONS.map(([id, title]) => {
     const inSec = entries.filter(e => e.section === id);
     const heads = [...new Set(inSec.map(e => e.heading))];

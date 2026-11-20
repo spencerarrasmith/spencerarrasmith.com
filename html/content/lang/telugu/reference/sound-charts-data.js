@@ -56,8 +56,8 @@
     ['Palatal', 'Dorsal'], ['Velar', 'Dorsal'], ['Uvular', 'Dorsal'],
     ['Pharyngeal', 'Laryngeal'], ['Glottal', 'Laryngeal'],
   ];
-  const MANNERS = ['Nasal', 'Plosive', 'Affricate', 'Sibilant fricative', 'Non-sibilant fricative',
-                   'Approximant', 'Tap or flap', 'Trill', 'Lateral fricative', 'Lateral approximant', 'Lateral tap or flap'];
+  const MANNERS = ['Nasal', 'Plosive', 'Affricate', 'Sibilant Fricative', 'Non-sibilant Fricative',
+                   'Approximant', 'Tap or Flap', 'Trill', 'Lateral Fricative', 'Lateral Approximant', 'Lateral Tap or Flap'];
 
   const V = true, U = false;         // voiced, unvoiced
   const WHERE = {
@@ -81,18 +81,18 @@
     'tʃ': ['Postalveolar', 'Affricate', U], 'tʃʰ': ['Postalveolar', 'Affricate', U],
     'dʒ': ['Postalveolar', 'Affricate', V], 'dʒʱ': ['Postalveolar', 'Affricate', V],
     // Fricatives
-    's': ['Alveolar', 'Sibilant fricative', U],     'z': ['Alveolar', 'Sibilant fricative', V],
-    'ʃ': ['Postalveolar', 'Sibilant fricative', U], 'ʒ': ['Postalveolar', 'Sibilant fricative', V],
-    'ʂ': ['Retroflex', 'Sibilant fricative', U],
-    'f': ['Labiodental', 'Non-sibilant fricative', U], 'v': ['Labiodental', 'Non-sibilant fricative', V],
-    'θ': ['Dental', 'Non-sibilant fricative', U],      'ð': ['Dental', 'Non-sibilant fricative', V],
-    'h': ['Glottal', 'Non-sibilant fricative', U],     'ɦ': ['Glottal', 'Non-sibilant fricative', V],
+    's': ['Alveolar', 'Sibilant Fricative', U],     'z': ['Alveolar', 'Sibilant Fricative', V],
+    'ʃ': ['Postalveolar', 'Sibilant Fricative', U], 'ʒ': ['Postalveolar', 'Sibilant Fricative', V],
+    'ʂ': ['Retroflex', 'Sibilant Fricative', U],
+    'f': ['Labiodental', 'Non-sibilant Fricative', U], 'v': ['Labiodental', 'Non-sibilant Fricative', V],
+    'θ': ['Dental', 'Non-sibilant Fricative', U],      'ð': ['Dental', 'Non-sibilant Fricative', V],
+    'h': ['Glottal', 'Non-sibilant Fricative', U],     'ɦ': ['Glottal', 'Non-sibilant Fricative', V],
     // Approximants, tap, trill, laterals
     'ʋ': ['Labiodental', 'Approximant', V], 'ɹ': ['Alveolar', 'Approximant', V], 'j': ['Palatal', 'Approximant', V],
     'w': ['Velar', 'Approximant', V],      // labial-velar: the lips round as well (see the note); drawn where the tongue is
-    'ɾ': ['Alveolar', 'Tap or flap', V],   'ɽ': ['Retroflex', 'Tap or flap', V],
-    'l': ['Alveolar', 'Lateral approximant', V], 'ɫ': ['Alveolar', 'Lateral approximant', V],   // ɫ: l with the back of the tongue raised
-    'ɭ': ['Retroflex', 'Lateral approximant', V],
+    'ɾ': ['Alveolar', 'Tap or Flap', V],   'ɽ': ['Retroflex', 'Tap or Flap', V],
+    'l': ['Alveolar', 'Lateral Approximant', V], 'ɫ': ['Alveolar', 'Lateral Approximant', V],   // ɫ: l with the back of the tongue raised
+    'ɭ': ['Retroflex', 'Lateral Approximant', V],
   };
 
   // The 24 consonants General American tells apart, then (third entry) the common variants of p, t, k, and l.

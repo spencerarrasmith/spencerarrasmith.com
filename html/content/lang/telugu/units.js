@@ -57,13 +57,13 @@
         { id: "rosetta", icon: "అa", title: "Rosetta Stone",
           desc: "Every letter with its IPA and ISO sounds, a Telugu word, and an English word",
           src: "reference/01_rosetta.html" },
-        { id: "signs-conjuncts", icon: "శ్రీ", title: "Signs & conjuncts",
+        { id: "signs-conjuncts", icon: "శ్రీ", title: "Signs & Conjuncts",
           desc: "Every letter with each vowel sign, and as the second letter of a conjunct",
           src: "reference/02_signs-conjuncts.html" },
-        { id: "sound-charts", icon: "ఇఉ", title: "Sound charts",
+        { id: "sound-charts", icon: "ఇఉ", title: "Sound Charts",
           desc: "Telugu and English sounds side by side on the vowel and consonant charts",
           src: "reference/03_sound-charts.html" },
-        { id: "reference-idioms", icon: "📜", title: "Idioms & proverbs",
+        { id: "reference-idioms", icon: "📜", title: "Idioms & Proverbs",
           desc: "Sayings and what they mean",
           src: "reference/04_idioms.html",
           soon: {
@@ -77,7 +77,7 @@
             learn:    "A searchable word list covering the vocabulary units",
             practice: "Look up a word; tap to see its sound and sample use",
             fits:     "Grows as vocabulary units are built" } },
-        { id: "reference-verbs", icon: "⚡", title: "Important verbs",
+        { id: "reference-verbs", icon: "⚡", title: "Important Verbs",
           desc: "The verbs you will use most.",
           src: "reference/06_verbs.html",
           soon: {
@@ -126,21 +126,21 @@
     {
       title: "Grammar",
       tiles: [
-        { id: "grammar-sentence", icon: "🧱", title: "Sentence skeleton",
+        { id: "grammar-sentence", icon: "🧱", title: "Sentence Skeleton",
           desc: "The basic shape of a Telugu sentence.",
           src: "grammar/01_sentence.html",
           soon: {
             learn:    "Where subject, object, and verb sit, and how that differs from English word order.",
             practice: "Rebuild jumbled sentences and fill in the missing piece.",
             fits:     "Returns in Advanced Grammar when sentences get longer." } },
-        { id: "grammar-nouns", icon: "🏷️", title: "Nouns: gender & number",
+        { id: "grammar-nouns", icon: "🏷️", title: "Nouns: Gender & Number",
           desc: "Genders, plurals, and how nouns change.",
           src: "grammar/02_nouns.html",
           soon: {
             learn:    "How Telugu sorts nouns by gender, how plurals are formed, and which nouns behave differently.",
             practice: "Sort nouns by gender, build plurals, and match singular to plural.",
             fits:     "Revisited with case endings and again in verb agreement." } },
-        { id: "grammar-cases", icon: "🔗", title: "Case endings",
+        { id: "grammar-cases", icon: "🔗", title: "Case Endings",
           desc: "Endings that mark the role of a noun.",
           src: "grammar/03_cases.html",
           soon: {
@@ -161,7 +161,7 @@
             learn:    "How adjectives sit before nouns, which ones change form, and how comparisons are made.",
             practice: "Pair adjectives with nouns and build simple comparisons.",
             fits:     "Revisited in the Vocabulary units." } },
-        { id: "grammar-verbs", icon: "⚙️", title: "Verb basics",
+        { id: "grammar-verbs", icon: "⚙️", title: "Verb Basics",
           desc: "Verb roots, endings, and agreement.",
           src: "grammar/06_verbs.html",
           soon: {
@@ -201,7 +201,7 @@
             learn:    "Telugu numerals and number words, and how to say quantities and ordinals.",
             practice: "Read, hear-and-pick, and write numbers.",
             fits:     "Reused in Shopping and Time." } },
-        { id: "vocab-home", icon: "🏠", title: "At home",
+        { id: "vocab-home", icon: "🏠", title: "At Home",
           desc: "Rooms, furniture, and household words.",
           src: "vocabulary/03_home.html",
           soon: {
@@ -222,21 +222,21 @@
             learn:    "Names of common trades and what each one does.",
             practice: "Match trade to job and complete sentences.",
             fits:     "Reused in Questions." } },
-        { id: "vocab-food", icon: "🍛", title: "Food & drink",
+        { id: "vocab-food", icon: "🍛", title: "Food & Drink",
           desc: "Meals, ingredients, and ordering.",
           src: "vocabulary/06_food.html",
           soon: {
             learn:    "Everyday foods, tastes, and drinks.",
             practice: "Word recall rounds and short ordering scenarios.",
             fits:     "Reused in Hotel & restaurant." } },
-        { id: "vocab-hotel", icon: "🏨", title: "Hotel & restaurant",
+        { id: "vocab-hotel", icon: "🏨", title: "Hotel & Restaurant",
           desc: "Booking, ordering, and asking for help.",
           src: "vocabulary/07_hotel.html",
           soon: {
             learn:    "Phrases for rooms, tables, menus, and bills.",
             practice: "Role-play style fill-in-the-blank exchanges.",
             fits:     "Builds on Food & drink." } },
-        { id: "vocab-post", icon: "📮", title: "Post office · phone · bank",
+        { id: "vocab-post", icon: "📮", title: "Post Office · Phone · Bank",
           desc: "Everyday services and errands.",
           src: "vocabulary/08_post.html",
           soon: {
@@ -250,7 +250,7 @@
             learn:    "Vehicles, places, directions, and asking how to get somewhere.",
             practice: "Direction drills and short exchanges.",
             fits:     "Reused in Commands." } },
-        { id: "vocab-health", icon: "🩺", title: "Health & hygiene",
+        { id: "vocab-health", icon: "🩺", title: "Health & Hygiene",
           desc: "Body, symptoms, and care.",
           src: "vocabulary/10_health.html",
           soon: {
@@ -276,7 +276,7 @@
     {
       title: "Advanced Grammar",
       tiles: [
-        { id: "advanced-expressions", icon: "💬", title: "Useful expressions",
+        { id: "advanced-expressions", icon: "💬", title: "Useful Expressions",
           desc: "Ready-made phrases for daily use.",
           src: "advanced-grammar/01_expressions.html",
           soon: {
@@ -290,21 +290,21 @@
             learn:    "How commands are formed and softened for politeness.",
             practice: "Turn statements into commands and pick the polite form.",
             fits:     "Builds on Verb basics." } },
-        { id: "advanced-present", icon: "▶️", title: "Present tense",
+        { id: "advanced-present", icon: "▶️", title: "Present Tense",
           desc: "Saying what is happening now.",
           src: "advanced-grammar/03_present.html",
           soon: {
             learn:    "Forming the present, including the habitual and the continuous.",
             practice: "Conjugate verbs and complete sentences.",
             fits:     "Builds on Tenses." } },
-        { id: "advanced-future", icon: "⏭️", title: "Future tense",
+        { id: "advanced-future", icon: "⏭️", title: "Future Tense",
           desc: "Saying what will happen.",
           src: "advanced-grammar/04_future.html",
           soon: {
             learn:    "Forming the future and expressing plans and likelihood.",
             practice: "Convert present to future and complete sentences.",
             fits:     "Builds on Tenses." } },
-        { id: "advanced-past", icon: "⏮️", title: "Past tense",
+        { id: "advanced-past", icon: "⏮️", title: "Past Tense",
           desc: "Saying what has happened.",
           src: "advanced-grammar/05_past.html",
           soon: {
@@ -325,7 +325,7 @@
             learn:    "How negation works in each tense and with commands.",
             practice: "Turn positive sentences negative and spot the mistake.",
             fits:     "Builds on all three tense units." } },
-        { id: "advanced-voice", icon: "🔄", title: "Voice & causatives",
+        { id: "advanced-voice", icon: "🔄", title: "Voice & Causatives",
           desc: "Passive forms and “make or let someone do”.",
           src: "advanced-grammar/08_voice.html",
           soon: {

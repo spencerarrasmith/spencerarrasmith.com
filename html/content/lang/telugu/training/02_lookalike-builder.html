@@ -178,14 +178,14 @@ textarea {
   <section class="card pick" id="pick" aria-label="Character and its lookalikes">
     <div class="mode" id="mode" role="radiogroup" aria-label="A tap on the keyboard chooses">
       <button type="button" class="mode-opt" role="radio" data-mode="character" data-k="mode:character">Character</button>
-      <button type="button" class="mode-opt" role="radio" data-mode="looks" data-k="mode:looks">Looks like</button>
+      <button type="button" class="mode-opt" role="radio" data-mode="looks" data-k="mode:looks">Looks Like</button>
     </div>
     <div class="subject">
       <div id="glyph" class="glyph te" aria-live="polite"></div>
       <div class="prompt-name" id="promptName"></div>
     </div>
     <div class="tray">
-      <h3>Looks like</h3>
+      <h3>Looks Like</h3>
       <div id="chips" class="chips"></div>
     </div>
   </section>
@@ -197,7 +197,7 @@ textarea {
       <button type="button" class="btn" id="kbReset">Plain letters</button>
     </div>
     <div class="kbrow">
-      <h3>Vowel sign</h3>
+      <h3>Vowel Sign</h3>
       <div id="signs" class="keys signs"></div>
     </div>
     <div class="kbrow">
@@ -475,7 +475,7 @@ function keyHTML(ch,o){
 function renderKeyboard(){
   var combining=!!(kb.sign||kb.prefix.length), looks=S.mode==='looks';
   $('kb').className='card kb'+(looks?' looks':'');
-  $('kbTitle').innerHTML=looks?'Looks like <span class="te">'+esc(P)+'</span>':'Character';
+  $('kbTitle').innerHTML=looks?'Looks Like <span class="te">'+esc(P)+'</span>':'Character';
   $('signs').innerHTML=SIGNS.filter(offered).map(function(s){
     return '<button type="button" class="key'+(s[2]?' rare':'')+'" data-k="sign:'+s[0]+'" data-sign="'+s[0]+'" aria-pressed="'+(kb.sign===s[0])+'" title="'+(s[1]?'vowel sign '+esc(s[1]):'no vowel (pollu)')+'">'+RING+s[0]+'<small>'+(s[1]||'none')+'</small></button>';
   }).join('');

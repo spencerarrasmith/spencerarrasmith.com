@@ -189,7 +189,7 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
   flex-direction: column;
   gap: 12px;
   padding: 18px;
-  min-height: 138px;
+  min-height: 118px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -207,7 +207,14 @@ a.tile:hover, a.tile:focus-visible {
 
 a.tile:active { transform: translateY(0); }
 
+/* A home-page tile: the icon and the title share a line; the description sits under them */
+.tile-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tile.soon .tile-head { padding-right: 40px; }      /* room for the badge in the corner: "Soon" … */
+.tile.due  .tile-head { padding-right: 84px; }      /* … or Review's count ("12 to revisit") */
+.tile-head + .tile-desc { margin-top: 0; }
+
 .tile-icon {
+  flex-shrink: 0;
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -339,13 +346,18 @@ a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.t
   .hero > .logo + div { flex: 1 1 0; min-width: 0; }      /* the title takes what the logo and the two buttons leave */
   .pref-eg { flex-basis: auto; text-align: left; }
   .tiles { grid-template-columns: 1fr; gap: 10px; }
-  /* compact horizontal tiles keep the 35+ item list scannable on a phone */
+  /* compact horizontal tiles keep the 40+ item list scannable on a phone: the icon at the left, the
+     title and the description stacked beside it (the head's two parts are placed straight into the tile's grid) */
   .tile { flex-direction: row; align-items: center; gap: 14px; min-height: 0; padding: 12px 14px; border-radius: 14px; }
-  .tile-icon { width: 40px; height: 40px; flex-shrink: 0; font-size: 20px; }
+  .tile:not(.link) { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 1px 14px; }
+  .tile-head { display: contents; }
+  .tile.soon .tile-head, .tile.due .tile-head { padding-right: 0; }
+  .tile-icon { grid-row: 1 / span 2; width: 40px; height: 40px; font-size: 20px; }
+  .tile-head > .tile-title { grid-column: 2; align-self: end; padding-right: 38px; }
+  .tile-head + .tile-desc  { grid-column: 2; align-self: start; padding-right: 38px; }
+  .tile.due .tile-head > .tile-title { padding-right: 92px; }      /* room for the Review count ("12 to revisit") */
   .tile-desc { margin-top: 1px; }
   .tile-badge { top: 10px; right: 10px; }
-  .tile > div:not(.tile-icon) { padding-right: 38px; }
-  .tile.due > div:not(.tile-icon) { padding-right: 92px; }      /* room for the Review count ("12 to revisit") */
   .section-head { flex-wrap: wrap; row-gap: 2px; }
   /* link tiles: the thumbnail moves to the left edge, like a tile's icon */
   .page-note { padding: 18px 0 16px; }
