@@ -37,7 +37,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Build and push
+      - name: Build, check, and push
         run: |
           IMAGE=ghcr.io/spencerarrasmith/spencerarrasmith.com
           VERSION=${{ steps.ver.outputs.version }}
@@ -46,5 +46,11 @@ jobs:
             --build-arg GIT_TAG=$VERSION \
             --tag $IMAGE:${{ steps.ver.outputs.version }} \
             --tag $IMAGE:latest
+          # Start the new image and ask it for a few files the way Caddy does. An image that
+          # does not compress them, or sends the wrong cache headers, is not pushed.
+          docker run --detach --rm --name check --publish 127.0.0.1:8001:80 $IMAGE:$VERSION
+          sleep 2
+          tools/check-server.sh http://127.0.0.1:8001
+          docker stop check
           docker push $IMAGE:$VERSION
           docker push $IMAGE:latest
