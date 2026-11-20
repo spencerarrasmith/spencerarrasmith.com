@@ -7,7 +7,7 @@ Open `index.html` in a browser. Everything is static: no build step, no server n
 | Folder | Holds | Home-page section |
 |---|---|---|
 | `reference/` | External Links, Rosetta Stone, Signs & Conjuncts, Sound Charts, idioms, dictionary, verbs | Reference |
-| `alphabet/` | Phonemes, Diacritics, Conjuncts, Lookalike Builder, Lookalikes, … | Alphabet |
+| `alphabet/` | Phonemes, Diacritics, Conjuncts, Words (coming soon), Lookalike Builder, Lookalikes | Alphabet |
 | `grammar/` | Sentence, nouns, cases, … | Grammar |
 | `vocabulary/` | Greetings, numbers, home, … | Vocabulary |
 | `advanced-grammar/` | Expressions, commands, tenses, … | Advanced Grammar |
