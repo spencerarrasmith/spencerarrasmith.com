@@ -24,6 +24,7 @@ At the top level: `index.html` (the tile launcher, with the Profile button and t
 | `game-setup.js` | The popup a game opens before a session. It holds every option the game has (direction, number of rounds, mistakes allowed, its checkboxes), so a game that uses it has no ⋮ menu. Used by Phonemes, Diacritics, and Conjuncts; Lookalikes keeps its ⋮ menu. |
 | `lesson-shell.js` | The frame for lesson pages and the "Coming soon" placeholders. |
 | `base.css` | Fonts, reset, and color tokens. Defined here only. |
+| `fonts/` | The font files `base.css` loads (Inter, Noto Sans, Noto Sans Telugu, and the Lookalike Builder's two extra Telugu faces), each with its license. No font comes from another site. They are built by `tools/build-telugu-fonts.sh` at the top of the website repo; a rebuilt font gets a new file name. |
 | `home.css`, `game.css`, `shell.css`, `reference.css` | One stylesheet per kind of page: home (and the External Links page, which is laid out as tiles), games, lessons/placeholders/Review, and the Reference pages (on top of `game.css`). |
 
 ## Conventions

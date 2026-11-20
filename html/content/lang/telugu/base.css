@@ -9,7 +9,31 @@
    Change a color or the type stack here and the whole app
    follows.
 ═════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Fonts ─────────────────────────────────────────────────
+   Served from this folder (fonts/): no other site is asked for
+   them. A browser fetches a file only when a page shows text in
+   that family, so the two faces that only the Lookalike Builder's
+   font picker offers cost nothing anywhere else.
+
+   Inter              the interface: weights 400 to 700, one file
+   Noto Sans          sounds (IPA and ISO): weights 400 and 500, one file
+   Noto Sans Telugu   Telugu: 400 and 700, one file for both
+   Noto Serif Telugu  Lookalike Builder only: 400 and 600, one file for both
+   Tiro Telugu        Lookalike Builder only: 400
+
+   The files are built by tools/build-telugu-fonts.sh (at the top
+   of the website repo), which says how to change one. A changed
+   font needs a new file name (…-v2.woff2): browsers are told to
+   keep these files for a year.
+───────────────────────────────────────────────────────── */
+@font-face { font-family: 'Inter';             font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/inter-v1.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Sans';         font-style: normal; font-weight: 400 500; font-display: swap; src: url('fonts/noto-sans-v1.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Sans Telugu';  font-style: normal; font-weight: 400;     font-display: swap; src: url('fonts/noto-sans-telugu-v1.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Sans Telugu';  font-style: normal; font-weight: 700;     font-display: swap; src: url('fonts/noto-sans-telugu-v1.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Serif Telugu'; font-style: normal; font-weight: 400;     font-display: swap; src: url('fonts/noto-serif-telugu-v1.woff2') format('woff2'); }
+@font-face { font-family: 'Noto Serif Telugu'; font-style: normal; font-weight: 600;     font-display: swap; src: url('fonts/noto-serif-telugu-v1.woff2') format('woff2'); }
+@font-face { font-family: 'Tiro Telugu';       font-style: normal; font-weight: 400;     font-display: swap; src: url('fonts/tiro-telugu-v1.woff2') format('woff2'); }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
