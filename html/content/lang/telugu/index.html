@@ -98,28 +98,29 @@ const saveCollapsed = () => { try { localStorage.setItem(FOLD_KEY, JSON.stringif
 const ARROW = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 5.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 // The section that holds the Review tile takes the highlight on its arrow while items are waiting,
-// so a folded section still shows there is something to review. The arrow's label says so too.
+// so a folded section still shows there is something to review. The button's label says so too.
 const dueIn = s => (s.tiles.some(t => t.id === REVIEW) ? due() : 0);
 const toggleLabel = (s, shut) => (shut ? 'Show ' : 'Hide ') + s.title + (dueIn(s) ? ` (${dueText(dueIn(s))})` : '');
 
+// A section's heading line is one button, from its name across to the arrow: the whole line folds
+// the section away or brings it back. The button sits inside the heading, so the heading is still a heading.
 function toggleHTML(s, i) {
   const shut = collapsed.has(s.title), what = toggleLabel(s, shut);
-  return `<button type="button" class="section-toggle" aria-expanded="${!shut}" aria-controls="section-${i}" aria-label="${esc(what)}" title="${esc(what)}">${ARROW}</button>`;
+  return `<button type="button" class="section-toggle" aria-expanded="${!shut}" aria-controls="section-${i}" aria-label="${esc(what)}" title="${esc(what)}"><span class="section-name">${esc(s.title)}</span>${ARROW}</button>`;
 }
 
 function renderHome() {
   document.getElementById('sections').innerHTML = SECTIONS.map((s, i) => `
     <section class="section${collapsed.has(s.title) ? ' collapsed' : ''}${dueIn(s) ? ' has-due' : ''}" data-section="${esc(s.title)}">
       <div class="section-head">
-        <h2 class="section-title">${esc(s.title)}</h2>
-        ${toggleHTML(s, i)}
+        <h2 class="section-title">${toggleHTML(s, i)}</h2>
       </div>
       <div class="tiles" id="section-${i}"${collapsed.has(s.title) ? ' hidden' : ''}>${s.tiles.map(tileHTML).join('')}</div>
     </section>`).join('');
 }
 renderHome();
 
-// The arrow folds its section away or brings it back. Only that section is touched, so the button keeps the focus.
+// A click anywhere on a heading line folds its section away or brings it back. Only that section is touched, so the button keeps the focus.
 document.getElementById('sections').addEventListener('click', e => {
   const btn = e.target.closest('.section-toggle');
   if (!btn) return;
