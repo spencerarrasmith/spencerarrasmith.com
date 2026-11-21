@@ -25,6 +25,16 @@
      onChange(fn)        fn() runs when a setting changes (also
                            when another tab or frame changed it)
      persistent          → false if storage is unavailable
+     snapshot()          → a copy of every stored choice, to send
+     absorb(stored)      take another device's choices if they were
+                           made later than this browser's → true if
+                           anything here changed
+     forget()            back to the defaults, in this browser only
+                           (signing out)
+
+   STORED  { notation, _t }. _t is when a choice was last made; a
+   store from before it was kept counts as older than any that has
+   one, but newer than none at all.
 
    If storage is blocked (private window, some file:// setups)
    a change lasts for the current page view only.
@@ -70,6 +80,9 @@
     try { root.dispatchEvent(new root.Event('telugu-settings')); } catch (e) { /* no window */ }
   }
 
+  // when the choices in s were made: _t, or 1 for choices stored before _t was kept, or 0 for none
+  const stamp = s => (Number.isFinite(+s._t) && +s._t > 0 ? +s._t : Object.keys(s).some(k => k !== '_t') ? 1 : 0);
+
   const valid = (name, value) => !!SETTINGS[name] && Object.prototype.hasOwnProperty.call(SETTINGS[name].options, value);
 
   const api = {
@@ -82,6 +95,7 @@
       if (!valid(name, value)) return false;
       const s = load();
       s[name] = value;
+      s._t = Date.now();
       save(s);
       return true;
     },
@@ -98,6 +112,14 @@
       root.addEventListener('storage', e => { if (!e.key || e.key === KEY) fn(); });   // other tab / frame
     },
     get persistent() { load(); return persistent; },
+
+    snapshot() { return JSON.parse(JSON.stringify(load())); },
+    absorb(other) {
+      if (!other || typeof other !== 'object' || Array.isArray(other) || stamp(other) <= stamp(load())) return false;
+      save(JSON.parse(JSON.stringify(other)));
+      return true;
+    },
+    forget() { save({}); },
   };
 
   root.TeluguSettings = api;
