@@ -54,3 +54,47 @@ jobs:
           docker stop check
           docker push $IMAGE:$VERSION
           docker push $IMAGE:latest
+
+  build-pb:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Extract version
+        id: ver
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build, check, and push Pocketbase
+        run: |
+          IMAGE=ghcr.io/spencerarrasmith/telugu-pb
+          VERSION=${{ steps.ver.outputs.version }}
+          docker build pocketbase \
+            --tag $IMAGE:$VERSION \
+            --tag $IMAGE:latest
+          # Start the new image and wait for it. An image that does not start, or whose
+          # migration did not create the progress collection, is not pushed.
+          docker run --detach --name pb-check --publish 127.0.0.1:8090:8090 $IMAGE:$VERSION
+          for i in $(seq 1 30); do
+            curl -fs http://127.0.0.1:8090/api/health > /dev/null && break
+            sleep 0.5
+          done
+          curl -fs http://127.0.0.1:8090/api/health \
+            && curl -fs "http://127.0.0.1:8090/api/collections/progress/records?perPage=1" > /dev/null \
+            || { docker logs pb-check; exit 1; }
+          docker rm -f pb-check
+          docker push $IMAGE:$VERSION
+          docker push $IMAGE:latest
