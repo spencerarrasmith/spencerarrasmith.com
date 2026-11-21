@@ -116,6 +116,14 @@ if (!window.TeluguKeyboard) throw new Error('../telugu-keyboard.js was not found
      its vowel (the consonant's own a counts: క is k, a),
      then ం or ః if it carries one (each has its own key).
 
+   ం TAKES EITHER OF TWO KEYS. Its own (ṁ: the mark, whichever
+   nasal it is said as), or the nasal it is said as in this word:
+   the one made where the next consonant is made (కొంచెం: ɲ before
+   చ; కంగారు: ŋ before గ; పండు: ɳ; అందం: n), and m before any other
+   letter or at the end of the word (పుస్తకం). syllables() gives
+   that nasal as the part's sound; both are right, so a player can
+   spell what is written or what is said.
+
    MISTAKES ARE COUNTED BY THE SOUND, not by the word. Every
    pick is one answer. A wrong one is one mistake (a heart, when
    the session has a game over), and play goes on past that
@@ -173,6 +181,12 @@ const KEYS = {
 };
 const idOf = k => k.kind + ':' + k.key;
 
+// The keys that answer a sound: its own, and for ం the consonant key of the nasal it is said as here
+const ANUSVARA = '\u0C02';
+const nasalOf  = p => (p.kind === 'm' && p.item.sign === ANUSVARA && p.sound && KEYS.c.find(c => c.key === p.sound)) || null;
+const answers  = p => [{ kind: p.kind, key: p.key }, nasalOf(p)].filter(Boolean);
+const answersWith = (k, p) => answers(p).some(a => a.kind === k.kind && a.key === k.key);
+
 /* ─────────────────────────────────────────────────────────
    STATE
 ───────────────────────────────────────────────────────── */
@@ -208,13 +222,14 @@ function buildKB() {
   markKeys();                             // a wrong pick still showing keeps its marks across a redraw
 }
 
-// While a wrong pick is showing: the key that was pressed (red), and the right one when it is lit (green)
+// While a wrong pick is showing: the key that was pressed (red), and the right ones when they are lit
+// (green: for ం both its own key and the nasal it is said as)
 function markKeys() {
   document.querySelectorAll('.kb-btn').forEach(b => b.classList.remove('ok', 'err'));
   if (!marks) return;
-  const bad = btnFor(marks.err), good = marks.ok && btnFor(marks.ok);
-  if (bad)  bad.classList.add('err');
-  if (good) good.classList.add('ok');
+  const bad = btnFor(marks.err);
+  if (bad) bad.classList.add('err');
+  (marks.ok || []).map(btnFor).filter(Boolean).forEach(b => b.classList.add('ok'));
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -304,7 +319,7 @@ function onPick(k) {
   const want = asked();
   if (!want) return;
 
-  if (k.kind === want.kind && k.key === want.key) {
+  if (answersWith(k, want)) {
     const end = at.p === word.syllables[at.s].parts.length - 1 && lastCharacter();
     at.p++;
     if (at.p === word.syllables[at.s].parts.length) { at.s++; at.p = 0; }
@@ -317,10 +332,14 @@ function onPick(k) {
   // Wrong. The character is missed at this sound; the rest of it is not asked.
   const first = missed.size === 0;
   missed.set(at.s, at.p);
-  marks = { err: k, ok: $('highlight-correct').checked ? want : null };
+  marks = { err: k, ok: $('highlight-correct').checked ? answers(want) : null };
   show();
   markKeys();
-  if (marks.ok) { const right = btnFor(want); if (right) { TeluguKeyboard.reveal(right); right.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } }
+  if (marks.ok) {                         // a right key in view: on the page showing if one is (ɲ is behind ౧౨౩), else the first
+    const right = marks.ok.map(btnFor).filter(Boolean), seen = right.find(b => !b.closest('.gkb-page') || b.closest('.gkb-page.on'));
+    const show1 = seen || right[0];
+    if (show1) { TeluguKeyboard.reveal(show1); show1.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  }
 
   // The line under the card says what was picked. It never gives the answer.
   const last = lastCharacter();
