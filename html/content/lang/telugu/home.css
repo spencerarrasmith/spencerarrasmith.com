@@ -8,8 +8,9 @@
 
    Sections:
      1. Home view (hero,      5. Link tiles (thumbnails)
-        settings)             6. App view (bar + iframe)
-     2. Sections + tile grid  7. Phone layout
+        settings, account,    6. App view (bar + iframe)
+        login popup)          7. Phone layout
+     2. Sections + tile grid
      3. Tile
      4. Review strip + badges
 ═════════════════════════════════════════════════════════ */
@@ -116,6 +117,88 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
 .pref-eg { flex-basis: 100%; font-size: 12.5px; color: var(--text-muted); }
 .pref-eg .te { font-family: 'Noto Sans Telugu', sans-serif; font-size: 15px; color: var(--text-dim); }
 .pref-eg b { font-family: 'Noto Sans', 'Inter', sans-serif; font-weight: 500; color: var(--text); }
+
+/* ── Account: who is logged in, and Log In / Log Out (index.html, "ACCOUNT"; sync.js) ── */
+.account { display: flex; align-items: center; gap: 10px; min-width: 0; margin-right: 2px; }
+.account[hidden] { display: none; }                      /* sync.js is not running: nothing to log in to */
+.account-name {
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13.5px; font-weight: 500; color: var(--text-dim); cursor: default;
+}
+/* a small dot after the name while the latest progress has not reached the account */
+.account[data-status="offline"] .account-name::after,
+.account[data-status="error"] .account-name::after {
+  content: ''; display: inline-block; width: 6px; height: 6px; margin-left: 7px; vertical-align: 2px;
+  border-radius: 50%; background: var(--accent);
+}
+.account-btn {
+  height: 40px; padding: 0 14px;
+  font-family: inherit; font-size: 13.5px; font-weight: 600; white-space: nowrap;
+  color: var(--text-dim); background: var(--surface); border: 1px solid var(--border); border-radius: 11px;
+  cursor: pointer; transition: border-color .12s, color .12s, background .12s;
+}
+.account-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+.account-btn:disabled { opacity: .6; cursor: default; }
+.account-btn:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+
+/* The login popup: Cancel and the title along the top (as in a game's session popup), then one step */
+.login {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(6, 7, 16, .74);
+}
+.login[hidden] { display: none; }
+.login-box {
+  width: min(420px, 100%); max-height: 100%; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .65);
+}
+.login-head {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+}
+.login-head .login-btn { justify-self: start; }
+.login-title { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dim); }
+.login-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 18px 16px 20px; }
+.login-step { display: grid; gap: 12px; }
+.login-step[hidden] { display: none; }
+.login-lead { font-size: 14px; line-height: 1.5; color: var(--text-dim); }
+.login-lead b { color: var(--text); font-weight: 600; overflow-wrap: anywhere; }
+.login-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.login-form { display: grid; gap: 8px; }
+.login-row { display: flex; gap: 8px; }
+.login-row.end { justify-content: flex-end; flex-wrap: wrap; }
+.login-input {
+  flex: 1 1 auto; width: 0; min-width: 0; padding: 8px 10px;     /* width 0: the box takes the room the button leaves, however narrow */
+  font-family: inherit; font-size: 15px; color: var(--text);
+  background: var(--surface-up); border: 1px solid var(--border); border-radius: 9px;
+  color-scheme: dark;
+}
+.login-input:focus { outline: none; border-color: var(--accent); }
+.login-input.code { font-size: 18px; letter-spacing: .3em; font-variant-numeric: tabular-nums; }
+.login-btn {
+  padding: 7px 14px;
+  font-family: inherit; font-size: 14px; font-weight: 600; white-space: nowrap;
+  color: var(--text-dim); background: var(--surface-up); border: 1px solid var(--border); border-radius: 9px;
+  cursor: pointer; transition: border-color .12s, background .12s, filter .14s;
+}
+.login-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-glow); }
+.login-btn.wide { width: 100%; padding: 10px 14px; font-size: 14.5px; color: var(--text); }
+.login-btn.go { color: #0b0c18; background: var(--accent); border-color: var(--accent); font-weight: 700; }
+.login-btn.go:hover:not(:disabled) { background: var(--accent); filter: brightness(1.1); }
+.login-btn.danger { color: #fff; background: var(--error); border-color: var(--error); }
+.login-btn.danger:hover:not(:disabled) { background: var(--error); filter: brightness(1.08); }
+.login-btn:disabled, .login-input:disabled { opacity: .6; cursor: default; }
+.login-btn:focus-visible, .login-link:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+.login-or { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); }
+.login-or::before, .login-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.login-link {
+  justify-self: start; padding: 2px 0;
+  font-family: inherit; font-size: 13px; color: var(--accent-light);
+  background: none; border: 0; cursor: pointer;
+}
+.login-link:hover:not(:disabled) { text-decoration: underline; }
+.login-error { font-size: 13px; line-height: 1.45; color: var(--error); }
 
 /* ── Sections ──────────────────────────────── */
 .section { margin-bottom: 32px; }
@@ -343,7 +426,9 @@ a.tile.soon:focus-visible .tile-icon, a.tile.soon:focus-visible .tile-title, a.t
   #home, .tile-page { padding-left: 16px; padding-right: 16px; }
   .hero { padding: 28px 0 22px; gap: 12px; }
   .hero-title { font-size: 22px; }
-  .hero > .logo + div { flex: 1 1 0; min-width: 0; }      /* the title takes what the logo and the two buttons leave */
+  .hero > .logo + div { flex: 1 1 0; min-width: 0; }      /* the title takes what the logo and the buttons leave */
+  .account-name { display: none; }                         /* no room for the name: Log Out says enough */
+  .account-btn { padding: 0 11px; font-size: 13px; }
   .pref-eg { flex-basis: auto; text-align: left; }
   .tiles { grid-template-columns: 1fr; gap: 10px; }
   /* compact horizontal tiles keep the 40+ item list scannable on a phone: the icon at the left, the

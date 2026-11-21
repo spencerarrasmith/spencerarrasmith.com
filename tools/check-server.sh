@@ -51,6 +51,12 @@ ok $? "a font file (${font:-none found in base.css}) is sent as it is: .woff2 is
 keep=$(header plain cache-control "$APP/$font")
 case "$keep" in *max-age=31536000*immutable*) true ;; *) false ;; esac
 ok $? "and may be kept for a year: Cache-Control is \"$keep\""
+sdk=$(curl -s "$APP/index.html" | grep -o "vendor/pocketbase-[0-9.]*\.umd\.js" | head -1)
+[ -n "$sdk" ] && [ -n "$(header gzip content-encoding "$APP/$sdk")" ]
+ok $? "the PocketBase client (${sdk:-none found in index.html}) is compressed"
+keep=$(header plain cache-control "$APP/$sdk")
+case "$keep" in *max-age=31536000*immutable*) true ;; *) false ;; esac
+ok $? "and may be kept for a year: Cache-Control is \"$keep\""
 page=$(header plain cache-control "$APP/index.html")
 [ "$page" = no-cache ]
 ok $? "a page is checked with the server each time: Cache-Control is \"$page\""

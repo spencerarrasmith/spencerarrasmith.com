@@ -1,6 +1,6 @@
 # Telugu Suite
 
-Open `index.html` in a browser. Everything is static: no build step, no server needed (a plain double-click works).
+Open `index.html` in a browser. Everything is static: no build step, no server needed (a plain double-click works). Opened that way there is no logging in: progress is kept in that browser only.
 
 ## Layout
 
@@ -21,6 +21,8 @@ At the top level: `index.html` (the tile launcher, with the Profile button and t
 | `units.js` | The one list of sections and tiles. The home page, Review, and the "Coming soon" pages all read it. |
 | `telugu-data.js`, `lookalikes-data.js` | Letters, signs, digits, clusters, and lookalike groups, each sound in both IPA and ISO; `notation` (which of the two to show), `read()` (the sound of any Telugu character), and `syllables()` (a whole word split into its characters, each with the sounds it spells); the CSV reader the Lookalikes game and the Lookalike Builder share. |
 | `progress.js` | Missed items and every session a game finished (this browser only; Lookalikes, a training tool with no chart, keeps none). The sessions are what the Profile page charts; "Reset statistics" there erases both. A missed character is stored as the character, so Review can show it in either notation. Two copies of the store (this browser's and an account's) can be merged without losing anything: each change carries its time, and what Review cleared or "Reset statistics" erased stays erased ("SYNCING" at the top of the file). |
+| `sync.js` | Logging in, and keeping progress and settings the same on every device. Runs on the home page only, and only when the app comes from the website: it keeps this browser's copy and the account's in step (merging them, so nothing is lost), and the home page shows who is logged in, with Log In / Log Out, at its top right. The accounts are kept by PocketBase on the same site, at `/api/` (`pocketbase/` at the top of the website repo). |
+| `vendor/` | Other people's code, each file with its version in its name and its license beside it: the PocketBase client (`pocketbase-0.29.0.umd.js`), which `sync.js` uses. |
 | `game-core.js`, `game-menu.js` | The round every game plays (deck, counters, complete screen), and the keyboard options plus the ⋮ menu of a game that has one. |
 | `game-setup.js` | The popup a game opens before a session. It holds every option the game has (direction, number of rounds, the mistake that is game over, and its checkboxes, among them whether missed guesses reappear), so a game that uses it has no ⋮ menu. Used by Phonemes, Diacritics, Conjuncts, and Words; Lookalikes keeps its ⋮ menu. |
 | `lesson-shell.js` | The frame for lesson pages and the "Coming soon" placeholders. |

@@ -15,8 +15,12 @@
       <div>
         <h1 class="hero-title" id="hero-title">Telugu Telusu</h1>
       </div>
-      <!-- top right: the Profile page, and the Settings menu -->
+      <!-- top right: who is logged in (and Log In / Log Out), the Profile page, and the Settings menu -->
       <div class="hero-tools">
+        <div class="account" id="account" hidden>
+          <span class="account-name" id="account-name" hidden></span>
+          <button class="account-btn" id="account-btn" type="button">Log In</button>
+        </div>
         <a class="icon-btn" id="profile-btn" href="#/profile" aria-label="Profile" title="Profile">
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="6.6" r="3.4"/><path d="M3.2 17.2c.5-3.6 3.3-5.6 6.8-5.6s6.3 2 6.8 5.6"/></svg>
         </a>
@@ -43,9 +47,52 @@
   <iframe id="app-frame" title="Sub-app"></iframe>
 </div>
 
+<!-- Logging in (and the question asked when logging out would lose progress). Opened from the top right. -->
+<div class="login" id="login" hidden>
+  <div class="login-box" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="login-head">
+      <button class="login-btn" id="login-cancel" type="button">Cancel</button>
+      <h2 class="login-title" id="login-title">Log In</h2>
+    </div>
+    <div class="login-body">
+      <div class="login-step" id="login-start">
+        <p class="login-lead">Keep your progress and statistics on every device.</p>
+        <button class="login-btn wide" id="login-google" type="button">Continue with Google</button>
+        <div class="login-or">or</div>
+        <form class="login-form" id="login-email-form" novalidate>
+          <label class="login-label" for="login-email">Email</label>
+          <div class="login-row">
+            <input class="login-input" id="login-email" type="email" autocomplete="email" spellcheck="false" required>
+            <button class="login-btn go" id="login-send" type="submit">Send Code</button>
+          </div>
+        </form>
+      </div>
+      <form class="login-step" id="login-code-form" novalidate hidden>
+        <p class="login-lead">Enter the 6-digit code sent to <b id="login-sent-to"></b>.</p>
+        <label class="login-label" for="login-code">Code</label>
+        <div class="login-row">
+          <input class="login-input code" id="login-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+          <button class="login-btn go" id="login-enter" type="submit">Log In</button>
+        </div>
+        <button class="login-link" id="login-back" type="button">Use a Different Email</button>
+      </form>
+      <div class="login-step" id="login-out" hidden>
+        <p class="login-lead">Your latest progress has not reached your account yet. Logging out now removes it from this device.</p>
+        <div class="login-row end">
+          <button class="login-btn" id="login-stay" type="button">Stay Logged In</button>
+          <button class="login-btn danger" id="login-out-anyway" type="button">Log Out Anyway</button>
+        </div>
+      </div>
+      <p class="login-error" id="login-error" role="alert" hidden></p>
+    </div>
+  </div>
+</div>
+
 <script src="settings.js"></script>
 <script src="units.js"></script>
 <script src="progress.js"></script>
+<script src="vendor/pocketbase-0.29.0.umd.js"></script>
+<script src="sync.js"></script>
 <script>
 /* ─────────────────────────────────────────────────────────
    CONFIG — the sections and tiles live in units.js.
@@ -175,6 +222,117 @@ renderPrefs();
   document.addEventListener('pointerdown', e => { if (!menu.hidden && !wrap.contains(e.target)) setOpen(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
   window.addEventListener('hashchange', () => setOpen(false));
+})();
+
+/* ─────────────────────────────────────────────────────────
+   ACCOUNT  (sync.js)
+   At the top right, before the Profile button: the name of
+   whoever is logged in and "Log Out", or just "Log In". Hovering
+   the name says how syncing is going. Log In opens a popup with
+   two ways in: Google, or a 6-digit code sent by email.
+   Logging out empties this browser (the account keeps it all);
+   if the latest progress has not reached the account yet, the
+   popup asks first.
+   Without sync.js (the app opened as a file, say), none of this
+   is shown, and progress stays in this browser as before.
+───────────────────────────────────────────────────────── */
+(function account() {
+  const Sync = window.TeluguSync;
+  if (!Sync) return;
+  const $ = id => document.getElementById(id);
+  const box = $('account'), name = $('account-name'), btn = $('account-btn'), dlg = $('login'), err = $('login-error');
+  box.hidden = false;
+
+  const time = t => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const STATUS = {
+    syncing: () => 'Syncing…',
+    synced:  () => 'Synced' + (Sync.synced ? ' at ' + time(Sync.synced) : ''),
+    offline: () => 'Offline: your progress will sync when you are back online',
+    error:   () => 'Could not reach your account: trying again soon',
+  };
+  function render() {
+    const inn = Sync.loggedIn;
+    box.dataset.status = Sync.status;
+    name.hidden = !inn;
+    name.textContent = inn ? Sync.name : '';
+    name.title = inn ? [Sync.name !== Sync.email ? Sync.email : '', (STATUS[Sync.status] || (() => ''))()].filter(Boolean).join(' · ') : '';
+    if (!btn.disabled) btn.textContent = inn ? 'Log Out' : 'Log In';
+  }
+  Sync.onChange(render);
+  render();
+
+  // the popup: one step at a time (start → code), or the question before logging out
+  let otpId = null;
+  const STEPS = ['login-start', 'login-code-form', 'login-out'];
+  function step(id, focus) {
+    STEPS.forEach(s => { $(s).hidden = s !== id; });
+    $('login-title').textContent = id === 'login-out' ? 'Log Out' : 'Log In';
+    say('');
+    if (focus) $(focus).focus();
+  }
+  function open(id, focus) { dlg.hidden = false; step(id, focus); }
+  function close() { dlg.hidden = true; otpId = null; busy(false); btn.focus(); }
+  const say = text => { err.textContent = text; err.hidden = !text; };
+  const busy = (on, b, label) => {                    // while waiting: everything off, and the button pressed says what it is waiting for
+    dlg.querySelectorAll('button, input').forEach(el => {
+      el.disabled = on;
+      if (!on && el.dataset.label) { el.textContent = el.dataset.label; delete el.dataset.label; }
+    });
+    if (on && b) { b.dataset.label = b.textContent; b.textContent = label; }
+  };
+  const problem = (e, fallback) =>
+    e && e.code === 'blocked' ? 'Your browser blocked the login window. Allow pop-ups for this site and try again.'
+    : e && e.status === 429 ? 'Too many tries. Wait a minute, then try again.'
+    : e && e.status === 0 && !e.isAbort && e.originalError && e.originalError.name === 'TypeError' ? 'Could not reach the server. Check your connection and try again.'
+    : fallback;
+
+  btn.addEventListener('click', async () => {
+    if (!Sync.loggedIn) { open('login-start', 'login-email'); return; }
+    btn.disabled = true; btn.textContent = 'Logging Out…';
+    const out = await Sync.logOut();
+    btn.disabled = false; render();
+    if (!out) open('login-out', 'login-stay');
+  });
+  $('login-cancel').addEventListener('click', close);
+  $('login-stay').addEventListener('click', close);
+  dlg.addEventListener('pointerdown', e => { if (e.target === dlg) close(); });       // a tap outside the box
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !dlg.hidden) close(); });
+  window.addEventListener('hashchange', () => { if (!dlg.hidden) close(); });
+
+  $('login-google').addEventListener('click', () => {
+    const popup = window.open('', 'telugu-login', 'popup,width=500,height=650');     // now, while the click still counts
+    busy(true, $('login-google'), 'Waiting for Google…'); say('');
+    Sync.logInWith('google', popup).then(close, e => {
+      busy(false, $('login-google'));
+      if (!e || e.code !== 'closed') say(problem(e, 'The Google login did not finish. Try again.'));
+    });
+  });
+  $('login-email-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = $('login-email').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say('Enter your email address.'); $('login-email').focus(); return; }
+    busy(true, $('login-send'), 'Sending…'); say('');
+    try {
+      otpId = await Sync.sendCode(email);
+      busy(false, $('login-send'));
+      $('login-sent-to').textContent = email; $('login-code').value = '';
+      step('login-code-form', 'login-code');
+    } catch (x) { busy(false, $('login-send')); say(problem(x, 'Could not send a code to that address.')); }
+  });
+  $('login-code-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const code = $('login-code').value.replace(/\D/g, '');
+    if (code.length !== 6) { say('The code is 6 digits.'); $('login-code').focus(); return; }
+    busy(true, $('login-enter'), 'Logging In…'); say('');
+    try { await Sync.enterCode(otpId, code); close(); }
+    catch (x) { busy(false, $('login-enter')); say(problem(x, 'That code is not right, or it has expired. Check it, or send a new one.')); $('login-code').focus(); }
+  });
+  $('login-back').addEventListener('click', () => step('login-start', 'login-email'));
+  $('login-out-anyway').addEventListener('click', async () => {
+    busy(true, $('login-out-anyway'), 'Logging Out…');
+    await Sync.logOut({ force: true });
+    close(); render();
+  });
 })();
 
 /* ─────────────────────────────────────────────────────────

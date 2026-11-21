@@ -139,7 +139,10 @@
 
   const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
   const num   = x => (Number.isFinite(+x) && +x > 0 ? +x : 0);
-  const byKey = o => Object.fromEntries(Object.entries(o).sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0)));   // one order, whichever copy came first
+  // One order for an object's keys, whichever copy it came from. The account server hands
+  // records back with their keys sorted; a copy written here has them in the order they were set.
+  // Compared as text, the same run would otherwise look like two.
+  const byKey = o => Object.fromEntries(Object.entries(o).sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0)));
 
   // Any store (this browser's, an older version's, another device's) in the current shape.
   // Changes s in place and returns it; anything that is not a store at all becomes a blank one.
@@ -173,6 +176,7 @@
     [a.misses, b.misses].forEach(src => Object.entries(src).forEach(([id, m]) => {
       if (cut.misses && m.t <= cut.misses) return;                     // erased since
       if (gone[id] && m.t <= gone[id]) return;                         // cleared in Review since
+      m = byKey(m);
       const have = misses[id];
       if (!have || m.t > have.t || (m.t === have.t && JSON.stringify(m) > JSON.stringify(have))) misses[id] = m;
     }));
@@ -181,6 +185,7 @@
       const each = new Map();
       [a.runs[game], b.runs[game]].forEach(list => (Array.isArray(list) ? list : []).forEach(r => {
         if (!isObj(r) || !num(r.t) || (cut.runs && r.t <= cut.runs)) return;
+        r = byKey(r);
         each.set(JSON.stringify(r), r);                                // the same run in both copies counts once
       }));
       const list = [...each.values()].sort((x, y) => x.t - y.t).slice(-RUN_CAP);
