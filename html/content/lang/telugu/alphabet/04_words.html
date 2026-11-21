@@ -89,6 +89,7 @@
 
 <script src="../settings.js"></script>
 <script src="../telugu-data.js"></script>
+<script src="../telugu-keyboard.js"></script>
 <script src="words-data.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
@@ -99,6 +100,7 @@ if (!window.TeluguData)  throw new Error('../telugu-data.js was not found');
 if (!window.TeluguWords) throw new Error('words-data.js was not found');
 if (!window.GameCore)    throw new Error('../game-core.js was not found');
 if (!window.GameSetup)   throw new Error('../game-setup.js was not found');
+if (!window.TeluguKeyboard) throw new Error('../telugu-keyboard.js was not found');
 
 /* ─────────────────────────────────────────────────────────
    DATA
@@ -129,46 +131,47 @@ if (!window.GameSetup)   throw new Error('../game-setup.js was not found');
    record of each session) is game-core.js: step() for each
    sound, judge() when the word is done. The popup that opens
    first is game-setup.js. It holds every option: number of
-   rounds, game over, and the four checkboxes. The game plays
+   rounds, game over, and the three checkboxes. The game plays
    one way only (word → sounds), so the popup has no direction.
-   This page draws the card, the two keyboards, and the row of
-   sounds under the card, and checks each pick.
+   This page draws the card, the keyboard of sounds, and the row
+   of sounds under the card, and checks each pick.
+
+   THE KEYBOARD is laid out as the Telugu keyboard is (training/
+   04_keyboard.html; Gboard's layout): each sound's key sits where
+   its letter's key sits there, so the two become familiar
+   together. ఞ, which has no place there, is behind ౧౨౩, as on
+   the Telugu keyboard. "Group keyboard phonetically" lays the keys
+   out in groups by sound instead (telugu-keyboard.js: board()).
 ───────────────────────────────────────────────────────── */
 const GAME  = 'words';
 const WORDS = TeluguWords.words;
 const N     = TeluguData.notation;      // how sounds are written: IPA (/amma/) or ISO (amma), chosen on the home page
-const { $, shuffle, esc } = GameCore;
+const { $, esc } = GameCore;
 
 const SESSION_SIZE = 20;      // words in the usual session, picked at random (the popup can ask for fewer, or more)
 const HINT         = 'Pick each sound of the highlighted character, in order';
 
-/* The keys. Each is one sound: { kind, key, label, block }
+/* The keys. Each is one sound: { kind, key, label, te, group }
      kind   'c' consonant · 'v' vowel · 'm' ం or ః        (what a part from syllables() is, too)
      key    the letter's or sign's ipa: its identity, whatever is printed on it
-     block  the labeled group it sits in when categories are shown
+     te     the letter whose place it takes on the Telugu keyboard (never shown)
+     group  its group when the keyboard is grouped by sound
    Consonants: the 34 of the usual set (no ఱ; క్ష is spelled k, ʂ, so it has no key of its own).
-   Vowels: the 14 vowel sounds, each long one beside its short one, then ం and ః.
+   Vowels: the 14 vowel sounds, then ం and ః.
    There is no "no vowel" key: no word in the list ends in a bare consonant.               */
 const isMark = g => g.grp === 'Nasal · aspirate';
+const vowelLetter = ipa => TeluguData.vowels.find(l => l.ipa === ipa && l.ch.length === 1);   // ɐ → అ (not అం)
 const KEYS = {
   c: TeluguData.pool(TeluguData.consonants, false)
-       .map(l => ({ kind: 'c', key: l.ipa, label: N.part(l), block: l.cat })),
+       .map(l => ({ kind: 'c', key: l.ipa, label: N.part(l), te: l.ch, group: l.cat })),
   v: TeluguData.shortThenLong(TeluguData.signs.filter(g => g.core && g.sign !== TeluguData.VIRAMA))
        .map(g => {
          const kind = isMark(g) ? 'm' : 'v';
-         return { kind, key: g.ipa, label: N.piece({ kind, item: g }),
-                  block: g.grp === 'Short' || g.grp === 'Long' ? 'Short · long' : g.grp };
+         return { kind, key: g.ipa, label: N.piece({ kind, item: g }), te: kind === 'm' ? g.sign : (vowelLetter(g.ipa) || {}).ch,
+                  group: g.grp === 'Short' || g.grp === 'Long' ? 'Short · long' : g.grp };
        }),
 };
 const idOf = k => k.kind + ':' + k.key;
-
-// Catch a word the keyboards can't spell while editing the list (an extra letter, a final ్)
-(function check() {
-  const have = new Set([...KEYS.c, ...KEYS.v].map(idOf));
-  WORDS.forEach(w => w.syllables.forEach(s => s.parts.forEach(p => {
-    if (!have.has(idOf(p))) throw new Error('words: no key for a sound of ' + w.te + ' (' + s.text + ')');
-  })));
-})();
 
 /* ─────────────────────────────────────────────────────────
    STATE
@@ -177,100 +180,33 @@ let word    = null;              // the word on the card
 let at      = { s: 0, p: 0 };    // the sound being asked for: which character, which of its sounds
 let missed  = new Map();         // characters that took a mistake → which of their sounds was missed
 let marks   = null;              // while a wrong pick is showing: { err, ok }: the key pressed, and the right one when it is lit
-let kbOrder = null;              // null, or { c, v }: shuffled copies of the keys (fixed for the round)
 
 const asked = () => (word && at.s < word.syllables.length ? word.syllables[at.s].parts[at.p] : null);
 
 /* ─────────────────────────────────────────────────────────
-   BUILD KEYBOARDS
+   BUILD THE KEYBOARD
 ───────────────────────────────────────────────────────── */
-// [[label, [items…]], …] keeping first-seen order
-function groupBy(items, key) {
-  const m = new Map();
-  items.forEach(it => {
-    if (!m.has(it[key])) m.set(it[key], []);
-    m.get(it[key]).push(it);
-  });
-  return [...m];
-}
-
 function btnFor(k) {
   return Array.from(document.querySelectorAll(`.kb-btn[data-kind="${k.kind}"]`))
     .find(b => b.dataset.ipa === k.key) || null;
 }
 
-function buildPanel(title, name, items, grouped) {
-  const col = document.createElement('div');
-  col.className    = 'kb-col';
-  col.dataset.kind = name;
-
-  const h = document.createElement('div');
-  h.className   = 'kb-col-title';
-  h.textContent = title;
-  col.appendChild(h);
-
-  // Grouped: one labeled block per category. Ungrouped: a single plain block.
-  (grouped ? groupBy(items, 'block') : [[null, items]]).forEach(([label, list]) => {
-    const g = document.createElement('div');
-    g.className = 'kb-group';
-
-    const row = document.createElement('div');
-    row.className = 'kb-row';
-    let pair = null;                       // a short vowel waiting for its long one
-    list.forEach((it, i) => {
-      const btn = document.createElement('button');
-      btn.type         = 'button';
-      btn.className    = 'kb-btn';
-      btn.textContent  = it.label;
-      btn.dataset.ipa  = it.key;
-      btn.dataset.kind = it.kind;
-      if (it.kind === 'm') btn.setAttribute('aria-label', it.key === TeluguData.signs.find(isMark).ipa ? 'anusvara (ం)' : 'visarga (ః)');
-      btn.addEventListener('click', () => onPick(it));
-      // A vowel and its long form go in together, so a row never breaks between the two
-      const next = list[i + 1];
-      if (it.kind === 'v' && next && next.key === TeluguData.longOf(it.key)) {
-        pair = document.createElement('span');
-        pair.className = 'kb-pair';
-        row.appendChild(pair);
-        pair.appendChild(btn);
-      } else if (pair) { pair.appendChild(btn); pair = null; }
-      else row.appendChild(btn);
-    });
-
-    if (label !== null) {
-      const l = document.createElement('div');
-      l.className   = 'kb-label';
-      l.textContent = label;
-      g.appendChild(l);
-    }
-    g.appendChild(row);
-    col.appendChild(g);
-  });
-  return col;
-}
-
-// Both panels follow the options in the session popup:
-//   Show categories checked   → grouped and labeled
-//   Show categories unchecked → one plain block per panel, alphabet order
-//   Shuffle keyboard checked  → that block in a random order (kbOrder), which
-//                              stays fixed for the round so keys can be found
-// Rebuilding (when one of those two boxes changes) never restarts the round.
+// The keyboard (telugu-keyboard.js): unchecked "Group keyboard phonetically", each key where its
+// letter sits on the Telugu keyboard; checked, the vowel groups and then the consonant classes.
+// Redrawing (when that box changes) never restarts the round.
 function buildKB() {
-  const grouped = GameMenu.grouped();
-  const src     = grouped ? KEYS : (kbOrder || KEYS);
-  const area = $('kb-area');
-  area.innerHTML = '';
-  const wrap = document.createElement('div');
-  wrap.className = 'kb-cols';
-  wrap.append(
-    buildPanel('Consonant', 'c', src.c, grouped),
-    buildPanel('Vowel',     'v', src.v, grouped),
-  );
-  area.appendChild(wrap);
-  markKeys();                             // a wrong pick still showing keeps its marks across a rebuild
+  TeluguKeyboard.board($('kb-area'), {
+    grouped: GameMenu.grouped(),
+    faces:   'sound',
+    keys: [...KEYS.v, ...KEYS.c].map(k => ({
+      te: k.te, label: k.label, group: k.group, vowel: k.kind !== 'c',
+      data:   { ipa: k.key, kind: k.kind },
+      aria:   k.kind === 'm' ? (k.key === TeluguData.signs.find(isMark).ipa ? 'anusvara (ం)' : 'visarga (ః)') : undefined,
+      onPick: () => onPick(k),
+    })),
+  });
+  markKeys();                             // a wrong pick still showing keeps its marks across a redraw
 }
-
-const newOrder = () => ({ c: shuffle(KEYS.c), v: shuffle(KEYS.v) });
 
 // While a wrong pick is showing: the key that was pressed (red), and the right one when it is lit (green)
 function markKeys() {
@@ -384,7 +320,7 @@ function onPick(k) {
   marks = { err: k, ok: $('highlight-correct').checked ? want : null };
   show();
   markKeys();
-  if (marks.ok) { const right = btnFor(want); if (right) right.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  if (marks.ok) { const right = btnFor(want); if (right) { TeluguKeyboard.reveal(right); right.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } }
 
   // The line under the card says what was picked. It never gives the answer.
   const last = lastCharacter();
@@ -415,7 +351,6 @@ const game = GameCore.create({
   onRetry: () => openSetup(),            // "Practice Again" asks how to play the next session
   onStart() {
     $('kb-area').scrollTop = 0;
-    kbOrder = GameMenu.shuffled() ? newOrder() : null;   // fresh order each round
     buildKB();
   },
   render:   renderCard,
@@ -437,9 +372,7 @@ const setup = GameSetup.create({
   title: 'Words',
   home:  '../index.html',
   options: [
-    { id: 'show-cat',          label: 'Show categories',
-      note: { id: 'cat-note', text: 'Off while keyboard is shuffled' } },
-    { id: 'shuffle-kb',        label: 'Shuffle keyboard' },
+    { id: 'group-kb',          label: 'Group keyboard phonetically' },
     { id: 'highlight-correct', label: 'Highlight correct answer', checked: true },
     { id: 'missed-again',      label: 'Missed guesses reappear', checked: true },
   ],
@@ -453,14 +386,10 @@ const setup = GameSetup.create({
 // leave: Cancel goes back to Home (only when the page has just opened and nothing was played)
 const openSetup = (leave = false) => setup.open({ leave });
 
-/* ── The keyboard options ─────────────────────────────── */
-// game-menu.js keeps "Show categories" and "Shuffle keyboard" in step (a shuffled keyboard
-// has no groups) and redraws the keyboards when either changes. It finds the two boxes by
-// id, which is why the popup is created above this line. This page has no ⋮ menu for it to open.
-GameMenu.init({
-  rebuild: buildKB,
-  reorder: on => { kbOrder = on ? newOrder() : null; },
-});
+/* ── The keyboard option ──────────────────────────────── */
+// game-menu.js redraws the keyboard when "Group keyboard phonetically" changes. It finds the box
+// by id, which is why the popup is created above this line. This page has no ⋮ menu for it to open.
+GameMenu.init({ rebuild: buildKB });
 
 game.start();                            // a round is dealt behind the popup; Start deals the one that is played
 openSetup(true);

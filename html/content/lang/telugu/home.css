@@ -102,8 +102,22 @@ a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
 }
 .settings-title { margin-bottom: 12px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 
-/* A setting in the menu: how sounds are written (IPA | ISO) */
+/* A setting in the menu: how sounds are written (IPA | ISO); whether the keyboard shows syllables */
 .pref  { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.pref + .pref { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.pref-check { display: inline-flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--text-dim); cursor: pointer; user-select: none; }
+.pref-check:hover { color: var(--text); }
+.pref-check input {
+  appearance: none; -webkit-appearance: none; position: relative; flex-shrink: 0; margin: 0;
+  width: 16px; height: 16px; border: 1.5px solid var(--text-muted); border-radius: 3px; background: transparent; cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.pref-check input:checked { background: var(--accent); border-color: var(--accent); }
+.pref-check input:checked::after {
+  content: ''; position: absolute; top: 1.5px; left: 4.5px; width: 4px; height: 8px;
+  border: 1.5px solid #0b0c18; border-top: none; border-left: none; transform: rotate(45deg);
+}
+.pref-check input:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
 .pref-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
 .seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
 .seg-opt {

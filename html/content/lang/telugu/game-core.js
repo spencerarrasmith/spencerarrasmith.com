@@ -168,9 +168,13 @@
     const hearts = n => n === null ? `${HEART}×${EVER}` : n > 3 ? `${HEART}×${n}` : n > 0 ? LAST.slice(-n).join('') : NONE;
 
     function updateProgress() {
+      // Remaining and Correct keep room for as many digits as the total has, so the stats are as wide
+      // at 9 as at 10: a title that only just fits beside them does not wrap, and move the game down
+      const digits = String(total).length + 'ch';
       $('s-rem').textContent   = deck.length;
       $('s-done').textContent  = completed;
       $('s-total').textContent = total;
+      $('s-rem').style.minWidth = $('s-done').style.minWidth = digits;
       $('prog-fill').style.width = (total ? Math.min(1, (completed + dropped) / total) * 100 : 0).toFixed(1) + '%';      // cards dealt with, right or not
       const lives = $('s-lives');
       if (lives) {

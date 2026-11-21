@@ -13,16 +13,14 @@
 
     .slot { min-width: 120px; }
 
-    /* (the two keyboards side by side, consonants and vowels, are laid out in game.css) */
+    /* (the keyboard, as the Telugu keyboard lays it out, is in game.css) */
 
-    /* Reversed: bare vowel signs are small marks, so their keys run larger and
-       a fixed width, which keeps the row even whatever each mark's own width */
-    .kb-btn.sign {
-      font-size: 28px;
-      line-height: 1.4;
-      min-width: 52px;
-      padding: 3px 10px;
-    }
+    /* Reversed: bare vowel signs are small marks, so their keys print larger */
+    .gkb .kb-btn.sign { font-size: 26px; }
+    @media (max-width: 420px) { .gkb .kb-btn.sign { font-size: 22px; } }
+    /* …but a whole syllable (కా, once the consonant is picked) is a letter's size */
+    .gkb.syl .kb-btn.sign { font-size: 21px; }
+    @media (max-width: 420px) { .gkb.syl .kb-btn.sign { font-size: 18px; } }
 
     /* Pending selection (before both pieces are chosen) */
     .kb-btn.sel:not(.ok):not(.err) {
@@ -78,6 +76,7 @@
 
 <script src="../settings.js"></script>
 <script src="../telugu-data.js"></script>
+<script src="../telugu-keyboard.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
 <script src="../game-core.js"></script>
@@ -86,6 +85,7 @@
 if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
 if (!window.GameCore)   throw new Error('../game-core.js was not found');
 if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
+if (!window.TeluguKeyboard) throw new Error('../telugu-keyboard.js was not found');
 
 /* ─────────────────────────────────────────────────────────
    DATA
@@ -93,16 +93,16 @@ if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
    player picks BOTH the consonant phoneme and the vowel sound.
    Letters, signs, and flags come from telugu-data.js:
      rare    → "rare" badge
-     inBook  → false for the extras (ఱ ౢ ౣ), hidden until
-               "Include extra letters" is checked
+   The extra letters (ఱ, and the signs ౢ ౣ) are not practiced: they
+   have a Reference page of their own (Bookish Telugu).
 
    The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the record of each session) is game-core.js.
    The popup that opens first is game-setup.js. It holds every
    option: direction, number of rounds, game over, and
-   the four checkboxes. There is no ⋮ menu on this page.
-   This page draws the card, the two keyboards, and the slots,
-   and checks the pair of picks.
+   the two checkboxes. There is no ⋮ menu on this page.
+   This page draws the card, the keyboard, and the slots, and
+   checks the pair of picks.
 ───────────────────────────────────────────────────────── */
 const GAME       = 'diacritics';
 const CONSONANTS = [...TeluguData.consonants, ...TeluguData.conjunctLetters];   // ends with క్ష
@@ -118,27 +118,17 @@ const PER_VOWEL = 3;     // cards per vowel sign (each with a different consonan
 let reversed = false;             // false: card shows the syllable, keys show sounds
                                   // true:  card shows the sound, keys show Telugu
 let sel = { c: null, v: null };   // pending picks: each key's ipa (its identity, whatever is printed on it)
-let keys    = { c: [], v: [] };   // what is on the two keyboards, in alphabet order
-let kbOrder = null;               // null, or { c, v }: shuffled copies (fixed for the round)
+let keys    = { c: [], v: [] };   // the consonants and vowel signs on the keyboard, in alphabet order
+let kb      = null;               // the keyboard (telugu-keyboard.js board())
+const SYLLABLES = TeluguKeyboard.syllables();   // "Keyboard shows syllables" (the app's settings)
 
 /* ─────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────── */
-// [[label, [items…]], …] keeping first-seen order. key: a property name, or a function of the item
-function groupBy(items, key) {
-  const of = typeof key === 'function' ? key : it => it[key];
-  const m = new Map();
-  items.forEach(it => {
-    if (!m.has(of(it))) m.set(of(it), []);
-    m.get(of(it)).push(it);
-  });
-  return [...m];
-}
-
-// The vowel keyboard keeps each long vowel beside its short one: a ā · i ī · u ū · e ē · o ō,
-// in one block, as the alphabet itself runs (అ ఆ ఇ ఈ …). telugu-data.js puts them in that order.
-const { shortThenLong, longOf } = TeluguData;
-const vowelBlock = v => (v.grp === 'Short' || v.grp === 'Long' ? 'Short · long' : v.grp);     // the label of a key's block
+// Grouped, each long vowel sits beside its short one: a ā · i ī · u ū · e ē · o ō, in one
+// group, as the alphabet itself runs (అ ఆ ఇ ఈ …). telugu-data.js puts them in that order.
+const { shortThenLong } = TeluguData;
+const vowelBlock = v => (v.grp === 'Short' || v.grp === 'Long' ? 'Short · long' : v.grp);     // the group a vowel key is in
 
 // Every vowel sign gets PER_VOWEL cards, each with a different random consonant
 function buildDeck(cons, vows) {
@@ -176,104 +166,70 @@ function btnFor(kind, ipa) {
 }
 
 /* ─────────────────────────────────────────────────────────
-   BUILD KEYBOARDS
+   BUILD THE KEYBOARD  (telugu-keyboard.js)
+   One keyboard for both picks, as the Telugu keyboard lays it out:
+   the vowels across the top, the consonants class by class below.
+   A vowel key takes its vowel's place (ā at ఆ's, ṁ at ం's); a key
+   with no place there is behind ౧౨౩: క్ష; and, keys showing sounds,
+   the pure consonant ∅. Keys showing Telugu follow the Telugu
+   keyboard after a consonant, where the అ key is ్: there ్ takes
+   అ's place, and the "no sign" key ◌ is behind ౧౨౩.
+   "Group keyboard phonetically": the vowel groups, then the
+   consonant classes, each a labeled band.
+   ⌫ takes back the consonant or vowel picked so far.
+   With "Keyboard shows syllables" (the app's settings), once a
+   consonant is picked the Telugu sign keys show the syllable
+   each makes with it (కా కి … క్), as the Telugu keyboard does.
+   Redrawing (when that box changes) never restarts the round.
 ───────────────────────────────────────────────────────── */
-function buildPanel(title, kind, items, key, grouped) {
-  const col = document.createElement('div');
-  col.className    = 'kb-col';
-  col.dataset.kind = kind;
-
-  const h = document.createElement('div');
-  h.className   = 'kb-col-title';
-  h.textContent = title;
-  col.appendChild(h);
-
-  // Reversed consonants: the Telugu letter keyboard shared with Phonemes
-  // (telugu-data.js), restricted to the consonants on this page.
-  if (reversed && kind === 'c') {
-    const body = document.createElement('div');
-    body.className = 'kb-col-keys';
-    TeluguData.buildKeyboard(body, {
-      face:       'telugu',
-      visible:    new Set(items),
-      skipHidden: true,
-      grouped,
-      order:      items,                    // only used when ungrouped
-      onPick:     (l, btn) => onPick('c', l.ipa, btn),
-    }).forEach(b => { b.dataset.kind = 'c'; });
-    col.appendChild(body);
-    return col;
-  }
-
-  // Grouped: one labeled block per category. Ungrouped: a single plain block.
-  (grouped ? groupBy(items, key) : [[null, items]]).forEach(([label, list]) => {
-    const g = document.createElement('div');
-    g.className = 'kb-group';
-
-    const row = document.createElement('div');
-    row.className = 'kb-row';
-    let pair = null;                       // a short vowel waiting for its long one
-    list.forEach((it, i) => {
-      const btn = document.createElement('button');
-      btn.className   = 'kb-btn' + (reversed ? ' te sign' : '');
-      btn.textContent = reversed ? signLabel(it) : soundLabel(kind, it);
-      if (reversed) btn.setAttribute('aria-label', it.sign === '' ? 'no sign: the consonant on its own' : 'vowel sign ' + N.wrap(soundLabel('v', it)));
-      btn.dataset.ipa  = it.ipa;
-      btn.dataset.kind = kind;
-      btn.addEventListener('click', () => onPick(kind, it.ipa, btn));
-      // A vowel and its long form go in together, so a row never breaks between the two
-      const next = list[i + 1];
-      if (kind === 'v' && next && next.ipa === longOf(it.ipa)) {
-        pair = document.createElement('span');
-        pair.className = 'kb-pair';
-        row.appendChild(pair);
-        pair.appendChild(btn);
-      } else if (pair) { pair.appendChild(btn); pair = null; }
-      else row.appendChild(btn);
-    });
-
-    if (label !== null) {
-      const l = document.createElement('div');
-      l.className   = 'kb-label';
-      l.textContent = label;
-      g.appendChild(l);
-    }
-    g.appendChild(row);
-    col.appendChild(g);
-  });
-  return col;
-}
-
-// Both panels follow the options in the session popup:
-//   Show categories checked   → grouped and labeled
-//   Show categories unchecked → one plain block per panel, alphabet order
-// (either way, each long vowel sits right after its short one)
-//   Shuffle keyboard checked  → that block in a random order (kbOrder), which
-//                              stays fixed for the round so keys can be found
-// Rebuilding (when one of those two boxes changes) never restarts the round.
+const vowelPlace = v => {
+  if (v.sign === TeluguData.VIRAMA) return reversed ? 'అ' : null;               // ్
+  if (v.sign === '') return reversed ? null : 'అ';                              // the consonant's own a
+  if (v.sign === '\u0C02' || v.sign === '\u0C03') return v.sign;                 // ం ః
+  const letter = TeluguData.vowels.find(l => l.ipa === v.ipa && l.ch.length === 1);
+  return letter ? letter.ch : null;
+};
 function buildKB() {
-  const grouped = GameMenu.grouped();
-  const src     = grouped ? keys : (kbOrder || keys);
-  const area = $('kb-area');
-  area.innerHTML = '';
-  const wrap = document.createElement('div');
-  wrap.className = 'kb-cols';
-  wrap.append(
-    buildPanel('Consonant', 'c', src.c, 'cat', grouped),
-    buildPanel(reversed ? 'Vowel sign' : 'Vowel', 'v', src.v, vowelBlock, grouped),
-  );
-  area.appendChild(wrap);
+  const pick = (kind, it) => (k, btn) => onPick(kind, it.ipa, btn);
+  kb = TeluguKeyboard.board($('kb-area'), {
+    grouped: GameMenu.grouped(),
+    onBack:  onBack,
+    faces:   reversed ? 'telugu' : 'sound',
+    groups:  [...new Set(keys.v.map(vowelBlock)), ...new Set(keys.c.map(c => c.cat))],
+    keys: [
+      ...keys.v.map(it => ({
+        te: vowelPlace(it), group: vowelBlock(it), vowel: true, telugu: reversed, cls: reversed ? 'sign' : '',
+        label: reversed ? signLabel(it) : soundLabel('v', it),
+        aria:  reversed ? (it.sign === '' ? 'no sign: the consonant on its own' : 'vowel sign ' + N.wrap(soundLabel('v', it))) : undefined,
+        data:  { ipa: it.ipa, kind: 'v' }, onPick: pick('v', it),
+      })),
+      ...keys.c.map(it => ({
+        te: it.ch, group: it.cat, telugu: reversed,
+        label: reversed ? it.ch : soundLabel('c', it),
+        data:  { ipa: it.ipa, kind: 'c' }, onPick: pick('c', it),
+      })),
+    ],
+  });
 
-  // keep a half-made answer visible across a rebuild
+  // keep a half-made answer visible across a redraw
   if (!game.locked) ['c', 'v'].forEach(k => {
     const b = sel[k] !== null && btnFor(k, sel[k]);
     if (b) b.classList.add('sel');
   });
+  showSyllables();
+}
+
+// The sign keys once a consonant is picked: each the syllable it makes (కా), or the bare sign
+function showSyllables() {
+  if (!kb) return;
+  const c = reversed && SYLLABLES && sel.c !== null && sel.v === null && CONSONANTS.find(x => x.ipa === sel.c);   // not once answered
+  kb.relabel(c ? k => (k.data.kind === 'v' ? c.ch + VOWELS.find(v => v.ipa === k.data.ipa).sign : null) : null);
+  kb.el.classList.toggle('syl', !!c);
+  kb.back(!game.locked && (sel.c !== null) !== (sel.v !== null));      // one of the two picked
 }
 
 const IPA_SIZE = ['', '5rem', '5rem', '4.2rem', '3.6rem', '3.1rem', '2.7rem'];   // by length of the sound; the last applies to anything longer
 
-const newOrder = () => ({ c: shuffle(keys.c), v: shuffle(keys.v) });
 
 /* ─────────────────────────────────────────────────────────
    ROUND STATE + RENDER
@@ -287,6 +243,7 @@ function updateSlots() {
     val.textContent = has ? pickLabel(k, sel[k]) : '–';
     val.classList.toggle('te', reversed && has);
   });
+  showSyllables();
 }
 
 function clearRound() {
@@ -312,7 +269,7 @@ function renderCard(c) {
 
   const badge = $('cat-badge');
   badge.textContent      = `${c.cat} + ${c.v.grp}`;        // the consonant's category and the vowel's: "Velar + Short"
-  badge.style.visibility = $('show-cat').checked ? '' : 'hidden';
+  GameMenu.sync();                                         // the label shows while the keyboard is grouped
   $('rare-badge').style.display = c.rare ? '' : 'none';
   clearRound();
 }
@@ -321,6 +278,7 @@ function renderCard(c) {
    ANSWER HANDLING
    Picking one piece only marks it; the round is judged as
    soon as BOTH a consonant and a vowel have been chosen.
+   ⌫ takes back the piece picked so far.
 ───────────────────────────────────────────────────────── */
 function onPick(kind, ipa, btn) {
   if (game.locked) return;
@@ -329,6 +287,18 @@ function onPick(kind, ipa, btn) {
     .forEach(b => b.classList.toggle('sel', b === btn));
   updateSlots();
   if (sel.c !== null && sel.v !== null) evaluate();
+}
+
+// ⌫: take back the one piece picked so far
+function onBack() {
+  if (game.locked) return;
+  ['c', 'v'].forEach(k => {
+    if (sel[k] === null) return;
+    const b = btnFor(k, sel[k]);
+    if (b) b.classList.remove('sel');
+    sel[k] = null;
+  });
+  updateSlots();
 }
 
 function evaluate() {
@@ -348,6 +318,7 @@ function evaluate() {
       const right = btnFor(k, answer[k]);
       if (right) {
         right.classList.add('ok');
+        TeluguKeyboard.reveal(right);    // it may be behind ౧౨౩
         scrollTarget = scrollTarget || right;
       }
     }
@@ -370,17 +341,14 @@ function evaluate() {
 /* ─────────────────────────────────────────────────────────
    THE ROUND  (game-core.js)
 ───────────────────────────────────────────────────────── */
-// What a new round is dealt from: the consonants and signs the options allow.
-// Both keyboards carry all of them, however few rounds are dealt.
-const inPlay = () => {
-  const all = $('include-extra').checked;
-  return { c: TeluguData.pool(CONSONANTS, all), v: shortThenLong(TeluguData.pool(VOWELS, all)) };
-};
+// What a new round is dealt from: the book's consonants and signs.
+// The keyboard carries all of them, however few rounds are dealt.
+const inPlay = () => ({ c: TeluguData.pool(CONSONANTS, false), v: shortThenLong(TeluguData.pool(VOWELS, false)) });
 function deal() {
   keys = inPlay();
   return buildDeck(keys.c, keys.v);
 }
-// How many cards that is: PER_VOWEL for every sign (51, or 57 with the extra letters)
+// How many cards that is: PER_VOWEL for every sign (51)
 const deckSize = () => { const k = inPlay(); return k.v.length * Math.min(PER_VOWEL, k.c.length); };
 
 const game = GameCore.create({
@@ -391,7 +359,6 @@ const game = GameCore.create({
   variant: () => (reversed ? 'reverse' : ''),   // kept with each session's result (the Profile page)
   onStart() {
     $('kb-area').scrollTop = 0;
-    kbOrder = GameMenu.shuffled() ? newOrder() : null;   // fresh order each round
     buildKB();
   },
   render:   renderCard,
@@ -416,10 +383,7 @@ const setup = GameSetup.create({
   home:      '../index.html',
   direction: DIRECTIONS,
   options: [
-    { id: 'show-cat',      label: 'Show categories',
-      note: { id: 'cat-note', text: 'Off while keyboard is shuffled' } },
-    { id: 'shuffle-kb',    label: 'Shuffle keyboard' },
-    { id: 'include-extra', label: 'Include extra letters' },
+    { id: 'group-kb',      label: 'Group keyboard phonetically' },
     { id: 'missed-again',  label: 'Missed guesses reappear', checked: true },
   ],
   max: deckSize,
@@ -432,14 +396,11 @@ const setup = GameSetup.create({
 // leave: Cancel goes back to Home (only when the page has just opened and nothing was played)
 const openSetup = (leave = false) => setup.open({ leave });
 
-/* ── The keyboard options ─────────────────────────────── */
-// game-menu.js keeps "Show categories" and "Shuffle keyboard" in step (a shuffled keyboard
-// has no groups) and redraws the keyboards when either changes. It finds the two boxes by
-// id, which is why the popup is created above this line. This page has no ⋮ menu for it to open.
-GameMenu.init({
-  rebuild: buildKB,
-  reorder: on => { kbOrder = on ? newOrder() : null; },
-});
+/* ── The keyboard option ──────────────────────────────── */
+// game-menu.js redraws the keyboard (and shows or hides the card's groups) when "Group keyboard
+// phonetically" changes. It finds the box by id, which is why the popup is created above this
+// line. This page has no ⋮ menu for it to open.
+GameMenu.init({ rebuild: buildKB });
 
 showDirection();
 game.start();                            // a round is dealt behind the popup; Start deals the one that is played

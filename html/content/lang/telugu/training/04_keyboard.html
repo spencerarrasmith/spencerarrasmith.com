@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Telugu Keyboard</title>
+<link rel="stylesheet" href="../game.css">
+<link rel="stylesheet" href="../telugu-keyboard.css">
+<style>
+/* ── Telugu Keyboard workbench: the text, what it spells, a few options; the keyboard sits at the bottom ── */
+body { display: flex; flex-direction: column; }
+.bench { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.bench-inner { max-width: 760px; margin: 0 auto; padding: 14px 16px 18px; display: grid; gap: 12px; }
+.kb-text {
+  width: 100%; min-height: 96px; resize: vertical; padding: 10px 12px;
+  font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; font-size: 28px; line-height: 1.45;
+  color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  caret-color: var(--accent-light);
+}
+.kb-text:focus { outline: none; border-color: var(--accent); }
+.kb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 13px; color: var(--text-dim); }
+.kb-tools .menu-opt { margin: 0; }
+.kb-tools input[type="range"] { width: 120px; accent-color: var(--accent); vertical-align: middle; }
+.kb-tools .grow { flex: 1; }
+.kb-btns { display: inline-flex; gap: 8px; }
+.te { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; }
+.kb-btn2 { padding: 5px 12px; font: inherit; font-weight: 600; color: var(--text-dim); background: var(--surface-up); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+.kb-btn2:hover { border-color: var(--accent); }
+.kb-spell { display: grid; gap: 6px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.kb-spell-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.kb-spell-syls, .kb-spell-cps { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; align-items: center; }
+.syl { display: inline-grid; justify-items: center; padding: 3px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-up); }
+.syl b { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; font-size: 20px; font-weight: 400; color: var(--text); }
+.syl i { font-style: normal; font-size: 12px; color: var(--accent-light); }
+.cp { font-size: 12px; color: var(--text-dim); padding: 2px 7px; border-radius: 6px; background: var(--surface-up); }
+.cp span { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; font-size: 16px; color: var(--text); margin: 0 3px; }
+.none { font-size: 13px; color: var(--text-muted); }
+.kb-dock { flex-shrink: 0; }
+.kb-dock .tkb { max-width: 760px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); border-radius: 14px 14px 0 0; }
+</style>
+</head>
+<body>
+
+<header class="g-header">
+  <div class="g-header-top">
+    <span class="g-title">Telugu Keyboard</span>
+  </div>
+</header>
+
+<main class="bench">
+  <div class="bench-inner">
+    <p class="hint">Type with the keyboard below. After a consonant the vowel keys show its syllables (<span class="te">కా కి</span> …), and after <span class="te">క్</span> the consonant keys show its conjuncts (<span class="te">క్క క్శ</span> …). Hold a consonant for conjuncts too: after <span class="te">క</span>, hold <span class="te">శ</span> for <span class="te">క్శ</span>.</p>
+    <textarea class="kb-text" id="text" inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" lang="te" aria-label="Telugu text"></textarea>
+    <div class="kb-tools">
+      <label class="menu-opt" for="faces"><input type="checkbox" id="faces" checked> <span>Keyboard shows syllables</span></label>
+      <label for="hold">Long press <input type="range" id="hold" min="150" max="800" step="50" value="300"> <span id="hold-ms">300 ms</span></label>
+      <span class="grow"></span>
+      <span class="kb-btns"><button class="kb-btn2" id="copy" type="button">Copy</button> <button class="kb-btn2" id="clear" type="button">Clear</button></span>
+    </div>
+    <section class="kb-spell" aria-live="polite">
+      <div class="kb-spell-label">The Word at the Cursor</div>
+      <div class="kb-spell-syls" id="syls"></div>
+      <div class="kb-spell-label">The Character Before the Cursor, as Typed</div>
+      <div class="kb-spell-cps" id="cps"></div>
+    </section>
+  </div>
+</main>
+
+<div class="kb-dock" id="dock"></div>
+
+<script src="../settings.js"></script>
+<script src="../telugu-data.js"></script>
+<script src="../telugu-keyboard.js"></script>
+<script>
+/* ─────────────────────────────────────────────────────────
+   WORKBENCH — the keyboard (telugu-keyboard.js) typing into a
+   text box, with a readout of what was typed: the word at the
+   cursor split into its characters (with their sounds, in the
+   notation chosen on the home page), and the Unicode code points
+   of the character just before the cursor, which is how the
+   keyboard itself sees the text.
+───────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const text = $('text');
+const kb = TeluguKeyboard.create({ mount: $('dock'), target: text });
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// What a code point is, for the readout
+function role(cp) {
+  if (cp === 0x200C) return 'zero-width non-joiner';
+  if (cp === 0x0C4D) return 'virama ్';
+  if ((cp >= 0x0C05 && cp <= 0x0C14) || cp === 0x0C60 || cp === 0x0C61) return 'vowel';
+  if ((cp >= 0x0C15 && cp <= 0x0C39) || (cp >= 0x0C58 && cp <= 0x0C5A)) return 'consonant';
+  if ((cp >= 0x0C3E && cp <= 0x0C4C) || cp === 0x0C62 || cp === 0x0C63) return 'vowel sign';
+  if (cp === 0x0C02) return 'anusvara';
+  if (cp === 0x0C03) return 'visarga';
+  if (cp === 0x0C01) return 'candrabindu';
+  if (cp >= 0x0C66 && cp <= 0x0C6F) return 'digit';
+  return '';
+}
+const hex = cp => 'U+' + cp.toString(16).toUpperCase().padStart(4, '0');
+
+function readout() {
+  const N = TeluguData.notation;                       // the notation chosen now (it can change on the home page)
+  const before = text.value.slice(0, text.selectionStart ?? text.value.length);
+  const after  = text.value.slice(text.selectionStart ?? text.value.length);
+  const word = ((before.match(/[ఀ-౿‌]+$/) || [''])[0] + (after.match(/^[ఀ-౿‌]+/) || [''])[0]);
+  const syls = word.split('‌').filter(Boolean).flatMap(p => TeluguData.syllables(p) || [{ text: p, bad: true }]);
+  $('syls').innerHTML = syls.length
+    ? syls.map(s => `<span class="syl"><b>${esc(s.text)}</b><i>${s.bad ? '?' : esc(N.wrap(N.id === 'iso' ? s.iso : s.ipa))}</i></span>`).join('')
+    : '<span class="none">—</span>';
+  // the last character (a syllable, with its conjunct and signs) before the cursor
+  const last = (before.match(/(?:(?:[క-హౘ-ౚ]్)*[క-హౘ-ౚ]|[అ-ఔౠౡ])?[ా-్ౢౣ]?[ఁ-ః]?‌?$/) || [''])[0] || before.slice(-1);
+  $('cps').innerHTML = last
+    ? [...last].map(ch => { const cp = ch.codePointAt(0), r = role(cp); return `<span class="cp">${hex(cp)}<span>${esc(r === 'vowel sign' || r === 'virama ్' || /anusvara|visarga|candrabindu/.test(r) ? '◌' + ch : ch === '‌' ? '' : ch)}</span>${esc(r)}</span>`; }).join('')
+    : '<span class="none">—</span>';
+}
+['input', 'select', 'click', 'keyup'].forEach(t => text.addEventListener(t, readout));
+document.addEventListener('selectionchange', readout);
+readout();
+
+// "Keyboard shows syllables" is the app's setting (also in the home page's Settings menu): this box changes it everywhere
+const showFaces = () => { $('faces').checked = TeluguKeyboard.syllables(); kb.set({ syllableFaces: $('faces').checked }); };
+$('faces').addEventListener('change', e => { TeluguSettings.set('syllables', e.target.checked ? 'on' : 'off'); showFaces(); });
+showFaces();
+$('hold').addEventListener('input', e => { kb.set({ longPress: +e.target.value }); $('hold-ms').textContent = e.target.value + ' ms'; });
+$('clear').addEventListener('click', () => { text.value = ''; text.focus(); kb.refresh(); readout(); });
+$('copy').addEventListener('click', async () => {
+  const b = $('copy');
+  try { await navigator.clipboard.writeText(text.value); b.textContent = 'Copied'; }
+  catch (e) { text.select(); b.textContent = 'Select & Copy'; }
+  setTimeout(() => { b.textContent = 'Copy'; }, 1500);
+});
+TeluguSettings.onChange(() => { showFaces(); readout(); });
+</script>
+</body>
+</html>

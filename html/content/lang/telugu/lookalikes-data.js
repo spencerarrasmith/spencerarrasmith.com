@@ -22,7 +22,8 @@
      rare  from telugu-data.js: the letter, sign, or cluster is flagged
            rare there (ఙ ౠ ః …), so the badge never needs hand-flagging.
      core  false for extras (ఱ ౘ ౙ ఌ ౡ ౢ ౣ) and uncommon clusters: the game
-           hides these unless "Include extra letters" is checked.
+           leaves these out (the Lookalike Builder still offers them, with
+           its "Include extra letters" box).
 ═════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';

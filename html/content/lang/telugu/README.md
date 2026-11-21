@@ -6,8 +6,8 @@ Open `index.html` in a browser. Everything is static: no build step, no server n
 
 | Folder | Holds | Home-page section |
 |---|---|---|
-| `reference/` | External Links, Rosetta Stone, Signs & Conjuncts, Sound Charts, idioms, dictionary, verbs | Reference |
-| `training/` | Review (replay of missed items), Lookalike Builder, Lookalikes | Training |
+| `reference/` | External Links, Rosetta Stone, Signs & Conjuncts, Sound Charts, Bookish Telugu (the letters out of use, which no game practices, and Sanskrit loanwords), idioms, dictionary, verbs | Reference |
+| `training/` | Review (replay of missed items), Lookalike Builder, Lookalikes, Telugu Keyboard (the workbench for the on-screen keyboard) | Training |
 | `alphabet/` | Phonemes, Diacritics, Conjuncts, Words | Alphabet |
 | `grammar/` | Sentence, nouns, cases, … | Grammar |
 | `vocabulary/` | Greetings, numbers, home, … | Vocabulary |
@@ -17,14 +17,15 @@ At the top level: `index.html` (the tile launcher, with the Profile button and t
 
 | File | What it is |
 |---|---|
-| `settings.js` | App-wide choices, remembered in this browser. One so far: how sounds are written, IPA (`/k/`) or ISO 15919 (`ka`), chosen in the home page's Settings menu (☰). Loaded first on every page. Each change is stamped with its time, so a later choice made on another device wins when the two are synced. |
+| `settings.js` | App-wide choices, remembered in this browser, chosen in the home page's Settings menu (☰): how sounds are written, IPA (`/k/`) or ISO 15919 (`ka`); and "Keyboard shows syllables" (on by default), whether keys of Telugu letters show what they make with what came before (`కా`, `క్శ`; also a checkbox on the Telugu Keyboard page). Loaded first on every page. Each change is stamped with its time, so a later choice made on another device wins when the two are synced. |
 | `units.js` | The one list of sections and tiles. The home page, Review, and the "Coming soon" pages all read it. |
 | `telugu-data.js`, `lookalikes-data.js` | Letters, signs, digits, clusters, and lookalike groups, each sound in both IPA and ISO; `notation` (which of the two to show), `read()` (the sound of any Telugu character), and `syllables()` (a whole word split into its characters, each with the sounds it spells); the CSV reader the Lookalikes game and the Lookalike Builder share. |
 | `progress.js` | Missed items and every session a game finished (this browser only; Lookalikes, a training tool with no chart, keeps none). The sessions are what the Profile page charts; "Reset statistics" there erases both. A missed character is stored as the character, so Review can show it in either notation. Two copies of the store (this browser's and an account's) can be merged without losing anything: each change carries its time, and what Review cleared or "Reset statistics" erased stays erased ("SYNCING" at the top of the file). |
 | `sync.js` | Logging in, and keeping progress and settings the same on every device. Runs on the home page only, and only when the app comes from the website: it keeps this browser's copy and the account's in step (merging them, so nothing is lost), and the home page shows who is logged in, with Log In / Log Out, at its top right. The accounts are kept by PocketBase on the same site, at `/api/` (`pocketbase/` at the top of the website repo). |
 | `vendor/` | Other people's code, each file with its version in its name and its license beside it: the PocketBase client (`pocketbase-0.29.0.umd.js`), which `sync.js` uses. |
-| `game-core.js`, `game-menu.js` | The round every game plays (deck, counters, complete screen), and the keyboard options plus the ⋮ menu of a game that has one. |
+| `game-core.js`, `game-menu.js` | The round every game plays (deck, counters, complete screen), and the keyboard option ("Group keyboard phonetically", which also shows each card's group) plus the ⋮ menu of a game that has one. |
 | `game-setup.js` | The popup a game opens before a session. It holds every option the game has (direction, number of rounds, the mistake that is game over, and its checkboxes, among them whether missed guesses reappear), so a game that uses it has no ⋮ menu. Used by Phonemes, Diacritics, Conjuncts, and Words; Lookalikes keeps its ⋮ menu. |
+| `telugu-keyboard.js`, `telugu-keyboard.css` | The on-screen Telugu keyboard, laid out and behaving like Gboard's: after a consonant the vowel keys type its vowel sign and show the syllable it makes (కి); a long press on a consonant offers it joined to the consonant before (క్శ), and its common conjuncts (from `telugu-data.js`). For pages where the learner types Telugu; tried out on Training → Telugu Keyboard. The stylesheet layers on `game.css`. Its `board()` lays out the games' answer keys the same way (each key where its letter sits; ఞ, క్ష and the like behind ౧౨౩), or in groups by sound with "Group keyboard phonetically". |
 | `lesson-shell.js` | The frame for lesson pages and the "Coming soon" placeholders. |
 | `base.css` | Fonts, reset, and color tokens. Defined here only. |
 | `fonts/` | The font files `base.css` loads (Inter, Noto Sans, Noto Sans Telugu, and the Lookalike Builder's two extra Telugu faces), each with its license. No font comes from another site. They are built by `tools/build-telugu-fonts.sh` at the top of the website repo; a rebuilt font gets a new file name. |

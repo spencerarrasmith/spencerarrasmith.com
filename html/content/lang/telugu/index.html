@@ -186,12 +186,16 @@ document.getElementById('sections').addEventListener('click', e => {
 
 /* ─────────────────────────────────────────────────────────
    SETTINGS  (settings.js)
-   The ☰ button at the top right opens the Settings menu. One
-   setting so far: how sounds are written, everywhere in the
-   app, IPA or ISO. This is the only place it is chosen. Every
-   page reads it as it loads, and a page is loaded afresh each
-   time it is opened from here, so the next page opened shows
-   the new choice.
+   The ☰ button at the top right opens the Settings menu:
+     Sounds as   how sounds are written, everywhere in the app,
+                 IPA or ISO. This is the only place it is chosen.
+     Keyboard    "Shows syllables": keys of Telugu letters show
+                 what they make with what came before (కా, క్శ).
+                 On unless turned off; the Telugu Keyboard page
+                 has the same checkbox.
+   Every page reads them as it loads, and a page is loaded afresh
+   each time it is opened from here, so the next page opened
+   shows the new choice.
 ───────────────────────────────────────────────────────── */
 function renderPrefs() {
   const box = document.getElementById('prefs');
@@ -204,11 +208,19 @@ function renderPrefs() {
       <span class="seg">${opts.map(o => `<button type="button" class="seg-opt${o.value === now ? ' on' : ''}" role="radio"
         aria-checked="${o.value === now}" data-value="${esc(o.value)}" title="${esc(o.hint)}">${esc(o.label)}</button>`).join('')}</span>
       <span class="pref-eg" id="pref-eg"><span class="te">క</span> is written <b>${esc(opts.find(o => o.value === now).example)}</b></span>
+    </div>
+    <div class="pref">
+      <span class="pref-label">Keyboard</span>
+      <label class="pref-check"><input type="checkbox" id="pref-syl"${Settings.get('syllables') === 'on' ? ' checked' : ''}> Shows syllables</label>
+      <span class="pref-eg">After <span class="te">క</span>, the keys read <span class="te">కా కి</span> …; after <span class="te">క్</span>, <span class="te">క్క క్ష</span> …</span>
     </div>`;
 }
 document.getElementById('prefs').addEventListener('click', e => {
   const b = e.target.closest('.seg-opt');
   if (b && Settings.set('notation', b.dataset.value)) renderPrefs();
+});
+document.getElementById('prefs').addEventListener('change', e => {
+  if (e.target.id === 'pref-syl') Settings.set('syllables', e.target.checked ? 'on' : 'off');
 });
 if (Settings) Settings.onChange(renderPrefs);        // another tab changed it
 renderPrefs();

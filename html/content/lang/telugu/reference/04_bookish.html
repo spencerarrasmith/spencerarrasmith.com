@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bookish Telugu</title>
+<link rel="stylesheet" href="../game.css">
+<link rel="stylesheet" href="../reference.css">
+<style>
+/* ── Bookish Telugu-specific. The scrolling page, sticky header, hint, tools row, jump pills
+      and tags are in reference.css; the header and colors in game.css / base.css ── */
+.wrap { gap: 16px; }
+.hint { max-width: 74ch; }
+.te { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; }
+section.part { display: grid; gap: 12px; scroll-margin-top: 64px; }
+section.part > h2 { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 10px; }
+.bk { display: grid; grid-template-columns: 64px 1fr; gap: 4px 14px; align-items: start; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.bk .glyph { grid-row: 1 / span 2; font-family: 'Noto Sans Telugu', serif; font-size: 40px; line-height: 1.3; color: var(--accent-light); text-align: center; }
+.bk h3 { font-size: 14px; font-weight: 600; color: var(--text); }
+.bk h3 .snd { margin-left: 8px; font-family: 'Noto Sans', 'Inter', sans-serif; font-weight: 400; font-size: 13px; color: var(--accent-light); }
+.bk p { font-size: 13px; line-height: 1.55; color: var(--text-dim); }
+.words { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 10px; }
+.wd { display: grid; gap: 2px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.wd .w { font-family: 'Noto Sans Telugu', serif; font-size: 30px; line-height: 1.4; color: var(--text); }
+.wd .s { font-size: 13px; color: var(--accent-light); }
+.wd .m { font-size: 13px; color: var(--text-dim); }
+.wd .why { font-size: 12px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<header class="g-header">
+  <div class="g-header-top">
+    <span class="g-title">Bookish Telugu</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="hint">Telugu writing keeps a few letters that modern Telugu no longer uses, and spells words taken from Sanskrit the Sanskrit way. None of this is practiced in the games or on the keyboard; it is here so that you can recognize it in older or more formal writing.</p>
+
+  <div class="tools">
+    <nav class="jump" aria-label="Jump to"><a href="#sec-letters">Letters Out of Use</a><a href="#sec-loans">Sanskrit Loanwords</a></nav>
+  </div>
+
+  <section class="part" id="sec-letters">
+    <h2>Letters Out of Use</h2>
+    <p class="hint">Traditional alphabets still list these, and you may meet them in older books, grammars, and dictionaries. Modern spelling does without them.</p>
+    <div class="cards" id="letters"></div>
+  </section>
+
+  <section class="part" id="sec-loans">
+    <h2>Sanskrit Loanwords</h2>
+    <p class="hint">Words borrowed from Sanskrit (<i>tatsama</i>, "same as that") keep their Sanskrit spelling, and with it the sounds native Telugu words rarely use: the aspirated consonants (ఖ ఘ ఛ ఝ ఠ ఢ థ ధ ఫ భ), ఋ, శ and ష, క్ష, జ్ఞ, and ః. In everyday speech many speakers say some of these more softly than they are written, an aspirate like the plain consonant, for example.</p>
+    <div class="words" id="words"></div>
+  </section>
+
+</div>
+
+<script src="../settings.js"></script>
+<script src="../telugu-data.js"></script>
+<script>
+if (!window.TeluguData) throw new Error('../telugu-data.js was not found');
+
+/* ─────────────────────────────────────────────────────────
+   CONFIG — the notes and the words. Edit them here.
+   The letters out of use are telugu-data.js's extra letters and
+   signs (inBook: false), plus ఁ, which telugu-data.js leaves out
+   of its letters (it is silent today). Their sounds are written in
+   the reader's notation (IPA or ISO, chosen on the home page).
+───────────────────────────────────────────────────────── */
+const NOTES = {
+  'ఌ':  'The vocalic l of Sanskrit. Even in Sanskrit it turns up in hardly more than one verb root (kḷp-, "to be arranged"), so Telugu writing almost never needs it.',
+  'ౡ':  'Its long partner, which no ordinary word uses even in Sanskrit: it is there to complete the pattern of the alphabet (ఋ ౠ, ఌ ౡ).',
+  'ౢ':  'The vowel sign of ఌ, for writing it after a consonant. As rare as the letter.',
+  'ౣ':  'The vowel sign of ౡ. Rarer still.',
+  'ఱ':  'A second r (bandi ra, "cart ra"), kept apart from ర in older Telugu. The two have merged in speech, and modern spelling writes ర, but older and literary texts still have ఱ in some native words.',
+  'ౘ':  'A letter made to show the ts that చ often stands for (before a, o, u in many native words). It never caught on: చ is written for both sounds.',
+  'ౙ':  'Its voiced partner, for the dz that జ often stands for. Unused for the same reason: జ is written for both.',
+  'ఁ':  'The half anusvara (arasunna). Classical Telugu used it for a nasal that has since dropped out of speech; it is silent today, and modern spelling leaves it out.',
+};
+const ARDHANUSVARA = { ch: 'ఁ', sign: true, ipa: null, iso: 'm̐' };   // ఁ: not one of telugu-data.js's letters
+
+const WORDS = [
+  // [the word, what it means, what makes it bookish]
+  ['ఋషి',   'sage',                 'ఋ'],
+  ['ధర్మం',  'duty; righteousness',  'the aspirate ధ'],
+  ['భాష',   'language',             'the aspirate భ, and ష'],
+  ['శాంతి',  'peace',                'శ'],
+  ['క్షమ',   'forgiveness',          'క్ష'],
+  ['జ్ఞానం',  'knowledge',            'జ్ఞ'],
+  ['దుఃఖం',  'sorrow',               'ః, and the aspirate ఖ'],
+  ['విద్య',  'learning; education',  'ద్య'],
+];
+
+/* ─────────────────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────────────────── */
+const TD = TeluguData, N = TD.notation;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const out = [
+  ...TD.letters.filter(l => !l.inBook).map(l => ({ glyph: l.ch, name: 'Letter', sound: N.wrap(N.letter(l)) })),
+  ...TD.signs.filter(g => !g.inBook).map(g => ({ glyph: '◌' + g.sign, key: g.sign, name: 'Vowel sign', sound: N.wrap(N.sign(g)) })),
+  { glyph: '◌' + ARDHANUSVARA.ch, key: ARDHANUSVARA.ch, name: 'Sign', sound: N.id === 'iso' ? ARDHANUSVARA.iso : 'silent' },
+];
+// ఌ ౡ ౢ ౣ, then ఱ, ౘ ౙ, then ఁ: kin together
+const ORDER = ['ఌ', 'ౡ', 'ౢ', 'ౣ', 'ఱ', 'ౘ', 'ౙ', 'ఁ'];
+out.sort((a, b) => ORDER.indexOf(a.key || a.glyph) - ORDER.indexOf(b.key || b.glyph));
+$('letters').innerHTML = out.map(x => `
+  <article class="bk">
+    <div class="glyph" lang="te">${esc(x.glyph)}</div>
+    <h3>${esc(x.name)}<span class="snd">${esc(x.sound)}</span></h3>
+    <p>${esc(NOTES[x.key || x.glyph] || '')}</p>
+  </article>`).join('');
+
+$('words').innerHTML = WORDS.map(([w, meaning, why]) => {
+  const syl = TD.syllables(w);
+  return `
+  <article class="wd">
+    <div class="w" lang="te">${esc(w)}</div>
+    <div class="s">${syl ? esc(N.wrap(N.word(syl))) : ''}</div>
+    <div class="m">${esc(meaning)}</div>
+    <div class="why">Bookish: <span class="te">${esc(why)}</span></div>
+  </article>`;
+}).join('');
+</script>
+</body>
+</html>

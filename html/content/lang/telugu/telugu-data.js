@@ -13,8 +13,11 @@
      core    derived. true → part of the DEFAULT practice set.
              Letters/signs: core = inBook.
              Clusters:      core = inBook && !rare.
-             Pages show items with core:false only when their
-             "Include extra letters/clusters" box is checked.
+             The games leave out items with core:false (the letters
+             out of use are on the Bookish Telugu page), save the
+             uncommon clusters Conjuncts offers with its "Include
+             uncommon clusters" box; the Lookalike Builder shows the
+             rest with its "Include extra letters" box.
 
    TWO WAYS TO WRITE A SOUND
      ipa   the sound, in IPA: క is k, కా is kaː, క as a syllable is
@@ -36,8 +39,8 @@
    (the Words game asks for them one by one). notation.word() writes the
    whole word's sound.
 
-   KEYBOARD  buildKeyboard() draws the letter keyboard (sound or
-   Telugu face) in alphabet order, so pages share one layout.
+   KEYBOARD  the games' keys are laid out by telugu-keyboard.js
+   (TeluguKeyboard.board()); letterGroups gives their groups by sound.
 
    Row syntax for letters:  [glyph, ipa, iso, flags?]
      iso    for a consonant, the consonant alone (k): the letter's
@@ -543,86 +546,6 @@
     });
   }
 
-  /* ── Letter keyboard ─────────────────────────────────────
-     One keyboard, two faces, built from letterGroups so every
-     page lays the alphabet out the same way:
-
-       buildKeyboard(container, {
-         face:    'sound' | 'telugu',   what is printed on the keys.
-                                        'sound' is the letter in the
-                                        reader's notation (k · ka);
-                                        'ipa' still works and means
-                                        the same
-         text:    fn(letter)            optional: print this instead
-                                        (e.g. notation.part for keys
-                                        that are pieces of a syllable)
-         visible: Set | fn(letter)      letters to show (default: all);
-                                        the rest are rendered hidden
-         grouped: true | false          true (default): one labeled group
-                                        per place of articulation.
-                                        false: a single unlabeled block,
-                                        like an ordinary keyboard, still
-                                        in alphabet order
-         order:   [letter, …]           only with grouped:false: the order
-                                        to lay the keys out in (e.g. a
-                                        shuffled copy of letters). Default:
-                                        alphabet order
-         skipHidden: true | false       false (default): letters that are
-                                        not `visible` are still rendered,
-                                        just display:none. true: they are
-                                        left out entirely, and a group left
-                                        with no keys is dropped (so a page
-                                        can show e.g. consonants only)
-         onPick:  fn(letter, button)
-       })
-
-     Markup:  .kb-group > .kb-label + .kb-row > button.kb-btn
-              (Telugu face adds .te; ungrouped has one .kb-group and
-              no .kb-label). Each key carries data-ipa and data-ch.
-              Styling is left to the page.
-     Returns  the buttons, in alphabet order.                      */
-  function buildKeyboard(container, opts = {}) {
-    const { face = 'sound', text, visible, onPick, grouped = true, order, skipHidden = false } = opts;
-    const label = text || (face === 'telugu' ? l => l.ch : notation.letter);
-    const doc    = container.ownerDocument;
-    const isShown = visible instanceof Set ? l => visible.has(l)
-                  : typeof visible === 'function' ? visible
-                  : () => true;
-    const buttons = [];
-    container.innerHTML = '';
-    const blocks = grouped ? letterGroups
-                           : [{ lbl: null, letters: order || letterGroups.flatMap(g => g.letters) }];
-    blocks.forEach(grp => {
-      const g = doc.createElement('div');
-      g.className = 'kb-group';
-      if (grp.lbl !== null) {
-        const lbl = doc.createElement('div');
-        lbl.className   = 'kb-label';
-        lbl.textContent = grp.lbl;
-        g.appendChild(lbl);
-      }
-      const row = doc.createElement('div');
-      row.className = 'kb-row';
-      grp.letters.forEach(l => {
-        if (skipHidden && !isShown(l)) return;
-        const btn = doc.createElement('button');
-        btn.type        = 'button';
-        btn.className   = 'kb-btn' + (face === 'telugu' ? ' te' : '');
-        btn.textContent = label(l);
-        btn.dataset.ipa = l.ipa;
-        btn.dataset.ch  = l.ch;
-        if (!isShown(l)) btn.style.display = 'none';
-        btn.addEventListener('click', () => { if (onPick) onPick(l, btn); });
-        row.appendChild(btn);
-        buttons.push(btn);
-      });
-      if (skipHidden && !row.childNodes.length) return;   // nothing to show in this group
-      g.appendChild(row);
-      container.appendChild(g);
-    });
-    return buttons;
-  }
-
   // Catch typos while editing the data.
   (function check() {
     const dup = (arr, f, what) => {
@@ -650,7 +573,7 @@
     letters, vowels, consonants, conjunctLetters,
     signs, longOf, shortThenLong, nasalBefore, digits, clusterSets: CLUSTER_SETS, clusters,
     notation, notationFor, read, syllables,
-    letterGroups, pool, buildKeyboard,
+    letterGroups, pool,
   });
 
   root.TeluguData = data;

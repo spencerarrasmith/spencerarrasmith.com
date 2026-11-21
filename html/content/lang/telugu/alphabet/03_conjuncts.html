@@ -17,6 +17,9 @@
       font-size: 12px;
       font-weight: 400;
     }
+    /* Keys showing the conjunct in the making (క్క క్ఖ …): taller than a letter */
+    .gkb.joining .kb-btn.te { font-size: 17px; }
+    @media (max-width: 420px) { .gkb.joining .kb-btn.te { font-size: 14px; } }
   </style>
 </head>
 <body>
@@ -62,6 +65,7 @@
 
 <script src="../settings.js"></script>
 <script src="../telugu-data.js"></script>
+<script src="../telugu-keyboard.js"></script>
 <script src="../progress.js"></script>
 <script src="../game-menu.js"></script>
 <script src="../game-core.js"></script>
@@ -82,15 +86,16 @@ if (!window.GameSetup)  throw new Error('../game-setup.js was not found');
                order ("Nasal + Velar"). Never the set name,
                which can name a letter ("+ య (ya)")
      rare    → "rare" badge (clusters marked * in the list)
-     core    → false for rare clusters and any cluster using
-               an extra letter: hidden until "Include
-               uncommon clusters" is checked
+     core    → false for rare clusters: dealt only when
+               "Include uncommon clusters" is checked
+   The extra letters (ఱ ౘ ౙ) are not practiced: they have a
+   Reference page of their own (Bookish Telugu).
 
    The round itself (deck, counters, re-queuing a missed card,
    the complete screen, the record of each session) is game-core.js.
    The popup that opens first is game-setup.js. It holds every
    option: direction, number of rounds, game over, and
-   the four checkboxes. There is no ⋮ menu on this page.
+   the three checkboxes. There is no ⋮ menu on this page.
    This page draws the card, the keyboard, and the slots, and
    checks the picks.
 ───────────────────────────────────────────────────────── */
@@ -98,7 +103,7 @@ const GAME       = 'conjuncts';             // tile id: finishing either directi
 const CONSONANTS = TeluguData.consonants;
 const CLUSTERS   = TeluguData.clusters;
 const N          = TeluguData.notation;     // how sounds are written: IPA (/kʂa/) or ISO (kṣa), chosen on the home page
-const { $, shuffle } = GameCore;
+const { $ } = GameCore;
 
 const SESSION_SIZE = 40;    // cards in the usual session, sampled from the pool (the popup can ask for fewer, or more)
 const ORDINALS     = ['1st', '2nd', '3rd', '4th'];
@@ -113,76 +118,57 @@ let reversed = false;   // false: card shows the conjunct, keys show sounds
 let sel = [];        // picked ipa per slot (null = empty): a key's identity, whatever is printed on it
 let slotEls = [];
 let keys    = [];    // the consonants on the keyboard, in alphabet order
-let kbOrder = null;  // null, or a shuffled copy of keys (fixed for the round)
+let kb      = null;  // the keyboard (telugu-keyboard.js board())
+const SYLLABLES = TeluguKeyboard.syllables();   // "Keyboard shows syllables" (the app's settings)
 
 /* ─────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────── */
-// [[label, [items…]], …] keeping first-seen order
-function groupBy(items, key) {
-  const m = new Map();
-  items.forEach(it => {
-    if (!m.has(it[key])) m.set(it[key], []);
-    m.get(it[key]).push(it);
-  });
-  return [...m];
-}
-
 function btnFor(ipa) {
   return Array.from(document.querySelectorAll('.kb-btn'))
     .find(b => b.dataset.ipa === ipa) || null;
 }
 
 /* ─────────────────────────────────────────────────────────
-   BUILD KEYBOARD  (consonants only)
+   BUILD KEYBOARD  (consonants only; telugu-keyboard.js)
+   Sound keys (each consonant alone: k), or (reversed) the Telugu
+   letters. "Group keyboard phonetically" unchecked: the whole Telugu
+   keyboard, each consonant where it sits (ఞ behind ౧౨౩), the vowels
+   there too but dimmed: no conjunct asks for one. Checked: in
+   groups by place of articulation. Redrawing (when that box
+   changes) never restarts the round.
+   ⌫ takes back the last pick: on once a consonant is picked,
+   until the last slot is filled.
+   With "Keyboard shows syllables" (the app's settings), Telugu
+   keys show the conjunct in the making: once the 1st consonant
+   is స, they read స్క స్ఖ …, as the Telugu keyboard does after
+   స్. Sound keys stay sounds.
 ───────────────────────────────────────────────────────── */
-// Sound keys (each consonant alone: k), or (reversed) the Telugu letter keyboard shared with Phonemes
-// (telugu-data.js), restricted to the consonants. Both follow the options in the session popup:
-//   Show categories checked   → grouped and labeled by place of articulation
-//   Show categories unchecked → one plain block of keys, alphabet order
-//   Shuffle keyboard checked  → that block in a random order (kbOrder), which
-//                              stays fixed for the round so keys can be found
-// Rebuilding (when one of those two boxes changes) never restarts the round.
 function buildKB() {
-  const grouped = GameMenu.grouped();
-  const list0   = grouped ? keys : (kbOrder || keys);
-  const area = $('kb-area');
-  area.innerHTML = '';
-  if (reversed) {
-    TeluguData.buildKeyboard(area, {
-      face:       'telugu',
-      visible:    new Set(keys),
-      skipHidden: true,
-      grouped,
-      order:      list0,                    // only used when ungrouped
-      onPick:     l => onPick(l.ipa),
-    });
-    return;
-  }
-  (grouped ? groupBy(list0, 'cat') : [[null, list0]]).forEach(([label, list]) => {
-    const g = document.createElement('div');
-    g.className = 'kb-group';
-
-    const row = document.createElement('div');
-    row.className = 'kb-row';
-    list.forEach(it => {
-      const btn = document.createElement('button');
-      btn.className    = 'kb-btn';
-      btn.textContent  = N.part(it);
-      btn.dataset.ipa  = it.ipa;
-      btn.addEventListener('click', () => onPick(it.ipa));
-      row.appendChild(btn);
-    });
-
-    if (label !== null) {
-      const l = document.createElement('div');
-      l.className   = 'kb-label';
-      l.textContent = label;
-      g.appendChild(l);
-    }
-    g.appendChild(row);
-    area.appendChild(g);
+  kb = TeluguKeyboard.board($('kb-area'), {
+    grouped: GameMenu.grouped(),
+    onBack:  onBack,
+    faces:   reversed ? 'telugu' : 'sound',
+    keys: keys.map(it => ({
+      te: it.ch, group: it.cat, telugu: reversed,
+      label: reversed ? it.ch : N.part(it),
+      data:  { ipa: it.ipa, ch: it.ch },
+      onPick: () => onPick(it.ipa),
+    })),
   });
+  showJoins();
+}
+
+// The keys after the picks so far: each the conjunct it would make (స్క), or its own letter
+function showJoins() {
+  if (!kb) return;
+  const next = sel.indexOf(null);
+  const so = reversed && SYLLABLES && !game.locked && next > 0
+    ? sel.slice(0, next).map(ipa => CONSONANTS.find(c => c.ipa === ipa).ch).join(TeluguData.VIRAMA) + TeluguData.VIRAMA
+    : '';
+  kb.relabel(so ? k => so + k.data.ch : null);
+  kb.el.classList.toggle('joining', !!so);
+  kb.back(!game.locked && sel.some(s => s !== null) && sel.includes(null));   // a conjunct half made
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -213,6 +199,7 @@ function updateSlots() {
     val.textContent = !has ? '–' : reversed ? picked.ch : N.part(picked);
     val.classList.toggle('te', reversed && has);
   });
+  showJoins();
 }
 
 // "usually said /ɡɲa/" for the few clusters spoken differently from their letters.
@@ -235,12 +222,13 @@ function renderCard(c) {
 
   const badge = $('cat-badge');
   badge.textContent      = c.classes;
-  badge.style.visibility = $('show-cat').checked ? '' : 'hidden';
+  GameMenu.sync();                                         // the label shows while the keyboard is grouped
   $('rare-badge').style.display = (c.rare || !c.inBook) ? '' : 'none';
 
   document.querySelectorAll('.kb-btn').forEach(b => b.classList.remove('ok', 'err'));
   sel = c.parts.map(() => null);
   buildSlots(c.parts.length);
+  showJoins();
 
   // Until the card is answered, the line under it carries the instruction
   const fb = $('feedback');
@@ -254,7 +242,8 @@ function renderCard(c) {
    ANSWER HANDLING
    Each pick fills the next empty slot (the same key can be
    used twice for doubled letters). The round is judged as
-   soon as every slot is filled; tap a filled slot to clear it.
+   soon as every slot is filled; tap a filled slot to clear it,
+   or ⌫ to clear the last one.
 ───────────────────────────────────────────────────────── */
 function onPick(ipa) {
   if (game.locked) return;
@@ -263,6 +252,12 @@ function onPick(ipa) {
   sel[i] = ipa;
   updateSlots();
   if (!sel.includes(null)) evaluate();
+}
+
+// ⌫: clear the last filled slot
+function onBack() {
+  if (game.locked) return;
+  for (let i = sel.length - 1; i >= 0; i--) if (sel[i] !== null) return onSlot(i);
 }
 
 function onSlot(i) {
@@ -287,7 +282,9 @@ function evaluate() {
   answerSet.forEach(a => btnFor(a).classList.add('ok'));
   if (!allOk) {
     const firstMiss = answer.findIndex((a, i) => !results[i]);
-    btnFor(answer[firstMiss]).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const right = btnFor(answer[firstMiss]);
+    TeluguKeyboard.reveal(right);        // it may be behind ౧౨౩
+    right.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   // The line under the card says what was picked: the conjunct the picks make, spelled the
@@ -308,7 +305,7 @@ function evaluate() {
 /* ─────────────────────────────────────────────────────────
    THE ROUND  (game-core.js)
 ───────────────────────────────────────────────────────── */
-const pool = () => TeluguData.pool(CLUSTERS, $('include-uncommon').checked);   // 83 clusters, or all 92
+const pool = () => TeluguData.pool(CLUSTERS, $('include-uncommon').checked).filter(c => c.inBook);   // 83 clusters, or all 92
 const game = GameCore.create({
   id:   GAME,
   size: SESSION_SIZE,
@@ -318,8 +315,7 @@ const game = GameCore.create({
   variant: () => (reversed ? 'reverse' : ''),   // kept with each session's result (the Profile page)
   onStart() {
     $('kb-area').scrollTop = 0;
-    keys    = TeluguData.pool(CONSONANTS, $('include-uncommon').checked);
-    kbOrder = GameMenu.shuffled() ? shuffle(keys) : null;   // fresh order each round
+    keys = TeluguData.pool(CONSONANTS, false);   // the book's consonants (ఙ ఞ among them, for the uncommon clusters)
     buildKB();
   },
   render:   renderCard,
@@ -346,9 +342,7 @@ const setup = GameSetup.create({
   home:      '../index.html',
   direction: DIRECTIONS,
   options: [
-    { id: 'show-cat',         label: 'Show categories',
-      note: { id: 'cat-note', text: 'Off while keyboard is shuffled' } },
-    { id: 'shuffle-kb',       label: 'Shuffle keyboard' },
+    { id: 'group-kb',         label: 'Group keyboard phonetically' },
     { id: 'include-uncommon', label: 'Include uncommon clusters' },
     { id: 'missed-again',     label: 'Missed guesses reappear', checked: true },
   ],
@@ -364,14 +358,11 @@ const setup = GameSetup.create({
 // leave: Cancel goes back to Home (only when the page has just opened and nothing was played)
 const openSetup = (leave = false) => setup.open({ leave });
 
-/* ── The keyboard options ─────────────────────────────── */
-// game-menu.js keeps "Show categories" and "Shuffle keyboard" in step (a shuffled keyboard
-// has no groups) and redraws the keyboard when either changes. It finds the two boxes by
-// id, which is why the popup is created above this line. This page has no ⋮ menu for it to open.
-GameMenu.init({
-  rebuild: buildKB,
-  reorder: on => { kbOrder = on ? shuffle(keys) : null; },
-});
+/* ── The keyboard option ──────────────────────────────── */
+// game-menu.js redraws the keyboard (and shows or hides the card's classes) when "Group keyboard
+// phonetically" changes. It finds the box by id, which is why the popup is created above this
+// line. This page has no ⋮ menu for it to open.
+GameMenu.init({ rebuild: buildKB });
 
 showDirection();
 game.start();                            // a round is dealt behind the popup; Start deals the one that is played

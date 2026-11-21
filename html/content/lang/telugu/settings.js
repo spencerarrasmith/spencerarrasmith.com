@@ -13,6 +13,16 @@
                   'iso'  the ISO 15919 spelling, plain    ka   kā
                 telugu-data.js turns this into TeluguData.notation,
                 which is what pages actually use.
+     syllables  whether a keyboard of Telugu letters shows what a
+                key will make with what came before it
+                  'on'   (default) after క the vowel keys read
+                         కా కి కీ …; after క్ (or, in a game, a
+                         first consonant క) the consonants read
+                         క్క క్ఖ …
+                  'off'  the keys keep their own letters (and
+                         the vowel signs show on ◌: ◌ా ◌ి …)
+                telugu-keyboard.js reads it: TeluguKeyboard.syllables().
+                Also a checkbox on the Telugu Keyboard page.
 
    API
      get(name)           → the current value (the default if
@@ -32,7 +42,7 @@
      forget()            back to the defaults, in this browser only
                            (signing out)
 
-   STORED  { notation, _t }. _t is when a choice was last made; a
+   STORED  { notation, syllables, _t }. _t is when a choice was last made; a
    store from before it was kept counts as older than any that has
    one, but newer than none at all.
 
@@ -51,6 +61,13 @@
       options: {
         ipa: ['IPA', 'The sound, in the International Phonetic Alphabet, between slashes', '/k/'],
         iso: ['ISO', 'The letter as ISO 15919 spells it in Latin letters', 'ka'],
+      },
+    },
+    syllables: {
+      default: 'on',
+      options: {
+        on:  ['On',  'Keys show the syllable or conjunct they make with what came before', 'కా కి క్ష'],
+        off: ['Off', 'Keys show their own letters', '◌ా ◌ి ష'],
       },
     },
   };

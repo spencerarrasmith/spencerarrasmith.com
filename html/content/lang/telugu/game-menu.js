@@ -1,42 +1,36 @@
 /* ═════════════════════════════════════════════════════════
-   game-menu.js — the keyboard options the practice games
-   share ("Show categories", "Shuffle keyboard"), and the ⋮
-   options menu of a game that has one (Lookalikes). Phonemes,
-   Diacritics, Conjuncts, and Words keep their checkboxes in
-   the session popup (game-setup.js) and have no ⋮ menu.
+   game-menu.js — the keyboard option the practice games share
+   ("Group keyboard phonetically"), and the ⋮ options menu of a
+   game that has one (Lookalikes). Phonemes, Diacritics,
+   Conjuncts, and Words keep their checkboxes in the session
+   popup (game-setup.js) and have no ⋮ menu.
    Exposes window.GameMenu. Pairs with game.css.
 
    The page supplies the markup (ids matter):
      #menu-wrap  #menu-btn  #opts-menu     the ⋮ button + popover (optional)
-     #show-cat   #shuffle-kb  #cat-note    keyboard options (optional)
-     #cat-badge                            the card's category label
+     #group-kb                             "Group keyboard phonetically" (optional)
+     #cat-badge                            the card's category label: shown
+                                           while the keyboard is grouped
+     #shuffle-kb                           Lookalikes' "Shuffle choices" (optional)
 
    Usage:
      GameMenu.init({
-       rebuild: buildKB,                        // redraw the keyboard(s)
-       reorder: on => { kbOrder = on ? … : null } // shuffle just toggled
+       rebuild: buildKB,                        // redraw the keyboard
+       reorder: on => { … }                     // "Shuffle choices" just toggled
      });
-     GameMenu.shuffled()   // is "Shuffle keyboard" checked?
-     GameMenu.grouped()    // is "Show categories" checked?
+     GameMenu.grouped()    // is "Group keyboard phonetically" checked?
+     GameMenu.shuffled()   // is "Shuffle choices" checked?
+     GameMenu.sync()       // the card's label follows the box (after a page sets it)
 
-   Rules it enforces
-     · Shuffle checked   → "Show categories" is forced off and held
-       there (a shuffled keyboard has no groups).
-     · Shuffle unchecked → the box is freed but stays unchecked.
-═════════════════════════════════════════════════════════ */
+   Unchecked, the games lay their keys out as the Telugu keyboard
+   does (TeluguKeyboard.board(), telugu-keyboard.js); checked, in
+   groups by sound, with each card's group shown on the card.
+════════════════════════════════════════════════════════ */
 (function () {
   const $ = id => document.getElementById(id);
 
   function syncCategories() {
-    const cat = $('show-cat'), shuf = $('shuffle-kb');
-    if (!cat) return;
-    const shuffled = !!shuf && shuf.checked;
-    if (shuffled) cat.checked = false;
-    cat.disabled = shuffled;
-    const row = cat.closest('.menu-opt');
-    if (row) row.classList.toggle('disabled', shuffled);
-    if ($('cat-note')) $('cat-note').hidden = !shuffled;
-    if ($('cat-badge')) $('cat-badge').style.visibility = cat.checked ? '' : 'hidden';
+    if ($('cat-badge')) $('cat-badge').style.visibility = $('group-kb') && $('group-kb').checked ? '' : 'hidden';
   }
 
   function init(opts = {}) {
@@ -53,12 +47,11 @@
       });
     }
 
-    if ($('show-cat')) $('show-cat').addEventListener('change', () => {
-      syncCategories();               // card label follows the box
-      rebuild();                      // regroup / flatten the keyboard(s)
+    if ($('group-kb')) $('group-kb').addEventListener('change', () => {
+      syncCategories();               // the card's label follows the box
+      rebuild();                      // the layout, or the groups
     });
     if ($('shuffle-kb')) $('shuffle-kb').addEventListener('change', e => {
-      syncCategories();
       reorder(e.target.checked);      // page picks a fresh order (or clears it)
       rebuild();
     });
@@ -70,6 +63,6 @@
     init,
     sync:     syncCategories,
     shuffled: () => !!$('shuffle-kb') && $('shuffle-kb').checked,
-    grouped:  () => !$('show-cat') || $('show-cat').checked,
+    grouped:  () => !!$('group-kb') && $('group-kb').checked,
   };
 })();

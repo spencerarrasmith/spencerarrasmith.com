@@ -73,7 +73,6 @@
           </button>
           <div class="menu" id="opts-menu" role="group" aria-label="Options" hidden>
             <label class="menu-opt"><input type="checkbox" id="shuffle-kb" checked> <span>Shuffle choices</span></label>
-            <label class="menu-opt"><input type="checkbox" id="include-extra"> <span>Include extra letters</span></label>
             <div class="menu-sep"></div>
             <div class="menu-head">Lookalike sets</div>
             <label class="menu-opt"><input type="checkbox" id="use-builtin" checked> <span>Built-in groups</span></label>
@@ -132,7 +131,8 @@ if (!window.GameCore)      throw new Error('../game-core.js was not found');
    Every character in a group becomes a card, each with its whole
    group as the choices (a character in two groups gets two cards).
    Items carry rare / core flags from telugu-data.js: rare shows the
-   "rare" pip; extras (ఱ ఌ ౡ …) wait for "Include extra letters".
+   "rare" pip; the extra letters (ఱ ఌ ౡ …) are left out of every
+   group: they are not practiced (Reference → Bookish Telugu).
 
    The round itself (deck, counters, re-queuing a missed card,
    the complete screen) is game-core.js. No record of a session is
@@ -161,10 +161,10 @@ let marks  = new Map();  // text → 'ok' | 'err' once the card is answered
 ───────────────────────────────────────────────────────── */
 // One card per character of every group in the checked sets. A group that
 // shrinks below two characters (extras hidden) has nothing to tell apart.
-function buildCards(sources, includeExtra) {
+function buildCards(sources) {
   const cards = [];
   sources.forEach(groups => groups.forEach(g => {
-    const items = g.items.filter(i => includeExtra || i.core);
+    const items = g.items.filter(i => i.core);          // the extra letters (ఱ ఌ ౡ …) are not practiced
     if (items.length < 2) return;
     items.forEach(item => cards.push({ item, options: items }));
   }));
@@ -315,7 +315,7 @@ function deal() {
   const sources = [];
   if ($('use-builtin').checked) sources.push(BUILTIN);
   if ($('use-custom').checked && custom.length) sources.push(custom);
-  return buildCards(sources, $('include-extra').checked);
+  return buildCards(sources);
 }
 
 // Every group emptied by the options: nothing to play, so say what to change.
@@ -326,7 +326,7 @@ function showEmpty() {
   $('rare-badge').style.display = 'none';
   $('char-card').className = 'char-card';
   $('feedback').textContent = '';
-  $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practice with these options. Check a set, or “Include extra letters”, in the ⋮ menu.</p>';
+  $('kb-area').innerHTML = '<p class="empty-note">No lookalike groups to practice with these options. Check a set in the ⋮ menu.</p>';
 }
 
 const game = GameCore.create({
@@ -354,7 +354,6 @@ GameMenu.init({
   if (!$('use-builtin').checked && !$('use-custom').checked) e.target.checked = true;
   game.start();
 }));
-$('include-extra').addEventListener('change', game.start);
 $('csv-btn').addEventListener('click', () => $('csv-file').click());
 $('csv-file').addEventListener('change', e => {
   const f = e.target.files && e.target.files[0];

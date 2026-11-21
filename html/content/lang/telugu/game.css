@@ -69,7 +69,8 @@
   color: var(--text-muted);
 }
 
-.g-stat-val { font-weight: 600; color: var(--text-dim); }
+.g-stat-val { font-weight: 600; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+#s-rem, #s-done { display: inline-block; text-align: right; }      /* as wide as the total (game-core.js) */
 
 /* Mistakes left in a session (game-core.js): ❤️×♾️ with no limit, else ❤️×20 … ❤️×4, 💚🤍🧡, 🤍🧡, 🧡, then ⭕.
    The box keeps one width (room for three hearts, or ❤️×20) and its text sits at the right, so the
@@ -395,35 +396,70 @@
   color: var(--error);
 }
 
-/* Two keyboards side by side: consonants (left) and vowels (right). Diacritics and Words. */
-.kb-cols {
-  flex-shrink: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-  gap: 22px;
-  align-items: start;
+/* A game's answer keys (TeluguKeyboard.board(), telugu-keyboard.js), as the Telugu keyboard lays
+   them out: each key where its letter sits there, on either of its two pages (the second behind
+   ౧౨౩, as tall as the first). Or, with "Group keyboard phonetically", one band
+   per group: the same keys at the same size, ten to a row. Vowel keys in the accent color. */
+.gkb { flex-shrink: 0; display: grid; gap: 6px; width: 100%; max-width: 760px; margin: 0 auto; }
+.gkb .kb-row { flex-wrap: nowrap; gap: 5px; }
+/* A key is the same size whatever is printed on it: a conjunct stacked under its letter (స్త్ర) is
+   taller than the key, and must not make the key, its row, or the keyboard any taller. So the key's
+   height is fixed (--kh), its contents do not count toward its size (contain: size), and each row of
+   the layout is fixed at the same height. */
+.gkb { --kh: 44px; }
+.gkb .kb-btn {
+  flex: 1 1 0; min-width: 0; height: var(--kh); min-height: var(--kh); max-height: var(--kh);
+  box-sizing: border-box; contain: size; padding: 0 2px;
+  font-size: 15px; white-space: nowrap; overflow: hidden;
+}
+.gkb .kb-btn.te { font-size: 21px; line-height: 1; padding: 0 2px; }
+.gkb .kb-btn.vk:not(.ok):not(.err):not(.sel):not(:hover) { color: var(--accent-light); }
+.gkb-pages { display: grid; }
+.gkb-page { grid-area: 1 / 1; display: grid; grid-auto-rows: var(--kh); align-content: start; gap: 6px; visibility: hidden; }
+.gkb-page > .kb-row { height: var(--kh); }
+/* Keys keep their height on either page: the second page's five rows leave a row's room empty,
+   above its last two (⌫'s row and the bottom row), which sit where the first page's do */
+.gkb-digits { grid-template-rows: repeat(3, var(--kh)) 1fr var(--kh); }
+.gkb-digits > .kb-row:nth-child(4) { align-self: end; }
+.gkb-page.on { visibility: visible; }
+/* Always the whole Telugu keyboard, both pages, its bottom row in its proportions (౧౨౩ 1½, , 1, space 5,
+   . 1, ⏎ 1½). Keys the game does not use (the vowels in Conjuncts, the digits, ⌫, space …) are drawn
+   dimmed and do nothing; ౧౨౩ / అఆ turns the page. */
+.gkb .gkb-fn { display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--text-dim); background: var(--bg); }
+.gkb .gkb-flip { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; }
+.gkb .gkb-flip:disabled { opacity: .35; cursor: default; }
+.gkb .gkb-off { opacity: .3; cursor: default; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+.gkb .gkb-off.vk { color: var(--accent-light); }
+.gkb .kb-btn.gkb-off.te { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; font-size: 21px; line-height: 1; }
+.gkb .gkb-space { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; font-weight: 400; color: var(--text-muted); }
+.gkb .gkb-enter { font-size: 18px; color: var(--bg); background: var(--accent); border-color: var(--accent); }
+.gkb .gkb-back { font-size: 18px; }
+.gkb button.gkb-back:disabled { opacity: .3; cursor: default; pointer-events: none; }      /* nothing to take back yet */
+.gkb-bottom .gkb-flip, .gkb-bottom .gkb-enter { flex-grow: 1.5; }
+.gkb-bottom .gkb-space { flex-grow: 5; }
+/* grouped: the same key size as the layout (a tenth of the row, --g between keys). Each group is as
+   wide as its keys (--n of them; ten at most to a line), and groups share a line while they fit,
+   as a keyboard row would: Velar and Palatal side by side, five keys each. */
+.gkb { --g: 5px; }
+.gkb[data-mode="grouped"] { display: flex; flex-wrap: wrap; column-gap: var(--g); row-gap: 10px; }
+.gkb[data-mode="grouped"] .kb-group { gap: 5px; min-width: 0; flex: 0 0 calc(var(--k) * (100% - 9 * var(--g)) / 10 + (var(--k) - 1) * var(--g)); }
+.gkb .gkb-wrap { flex-wrap: wrap; gap: var(--g); }
+.gkb .gkb-wrap .kb-btn { flex: 0 0 calc((100% - (var(--k) - 1) * var(--g)) / var(--k)); }
+.gkb[data-mode="grouped"] .kb-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 420px) {
+  .gkb, .gkb-page { gap: 5px; }
+  .gkb { --g: 3px; }
+  .gkb .kb-row { gap: 3px; }
+  .gkb { --kh: 42px; }
+  .gkb .kb-btn { font-size: 13px; border-radius: 6px; }
+  .gkb .kb-btn.te { font-size: 18px; }
+  .gkb .gkb-fn { font-size: 12.5px; }
 }
 
-.kb-col, .kb-col-keys { display: flex; flex-direction: column; gap: 9px; }
-/* a vowel and its long form: one unit in the row (same spacing as any two keys), so they wrap together */
-.kb-pair { display: inline-flex; gap: inherit; }
-
-.kb-col-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border);
-}
-
-@media (max-width: 680px) {
-  .kb-cols { grid-template-columns: 1fr; }
-  .kb-col[data-kind="v"] { order: -1; }   /* short vowel panel first */
-}
-
-/* ── 6. Selection slots (games where several picks make one answer) ── */
+/* ── 6. Selection slots (games where several picks make one answer) ──
+   A slot is as tall filled as empty, whatever fills it (a conjunct, క్ష, stands taller than its
+   letter): so the keyboard below never moves when a key is picked. */
 .slots { display: flex; gap: 10px; }
 
 .slot {
@@ -431,7 +467,9 @@
   align-items: center;
   gap: 8px;
   min-width: 92px;
-  padding: 5px 12px;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 0 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 9px;
@@ -460,7 +498,8 @@ button.slot.filled:hover { border-color: var(--accent-light); }
   color: var(--text-muted);
 }
 
-.slot-val.te { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; }
+.slot-val { line-height: 1; }
+.slot-val.te { font-family: 'Noto Sans Telugu', 'Noto Sans', sans-serif; font-size: 20px; font-weight: 700; line-height: 1; }
 
 .slot.filled { border-color: var(--accent); }
 .slot.filled .slot-val { color: var(--accent-light); }
